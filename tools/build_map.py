@@ -1,0 +1,431 @@
+#!/usr/bin/env python3
+"""Genera data/torino.json a partire dai dati OpenStreetMap.
+
+Uso:
+    python3 tools/fetch_osm.py            # scarica i tasselli OSM in .osm-cache/
+    python3 tools/build_map.py            # scrive data/torino.json
+    python3 tools/build_map.py --compare vecchio.json   # confronta con un file esistente
+
+Coordinate del gioco ("metri mappa"): x verso est, y verso sud, a partire da ORIGIN.
+Il motore le moltiplica per 5 (1 m = 5 unità) e le trasla di (clip.x0-50, clip.y0-50).
+
+Formato di uscita (tutte le linee sono codificate come polyline a interi, stile Google):
+  R  strade      [classe, senso_unico, indice_nome, corsie, polyline(1 m)]
+  B  edifici     [piani, tipo, esterno(qb m), buchi...]  tipo: 0 generico 1 chiesa 2 stadio 3 garage 4 scuola
+  A  aree        [tipo, esterno(qb m), buchi...]         tipo: g verde, p campo, k parcheggio, w acqua, r ferrovia
+  TW binari tram [[x,y],...]   TR linee tram [linea, [[x,y],...]]   TS/BS fermate tram/bus [x,y,nome]
+  L  landmark    {id: {...}}  forme reali degli edifici che il gioco modella a mano (src/landmarks/)
+"""
+import argparse, glob, json, math, os, sys, xml.etree.ElementTree as ET
+from collections import Counter, defaultdict
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ORIGIN = [45.0571, 7.6282]                 # lat, lon dell'angolo nord-ovest
+K = [78653.96734960107, 111132]            # metri per grado [lon, lat] a questa latitudine
+QB = 2                                     # risoluzione (m) di edifici e aree
+# zona giocabile in metri mappa: x0, y0, x1, y1 (la versione 1 era [500, 400, 2300, 2050])
+CLIP = [500, 400, 2300, 2400]
+
+# ---------------------------------------------------------------- lettura OSM
+def load_osm(paths):
+    nodes, ways, rels = {}, {}, {}
+    for f in paths:
+        for e in ET.parse(f).getroot():
+            t = {x.get('k'): x.get('v') for x in e.findall('tag')}
+            if e.tag == 'node':
+                nodes[e.get('id')] = (float(e.get('lat')), float(e.get('lon')), t)
+            elif e.tag == 'way':
+                ways[e.get('id')] = ([n.get('ref') for n in e.findall('nd')], t)
+            elif e.tag == 'relation':
+                rels[e.get('id')] = ([(m.get('type'), m.get('ref'), m.get('role')) for m in e.findall('member')], t)
+    return nodes, ways, rels
+
+def to_xy(lat, lon):
+    return ((lon - ORIGIN[1]) * K[0], (ORIGIN[0] - lat) * K[1])
+
+def to_ll(x, y):
+    return (ORIGIN[0] - y / K[1], ORIGIN[1] + x / K[0])
+
+# ---------------------------------------------------------------- codifica
+def enc_num(v, out):
+    v = ~(v << 1) if v < 0 else (v << 1)
+    while v >= 0x20:
+        out.append(chr((0x20 | (v & 0x1f)) + 63)); v >>= 5
+    out.append(chr(v + 63))
+
+def encode(pts, q):
+    out, px, py = [], 0, 0
+    for x, y in pts:
+        ix, iy = int(round(x / q)), int(round(y / q))
+        enc_num(ix - px, out); enc_num(iy - py, out); px, py = ix, iy
+    return ''.join(out)
+
+def dedupe(pts, q):
+    o = []
+    for p in pts:
+        r = (round(p[0] / q), round(p[1] / q))
+        if not o or (round(o[-1][0] / q), round(o[-1][1] / q)) != r:
+            o.append(p)
+    return o
+
+def area(r):
+    return abs(sum(r[i][0] * r[(i + 1) % len(r)][1] - r[(i + 1) % len(r)][0] * r[i][1] for i in range(len(r))) / 2)
+
+def centroid(r):
+    return (sum(p[0] for p in r) / len(r), sum(p[1] for p in r) / len(r))
+
+def half(v):
+    return round(v * 2) / 2
+
+def rdp_idx(pts, a, b, tol):
+    """Ramer-Douglas-Peucker sugli indici a..b (inclusi); restituisce gli indici da tenere."""
+    if b - a < 2:
+        return [a, b]
+    ax, ay = pts[a]; bx, by = pts[b]
+    dx, dy = bx - ax, by - ay; L = math.hypot(dx, dy) or 1e-9
+    best, bi = -1, a
+    for i in range(a + 1, b):
+        d = abs((pts[i][0] - ax) * dy - (pts[i][1] - ay) * dx) / L
+        if d > best: best, bi = d, i
+    if best <= tol:
+        return [a, b]
+    return rdp_idx(pts, a, bi, tol)[:-1] + rdp_idx(pts, bi, b, tol)
+
+# ---------------------------------------------------------------- geometria OSM
+class Geo:
+    def __init__(self, nodes, ways, rels):
+        self.N, self.W, self.R = nodes, ways, rels
+
+    def way_xy(self, wid):
+        refs = self.W[wid][0]
+        if not all(r in self.N for r in refs):
+            return None
+        return [to_xy(*self.N[r][:2]) for r in refs]
+
+    def closed_ring(self, wid):
+        p = self.way_xy(wid)
+        if not p or len(p) < 4 or self.W[wid][0][0] != self.W[wid][0][-1]:
+            return None
+        return p[:-1]
+
+    def stitch(self, wids):
+        """Unisce le vie in anelli chiusi (per i multipoligoni)."""
+        segs = [list(self.W[w][0]) for w in wids if w in self.W and all(r in self.N for r in self.W[w][0])]
+        rings = []
+        while segs:
+            cur = segs.pop(0)
+            changed = True
+            while cur[0] != cur[-1] and changed:
+                changed = False
+                for i, s in enumerate(segs):
+                    if s[0] == cur[-1]: cur += s[1:]
+                    elif s[-1] == cur[-1]: cur += s[::-1][1:]
+                    elif s[-1] == cur[0]: cur = s + cur[1:]
+                    elif s[0] == cur[0]: cur = s[::-1] + cur[1:]
+                    else: continue
+                    segs.pop(i); changed = True; break
+            if cur[0] == cur[-1] and len(cur) >= 4:
+                rings.append([to_xy(*self.N[r][:2]) for r in cur[:-1]])
+        return rings
+
+    def polygons(self, pred):
+        """Restituisce [(tags, esterno, buchi, id)] per vie chiuse e multipoligoni che soddisfano pred(tags)."""
+        out = []
+        for wid, (refs, t) in self.W.items():
+            if pred(t):
+                r = self.closed_ring(wid)
+                if r: out.append((t, r, [], 'w' + wid))
+        for rid, (mem, t) in self.R.items():
+            if t.get('type') != 'multipolygon' or not pred(t):
+                continue
+            outer = self.stitch([m[1] for m in mem if m[0] == 'way' and m[2] in ('outer', '')])
+            inner = self.stitch([m[1] for m in mem if m[0] == 'way' and m[2] == 'inner'])
+            for o in outer:
+                hs = [h for h in inner if point_in(centroid(h), o)]
+                out.append((t, o, hs, 'r' + rid))
+        return out
+
+def point_in(pt, ring):
+    x, y, c = pt[0], pt[1], False
+    for i in range(len(ring)):
+        a, b = ring[i], ring[i - 1]
+        if (a[1] > y) != (b[1] > y) and x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]:
+            c = not c
+    return c
+
+def in_box(p, box, m=0):
+    return box[0] - m <= p[0] <= box[2] + m and box[1] - m <= p[1] <= box[3] + m
+
+# ---------------------------------------------------------------- classificazione
+ROAD_CLS = {'primary': 'P', 'primary_link': 'P', 'trunk': 'P', 'trunk_link': 'P',
+            'secondary': 'S', 'secondary_link': 'S', 'tertiary': 'T', 'tertiary_link': 'T',
+            'residential': 'R', 'unclassified': 'R', 'living_street': 'R', 'pedestrian': 'X'}
+
+def building_kind(t):
+    b = t.get('building', '')
+    if b in ('church', 'cathedral', 'chapel') or t.get('amenity') == 'place_of_worship': return 1
+    if b in ('stadium', 'arena') or t.get('leisure') == 'stadium': return 2
+    if b in ('garage', 'garages', 'roof', 'shed', 'kiosk', 'carport', 'hut'): return 3
+    if b in ('school', 'kindergarten') or t.get('amenity') in ('school', 'kindergarten'): return 4
+    return 0
+
+def levels(t):
+    try:
+        return max(0, int(float(t.get('building:levels', '0').split(';')[0])))
+    except ValueError:
+        return 0
+
+def area_kind(t):
+    if t.get('natural') == 'water' or t.get('water') or t.get('landuse') in ('basin', 'reservoir') \
+       or (t.get('leisure') == 'swimming_pool' and 'building' not in t):
+        return 'w'
+    if t.get('leisure') in ('park', 'garden', 'dog_park') or t.get('landuse') in ('grass', 'village_green', 'recreation_ground', 'meadow', 'forest', 'flowerbed') \
+       or t.get('natural') in ('wood', 'scrub', 'grassland'):
+        return 'g'
+    if t.get('leisure') in ('pitch', 'playground', 'track'):
+        return 'p'
+    if t.get('amenity') == 'parking' and t.get('parking') not in ('underground', 'multi-storey', 'rooftop') and t.get('layer', '0') in ('0', ''):
+        return 'k'
+    if t.get('landuse') == 'railway':
+        return 'r'
+    return None
+
+# ---------------------------------------------------------------- landmark (forme reali, modellati a mano nel gioco)
+# id OSM: w = way, r = relation, n = node
+LANDMARKS = {
+    'stadio':        {'outer': 'r1695662', 'pitch': 'w124253933', 'nome': 'Stadio Olimpico Grande Torino'},
+    'torreMaratona': {'shape': 'w106487762', 'h': 40, 'nome': 'Torre Maratona'},
+    'braciere':      {'node': 'n1765623646', 'h': 57, 'nome': 'Braciere Olimpico'},
+    'arena':         {'shape': 'w41753512', 'h': 12, 'nome': 'Inalpi Arena'},
+    'piscinaMonumentale': {'shape': 'w49054011', 'levels': 2, 'nome': 'Piscina Stadio Monumentale'},
+    'piscinaOlimpica':    {'shape': 'w106357922', 'levels': 2, 'nome': 'Nuova Piscina Olimpica'},
+    'aquatica':           {'shape': 'w106487528', 'levels': 1, 'nome': 'Aquatica'},
+    'vascaEsterna':       {'shape': 'w106403249', 'nome': 'Vasca esterna'},
+    'piscinaSebastopoli': {'shape': 'w211767603', 'nome': 'Piscina Sebastopoli'},
+    'torinoNuoto':        {'shape': 'w243270140', 'nome': 'Torino Nuoto'},
+    'villaAmoretti':      {'shape': 'w56250013', 'nome': 'Villa Amoretti'},
+    'centraleLatte':      {'area': 'w242182366', 'nome': 'Centrale del Latte di Torino'},
+    'sme':                {'area': 'w49046716', 'univ': True, 'nome': 'Scuola di Management ed Economia'},
+    'rignon':             {'area': 'w48135024', 'detail': True, 'nome': 'Parco Rignon'},
+}
+KEEP_TAGS = ('building', 'building:levels', 'height', 'roof:shape', 'roof:height', 'roof:levels', 'roof:orientation', 'man_made',
+             'name', 'building:colour', 'roof:colour', 'building:material', 'roof:material', 'leisure', 'sport', 'surface',
+             'highway', 'natural', 'genus', 'attraction', 'amenity', 'playground', 'step_count', 'lit')
+
+def build(geo, clip, landmark_ids=True):
+    N, W, R = geo.N, geo.W, geo.R
+    road_box = (clip[0], clip[1], clip[2], clip[3])
+    tram_box = (clip[0] - 450, clip[1] - 750, clip[2] + 450, clip[3] + 750)
+    names, name_idx = [], {}
+    def nidx(n):
+        if not n: return -1
+        if n not in name_idx: name_idx[n] = len(names); names.append(n)
+        return name_idx[n]
+
+    # --- strade: vie intere che toccano la zona; semplificate tenendo sempre gli incroci
+    R_out, sel = [], []
+    for wid, (refs, t) in W.items():
+        cls = ROAD_CLS.get(t.get('highway'))
+        if not cls or t.get('area') == 'yes' or t.get('layer', '0').startswith('-') or t.get('tunnel') in ('yes', 'building_passage'):
+            continue
+        if cls == 'X' and not t.get('name'):
+            continue
+        p = geo.way_xy(wid)
+        if not p or not any(in_box(q2, road_box) for q2 in p):
+            continue
+        sel.append((wid, cls, t))
+    use = Counter(r for wid, _, _ in sel for r in W[wid][0])
+    for wid, cls, t in sel:
+        refs = W[wid][0]
+        keep = [i for i, r in enumerate(refs) if i == 0 or i == len(refs) - 1 or use[r] > 1]
+        pts_all = [to_xy(*N[r][:2]) for r in refs]
+        idx = []
+        for a, b in zip(keep, keep[1:]):
+            idx += rdp_idx(pts_all, a, b, 2.5)[:-1]
+        idx.append(keep[-1])
+        ow = t.get('oneway')
+        ow = 1 if ow in ('yes', '1', 'true') or t.get('junction') in ('roundabout', 'circular') else (-1 if ow == '-1' else 0)
+        try: lanes = int(t.get('lanes', '0').split(';')[0])
+        except ValueError: lanes = 0
+        pts = dedupe([(round(pts_all[i][0]), round(pts_all[i][1])) for i in idx], 1)
+        if len(pts) < 2: continue
+        R_out.append([cls, ow, nidx(t.get('name')), lanes, encode(pts, 1)])
+
+    # --- landmark: forme reali; gli edifici sostituiti vengono tolti dalla lista generica
+    L, skip_geo = {}, []          # skip_geo: (centroide, area) degli edifici modellati a mano
+    def shape_of(ref):
+        kind, i = ref[0], ref[1:]
+        if kind == 'w' and i in W:
+            r = geo.closed_ring(i)
+            return (r, []) if r else (None, None)
+        if kind == 'r' and i in R:
+            mem = R[i][0]
+            o = geo.stitch([m[1] for m in mem if m[0] == 'way' and m[2] in ('outer', '')])
+            h = geo.stitch([m[1] for m in mem if m[0] == 'way' and m[2] == 'inner'])
+            return (o[0], h) if o else (None, None)
+        return None, None
+    def q(r): return [[half(x), half(y)] for x, y in r]
+    def tagsub(t): return {k: v for k, v in t.items() if k in KEEP_TAGS}
+    def lines_in(ring, pred):
+        out = []
+        for wid, (refs, t) in W.items():
+            if not pred(t): continue
+            p = geo.way_xy(wid)
+            if p and sum(point_in(x, ring) for x in p) * 2 >= len(p):
+                out.append({'tags': tagsub(t), 'pts': q(p)})
+        return out
+    if landmark_ids:
+        for lid, spec in LANDMARKS.items():
+            o = {'nome': spec['nome']}
+            if 'node' in spec:
+                n = N.get(spec['node'][1:])
+                if not n: print('landmark mancante', lid, file=sys.stderr); continue
+                o['pos'] = [half(v) for v in to_xy(n[0], n[1])]
+            ref = spec.get('shape') or spec.get('outer') or spec.get('area')
+            if ref:
+                ring, holes = shape_of(ref)
+                if not ring: print('landmark mancante', lid, ref, file=sys.stderr); continue
+                o['outer'] = q(ring); o['holes'] = [q(h) for h in holes]
+                if 'area' not in spec: skip_geo.append((centroid(ring), area(ring)))
+                t = (W.get(ref[1:]) or R.get(ref[1:]) or (None, {}))[1]
+                o['tags'] = tagsub(t)
+            if 'pitch' in spec:
+                r2, _ = shape_of(spec['pitch']); o['pitch'] = q(r2) if r2 else None
+            for k2 in ('h', 'levels'):
+                if k2 in spec: o[k2] = spec[k2]
+            if 'area' in spec:
+                ring = o['outer']; c = centroid(ring)
+                inner = []
+                for wid, (refs, t) in W.items():
+                    is_b = 'building' in t or t.get('man_made') in ('water_tower', 'silo', 'storage_tank')
+                    if not is_b: continue
+                    r2 = geo.closed_ring(wid)
+                    if not r2: continue
+                    cc = centroid(r2)
+                    near_univ = spec.get('univ') and t.get('building') == 'university' and math.hypot(cc[0] - c[0], cc[1] - c[1]) < 250
+                    if not (point_in(cc, ring) or near_univ): continue
+                    if any(math.hypot(cc[0] - s[0][0], cc[1] - s[0][1]) < 3 for s in skip_geo): continue
+                    inner.append({'id': 'w' + wid, 'outer': q(r2), 'tags': tagsub(t)})
+                    skip_geo.append((cc, area(r2)))
+                o['buildings'] = inner
+                if spec.get('detail'):
+                    o['paths'] = lines_in(ring, lambda t: t.get('highway') in ('footway', 'path', 'steps', 'pedestrian', 'cycleway'))
+                    o['treeRows'] = lines_in(ring, lambda t: t.get('natural') == 'tree_row')
+                    o['areas'] = [{'tags': tagsub(t), 'outer': q(r2)} for t, r2, _, _ in geo.polygons(
+                        lambda t: t.get('leisure') in ('playground', 'dog_park', 'pitch', 'garden') or t.get('amenity') in ('fountain',))
+                        if point_in(centroid(r2), ring)]
+                    o['trees'] = [[half(v) for v in to_xy(la, lo)] for la, lo, t in N.values()
+                                  if t.get('natural') == 'tree' and point_in(to_xy(la, lo), ring)]
+                    o['points'] = [{'tags': tagsub(t), 'pos': [half(v) for v in to_xy(la, lo)]} for la, lo, t in N.values()
+                                   if (t.get('amenity') in ('bench', 'fountain', 'drinking_water', 'waste_basket') or t.get('leisure') in ('playground',)
+                                       or t.get('playground')) and point_in(to_xy(la, lo), ring)]
+            L[lid] = o
+
+    def skipped(outer):
+        c, a = centroid(outer), area(outer)
+        return any(math.hypot(c[0] - s[0][0], c[1] - s[0][1]) < 3 and abs(a - s[1]) < 0.15 * s[1] + 5 for s in skip_geo)
+
+    # --- edifici (senza duplicati: alcuni stadi sono mappati due volte come relazione)
+    B_out, seen = [], set()
+    for t, outer, holes, oid in geo.polygons(lambda t: 'building' in t and t.get('building') != 'no' and t.get('layer', '0')[:1] != '-' and t.get('location') != 'underground'):
+        if not any(in_box(p, clip) for p in outer): continue
+        if area(outer) < 6 or skipped(outer): continue
+        c = centroid(outer); key = (round(c[0]), round(c[1]), round(area(outer) / 10))
+        if key in seen: continue
+        seen.add(key)
+        o = dedupe(outer, QB)
+        if len(o) < 3: continue
+        row = [levels(t), building_kind(t), encode(o, QB)]
+        for h in holes:
+            hh = dedupe(h, QB)
+            if len(hh) >= 3: row.append(encode(hh, QB))
+        B_out.append(row)
+
+    # --- aree
+    A_out = []
+    for t, outer, holes, oid in geo.polygons(lambda t: area_kind(t) is not None and 'building' not in t):
+        if not any(in_box(p, clip) for p in outer): continue
+        o = dedupe(outer, QB)
+        if len(o) < 3: continue
+        row = [area_kind(t), encode(o, QB)]
+        for h in holes:
+            hh = dedupe(h, QB)
+            if len(hh) >= 3: row.append(encode(hh, QB))
+        A_out.append(row)
+
+    # --- tram: binari, linee, fermate; fermate bus
+    TW = []
+    for wid, (refs, t) in W.items():
+        if t.get('railway') != 'tram': continue
+        p = geo.way_xy(wid)
+        if not p or not any(in_box(q2, tram_box) for q2 in p): continue
+        TW.append([[half(x), half(y)] for x, y in p])
+    TR = []
+    for rid, (mem, t) in R.items():
+        if t.get('route') != 'tram': continue
+        line = t.get('ref') or t.get('name', '?')
+        seq = []
+        for m in mem:
+            if m[0] != 'way' or m[2] not in ('', 'forward', 'backward') or m[1] not in W: continue
+            refs = W[m[1]][0]
+            if not all(r in N for r in refs): continue
+            if not seq: seq = list(refs); continue
+            if refs[0] == seq[-1]: seq += refs[1:]
+            elif refs[-1] == seq[-1]: seq += refs[::-1][1:]
+            elif len(seq) == len(W[mem[0][1]][0]) and (refs[0] == seq[0] or refs[-1] == seq[0]):
+                seq = seq[::-1]; seq += refs[1:] if refs[0] == seq[-1] else refs[::-1][1:]
+            else: seq += refs  # salto: continua comunque
+        pts = [to_xy(*N[r][:2]) for r in seq]
+        pts = [p for p in pts if in_box(p, tram_box, 1200)]
+        inside = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(pts, pts[1:]) if in_box(a, clip, 60) and in_box(b, clip, 60))
+        if len(pts) < 2 or inside < 300: continue
+        row = [line, [[half(x), half(y)] for x, y in pts]]
+        if not any(r[0] == row[0] and r[1][0] == row[1][0] and r[1][-1] == row[1][-1] for r in TR):
+            TR.append(row)
+    TS, BS = [], []
+    for nid, (la, lo, t) in N.items():
+        p = to_xy(la, lo)
+        if not in_box(p, clip, 400): continue
+        if t.get('railway') == 'tram_stop' or (t.get('public_transport') == 'stop_position' and t.get('tram') == 'yes'):
+            TS.append([half(p[0]), half(p[1]), t.get('name', '')])
+        elif t.get('highway') == 'bus_stop' and in_box(p, clip, 80):
+            BS.append([half(p[0]), half(p[1]), t.get('name', '')])
+
+    return {'v': 2, 'qb': QB, 'origin': ORIGIN, 'k': K, 'clip': clip, 'names': names,
+            'R': R_out, 'B': B_out, 'A': A_out, 'TW': TW, 'TR': TR, 'TS': TS, 'BS': BS, 'L': L}
+
+def compare(new, old):
+    print('voce        nuovo  vecchio')
+    for k in ('R', 'B', 'A', 'TW', 'TR', 'TS', 'BS', 'names'):
+        print(f'{k:8} {len(new[k]):8} {len(old.get(k, [])):8}')
+    print('classi strade nuovo  ', sorted(Counter(r[0] for r in new['R']).items()))
+    print('classi strade vecchio', sorted(Counter(r[0] for r in old['R']).items()))
+    print('tipi edificio nuovo  ', sorted(Counter(b[1] for b in new['B']).items()))
+    print('tipi edificio vecchio', sorted(Counter(b[1] for b in old['B']).items()))
+    print('aree nuovo  ', sorted(Counter(a[0] for a in new['A']).items()))
+    print('aree vecchio', sorted(Counter(a[0] for a in old['A']).items()))
+    print('linee tram nuovo  ', [(t[0], len(t[1])) for t in new['TR']])
+    print('linee tram vecchio', [(t[0], len(t[1])) for t in old['TR']])
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--osm', default=os.path.join(ROOT, '.osm-cache'))
+    ap.add_argument('--out', default=os.path.join(ROOT, 'data', 'torino.json'))
+    ap.add_argument('--clip', type=float, nargs=4, default=CLIP)
+    ap.add_argument('--compare')
+    ap.add_argument('--no-landmarks', action='store_true')
+    a = ap.parse_args()
+    files = sorted(glob.glob(os.path.join(a.osm, '*.osm')))
+    if not files: sys.exit('Nessun file .osm in ' + a.osm + ' — esegui prima tools/fetch_osm.py')
+    geo = Geo(*load_osm(files))
+    clip = [int(v) for v in a.clip]
+    data = build(geo, clip, not a.no_landmarks)
+    if a.compare:
+        compare(data, json.load(open(a.compare)))
+    os.makedirs(os.path.dirname(a.out), exist_ok=True)
+    with open(a.out, 'w') as f:
+        json.dump(data, f, separators=(',', ':'), ensure_ascii=False)
+    print('scritto', a.out, os.path.getsize(a.out), 'byte;', 'landmark:', ', '.join(data['L']))
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,9 @@
+# Neon Torino — note per chi ci lavora
+
+- Lingua: testi del gioco, commenti e documentazione in italiano.
+- Niente build: moduli ES caricati dal browser, Three.js 0.160 da import map (index.html).
+- `data/torino.json` si genera con `python3 tools/build_map.py`, non si modifica a mano.
+- Unità: 1 m = 5 unità di gioco (`M` nel kit dei landmark); mondo x = est, z = sud.
+- Nuovi landmark: modulo in `src/landmarks/`, forme OSM in `LANDMARKS` di `tools/build_map.py` (vedi README).
+- Prima di consegnare: `npm test` (Playwright) e guardare le foto in `tests/out/`.
+- Dettagli inventati (non presenti in OSM) vanno dichiarati nel commento in testa al modulo.
