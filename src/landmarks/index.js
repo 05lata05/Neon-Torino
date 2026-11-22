@@ -10,14 +10,24 @@ import rignon from './rignon.js';
 const MODULES = { stadio, piscine, centraleLatte, sme, rignon };
 
 export function initLandmarks(ctx) {
-  const kit = makeKit(ctx), L = ctx.DATA.L || {}, errors = [];
+  const kit = makeKit(ctx),
+    L = ctx.DATA.L || {},
+    errors = [];
   for (const [name, build] of Object.entries(MODULES)) {
-    try { build(kit, L); } catch (err) { errors.push(name); console.error('landmark', name, err); }
+    try {
+      build(kit, L);
+    } catch (err) {
+      errors.push(name);
+      console.error('landmark', name, err);
+    }
   }
   ctx.envHooks.push(dk => kit.onEnv(dk));
   return {
-    kit, errors,
-    tick: (dt, t) => { for (const f of kit.ticks) f(dt, t); },
+    kit,
+    errors,
+    tick: (dt, t) => {
+      for (const f of kit.ticks) f(dt, t);
+    },
     // il gioco non pianta alberi casuali dentro le aree già curate da un landmark
     ownsTrees: (x, z) => kit.noRandomTrees.some(r => kit.pointIn([x, z], r)),
     list: Object.keys(L),

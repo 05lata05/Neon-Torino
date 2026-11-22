@@ -7,9 +7,11 @@
     "dev": "node tools/serve.mjs",
     "map": "python3 tools/build_map.py",
     "osm": "python3 tools/fetch_osm.py",
-    "test": "node tests/smoke.mjs"
+    "test": "node tests/smoke.mjs",
+    "format": "prettier --write \"src/**/*.js\" \"tests/**/*.mjs\" \"tools/**/*.mjs\""
   },
   "devDependencies": {
-    "three": "0.160.0"
+    "three": "0.160.0",
+    "prettier": "3.10.1"
   }
 }

@@ -11,7 +11,9 @@ const { chromium } = require('playwright');
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'tests', 'out');
 fs.mkdirSync(OUT, { recursive: true });
-const LOCAL_THREE = [path.join(ROOT, 'node_modules/three/build/three.module.js'), process.env.THREE_MODULE].find(p => p && fs.existsSync(p));
+const LOCAL_THREE = [path.join(ROOT, 'node_modules/three/build/three.module.js'), process.env.THREE_MODULE].find(
+  p => p && fs.existsSync(p),
+);
 
 const port = 8000 + Math.floor(Math.random() * 900);
 const srv = await serve(port);
@@ -19,8 +21,11 @@ const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=sw
 const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
 const errors = [];
 page.on('pageerror', e => errors.push('pageerror: ' + e.message));
-page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
-if (LOCAL_THREE) await page.route('https://cdn.jsdelivr.net/npm/three@0.160.0/**', r => r.fulfill({ path: LOCAL_THREE, contentType: 'text/javascript' }));
+page.on('console', m => {
+  if (m.type() === 'error') errors.push('console: ' + m.text());
+});
+if (LOCAL_THREE)
+  await page.route('https://cdn.jsdelivr.net/npm/three@0.160.0/**', r => r.fulfill({ path: LOCAL_THREE, contentType: 'text/javascript' }));
 
 await page.goto(`http://localhost:${port}/`);
 await page.waitForFunction(() => window.__nr && window.__nr.landmarks, null, { timeout: 120000 });
@@ -30,14 +35,39 @@ if (info.errors.length) errors.push('landmark con errori: ' + info.errors.join('
 
 const only = process.argv.slice(2);
 const views = await page.evaluate(() => {
-  const L = window.__nr.L, toW = window.__nr.toW, out = [];
-  const box = r => { let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const p of r) { const [x, z] = toW(p); x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); } return { cx: (x0 + x1) / 2, cz: (z0 + z1) / 2, s: Math.max(x1 - x0, z1 - z0) }; };
+  const L = window.__nr.L,
+    toW = window.__nr.toW,
+    out = [];
+  const box = r => {
+    let x0 = 1e9,
+      x1 = -1e9,
+      z0 = 1e9,
+      z1 = -1e9;
+    for (const p of r) {
+      const [x, z] = toW(p);
+      x0 = Math.min(x0, x);
+      x1 = Math.max(x1, x);
+      z0 = Math.min(z0, z);
+      z1 = Math.max(z1, z);
+    }
+    return { cx: (x0 + x1) / 2, cz: (z0 + z1) / 2, s: Math.max(x1 - x0, z1 - z0) };
+  };
   const st = L.stadio ? box(L.stadio.outer) : null;
   for (const id in L) {
-    const o = L[id]; const b = o.outer ? box(o.outer) : { ...(([x, z]) => ({ cx: x, cz: z }))(toW(o.pos)), s: 60 };
+    const o = L[id];
+    const b = o.outer ? box(o.outer) : { ...(([x, z]) => ({ cx: x, cz: z }))(toW(o.pos)), s: 60 };
     // vicino allo stadio la telecamera si mette dalla parte opposta, per non finire sotto la copertura
-    let dx = -0.66, dz = 0.75;
-    if (st && id !== 'stadio') { const ex = b.cx - st.cx, ez = b.cz - st.cz, l = Math.hypot(ex, ez); if (l < 2500 && l > 1) { dx = ex / l; dz = ez / l; } }
+    let dx = -0.66,
+      dz = 0.75;
+    if (st && id !== 'stadio') {
+      const ex = b.cx - st.cx,
+        ez = b.cz - st.cz,
+        l = Math.hypot(ex, ez);
+      if (l < 2500 && l > 1) {
+        dx = ex / l;
+        dz = ez / l;
+      }
+    }
     out.push({ id, ...b, dx, dz });
   }
   return out;
@@ -46,16 +76,97 @@ await page.evaluate(() => window.__nr.startGame());
 for (const v of views) {
   if (only.length && !only.includes(v.id)) continue;
   const d = Math.max(260, Math.min(v.s * 1.1, 950));
-  for (const [tag, hour] of [['giorno', 12], ['notte', 22]]) {
+  for (const [tag, hour] of [
+    ['giorno', 12],
+    ['notte', 22],
+  ]) {
     if (tag === 'notte' && !['stadio', 'rignon', 'arena'].includes(v.id)) continue;
-    await page.evaluate(({ v, d, hour }) => { window.__nr.setHour(hour); window.__nr.cam = { x: v.cx + v.dx * d, y: d * 0.55, z: v.cz + v.dz * d, lx: v.cx, ly: 0, lz: v.cz, fov: 50 }; }, { v, d, hour });
+    await page.evaluate(
+      ({ v, d, hour }) => {
+        window.__nr.setHour(hour);
+        window.__nr.cam = { x: v.cx + v.dx * d, y: d * 0.55, z: v.cz + v.dz * d, lx: v.cx, ly: 0, lz: v.cz, fov: 50 };
+      },
+      { v, d, hour },
+    );
     await page.waitForTimeout(700);
     await page.screenshot({ path: path.join(OUT, `${v.id}-${tag}.png`) });
   }
 }
-await page.evaluate(() => { window.__nr.cam = null; });
+await page.evaluate(() => {
+  window.__nr.cam = null;
+  window.__nr.setHour(12);
+});
 await page.waitForTimeout(500);
 await page.screenshot({ path: path.join(OUT, 'gioco.png') });
-await browser.close(); srv.close();
-if (errors.length) { console.error('ERRORI:\n' + [...new Set(errors)].join('\n')); process.exit(1); }
+
+// partita simulata: tasti veri, controlli sullo stato del gioco
+const st = () =>
+  page.evaluate(() => {
+    const n = window.__nr,
+      p = n.player;
+    return { x: p.x, y: p.y, car: !!p.car, state: n.state, wanted: n.wanted.level };
+  });
+const hold = async (key, ms) => {
+  await page.keyboard.down(key);
+  await page.evaluate(s => window.__nr.step(s), ms / 1000);
+  await page.keyboard.up(key);
+};
+const check = (ok, msg) => {
+  if (!ok) errors.push('partita: ' + msg);
+  else console.log('  ✓ ' + msg);
+};
+console.log('partita simulata:');
+await page.locator('#gl').focus();
+const s0 = await st();
+await hold('KeyW', 1200);
+const s1 = await st();
+check(Math.hypot(s1.x - s0.x, s1.y - s0.y) > 20, 'a piedi il giocatore cammina');
+// auto di prova accanto al giocatore, sul marciapiede di partenza (posizione nota e libera)
+const toSpawn = () =>
+  page.evaluate(() => {
+    const n = window.__nr;
+    n.teleport(n.SPAWN.x, n.SPAWN.y);
+    n.cars.splice(0, n.cars.length);
+  });
+await toSpawn();
+await page.evaluate(() => window.__nr.spawnCar('sportiva'));
+await page.keyboard.press('KeyE');
+await page.waitForTimeout(200);
+check((await st()).car, 'sale in auto con E');
+const s2 = await st();
+await hold('KeyW', 2000);
+const s3 = await st();
+check(Math.hypot(s3.x - s2.x, s3.y - s2.y) > 40, "l'auto accelera con W");
+await hold('Space', 400);
+await hold('KeyS', 800);
+await page.evaluate(() => {
+  for (let i = 0; i < 20 && Math.hypot(window.__nr.player.car.vx, window.__nr.player.car.vy) > 40; i++) window.__nr.step(0.5);
+}); // si ferma prima di scendere
+await page.keyboard.press('KeyE');
+await page.waitForTimeout(200);
+check(!(await st()).car, "scende dall'auto con E");
+await page.keyboard.press('KeyM');
+await page.waitForTimeout(300);
+check((await st()).state === 'map', 'apre la mappa con M');
+await page.keyboard.press('KeyM');
+await page.keyboard.press('KeyP');
+await page.waitForTimeout(200);
+check((await st()).state === 'pause', 'mette in pausa con P');
+await page.keyboard.press('KeyP');
+await toSpawn();
+await page.evaluate(() => window.__nr.spawnCar('polizia'));
+await page.keyboard.press('KeyE');
+await page.evaluate(() => window.__nr.step(0.5));
+check((await st()).wanted > 0, "rubare un'auto della polizia fa salire il livello di ricercato");
+await page.keyboard.press('KeyC');
+await page.keyboard.press('KeyR');
+await page.keyboard.press('KeyH');
+await page.waitForTimeout(500);
+await page.screenshot({ path: path.join(OUT, 'partita.png') });
+await browser.close();
+srv.close();
+if (errors.length) {
+  console.error('ERRORI:\n' + [...new Set(errors)].join('\n'));
+  process.exit(1);
+}
 console.log('ok — foto in tests/out/');
