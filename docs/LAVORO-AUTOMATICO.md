@@ -12,6 +12,12 @@ Per cambiare cosa fa: riordina o modifica le caselle di `ROADMAP.md`.
 
 Segui i passi in ordine. Se un passo dice di fermarti, chiudi la sessione con un breve messaggio finale che spiega il motivo.
 
+### 0. Note sull'ambiente
+- Il repository è già nella cartella di lavoro della sessione (ambiente cloud "Neon-Torino"); se non c'è, clonalo.
+- `gh auth status` può dire che il token non è valido: ignoralo. `gh api repos/05lata05/Neon-Torino/...` funziona
+  lo stesso, attraverso il proxy della sessione. Le pull request si aprono con
+  `gh api repos/05lata05/Neon-Torino/pulls -f title=... -f head=<ramo> -f base=main -f body=...`.
+
 ### 1. Controlli iniziali (costo minimo)
 1. Leggi la riga `Lavoro automatico:` in cima a `ROADMAP.md`. Se non dice `ATTIVO`, **fermati**: "Lavoro automatico in pausa".
 2. Controlla le pull request aperte del repository:
