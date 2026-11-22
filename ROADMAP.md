@@ -1,5 +1,10 @@
 # Roadmap di Neon Torino
 
+Lavoro automatico: ATTIVO
+
+> Ogni notte una sessione di Claude fa la prima casella libera e apre una pull request (regole in
+> `docs/LAVORO-AUTOMATICO.md`). Per fermarla scrivi `IN PAUSA` qui sopra. Le caselle marcate `(manuale)` le salta.
+
 Come si usa: ogni sessione di lavoro prende **la prima casella libera** della tappa in corso, lavora su un ramo
 dedicato (`feature/<nome>`), passa `npm test`, apre una pull request e spunta la casella qui.
 Una tappa finita = una versione giocabile con qualcosa di nuovo da provare.
