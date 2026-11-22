@@ -3,16 +3,53 @@
 ## Il flusso
 
 ```
-OpenStreetMap ──fetch_osm.py──▶ .osm-cache/*.osm ──build_map.py──▶ data/torino.json ──▶ src/main.js ──▶ src/landmarks/*
+OpenStreetMap ──fetch_osm.py──▶ .osm-cache/*.osm ──build_map.py──▶ data/torino.json ──▶ src/ (moduli ES) ──▶ browser
 ```
 
 1. **Dati** (`tools/`): il generatore trasforma i dati OSM in un JSON compatto (polilinee codificate a interi).
-   Le regole di classificazione (strade P/S/T/R/X, edifici chiesa/stadio/garage/scuola, aree verde/campo/parcheggio/acqua)
-   sono ricavate dalla prima versione della mappa e documentate in testa a `build_map.py`.
-2. **Mondo** (`src/main.js`): costruisce griglia di collisione, grafo stradale, palazzi con facciate generate, alberi,
-   lampioni, semafori, tram; poi gira il ciclo di gioco.
-3. **Landmark** (`src/landmarks/`): moduli indipendenti che ricevono un `kit` e le forme reali (`DATA.L`), e aggiungono
-   geometrie, collisioni, insegne ed etichette. Vengono costruiti prima di alberi e lampioni, così questi ne evitano le impronte.
+   Le regole di classificazione sono documentate in testa a `build_map.py`.
+2. **Gioco** (`src/`): moduli ES caricati direttamente dal browser, niente build. Three.js 0.160 da import map.
+3. **Landmark** (`src/landmarks/`): moduli che ricevono un `kit` e le forme reali (`DATA.L`).
+
+## I moduli
+
+```
+src/
+  main.js            avvio: chiama gli init() in ordine, popola la città, ciclo di gioco, strumenti di debug
+  core/              game.js (stato condiviso G) · render.js · util.js · state.js · update.js · input.js
+  world/             map.js (dati, griglia, grafo stradale) · ground.js · lights.js · city.js · skyline.js · weather.js · effects.js
+  entities/          vehicles.js · traffic.js · peds.js · police.js · heli.js · trams.js · collisions.js · spawn.js
+  gameplay/          player.js · missions.js · garage.js · tokens.js · ramps.js
+  render/            models.js · sync.js · camera.js · quality.js
+  ui/                hud.js · map.js
+  audio/             sfx.js · radio.js
+  landmarks/         kit.js · stadio.js · piscine.js · centrale-latte.js · sme.js · rignon.js
+```
+
+Ogni file comincia con una riga che dice a cosa serve.
+
+### Regole dei moduli
+
+- **Funzioni esportate** (`export function …`): si possono chiamare da qualsiasi modulo, in qualsiasi momento.
+- **`export let`**: valori creati all'avvio (texture, materiali, liste). Gli altri moduli li **leggono** soltanto.
+- **`init()`**: il codice che costruisce il mondo. `main.js` chiama gli `init()` in un ordine preciso (lo stesso
+  del vecchio file unico): un modulo può usare nel suo `init()` solo cose create dagli `init()` precedenti.
+- **`G`** (`core/game.js`): le variabili che più moduli **modificano** (`G.state`, `G.money`, `G.cars`, `G.mission`,
+  `G.gtime`, `G.rain`…). Se un modulo deve scrivere una variabile di un altro, va messa in `G`, oppure, meglio,
+  il modulo proprietario espone una funzione (è uno degli obiettivi di M1 in `ROADMAP.md`).
+
+Gli import circolari sono permessi e innocui: a livello di modulo ci sono solo dichiarazioni, il lavoro vero
+avviene negli `init()` e nel ciclo di gioco.
+
+### Dove mettere una cosa nuova
+
+| Voglio aggiungere… | Dove |
+|---|---|
+| un nuovo tipo di veicolo | `entities/vehicles.js` (`CARS`) e il modello in `render/models.js` |
+| una missione | `gameplay/missions.js` (in futuro: dati in `data/missioni/`) |
+| un elemento dell'HUD | `ui/hud.js` |
+| un edificio famoso | un modulo in `src/landmarks/` (vedi README) |
+| una meccanica nuova (es. armi) | un modulo nuovo in `gameplay/` con il suo `init()`, registrato in `main.js` |
 
 ## Coordinate
 
@@ -22,36 +59,20 @@ OpenStreetMap ──fetch_osm.py──▶ .osm-cache/*.osm ──build_map.py─
 | mondo | 5 unità = 1 m, traslato di `(clip.x0 - 50, clip.y0 - 50)` | tutto il gioco; in Three.js `x = est`, `z = sud`, `y = alto` |
 | griglia | celle da 10 unità (2 m) | collisioni (`grid`) e altezze per la telecamera (`hgrid`) |
 
-`toW([x, y])` converte da metri mappa a mondo. Nei landmark le altezze si scrivono in metri e si moltiplicano per `M = 5`.
+`toW([x, y])` converte da metri mappa a mondo.
 
-## Il ciclo di gioco (src/main.js)
+## Il ciclo di gioco
 
-`frame()` → `update(dt)` (giocatore, traffico, polizia, missioni, meteo) → `syncScene(dt)` (mesh di auto e pedoni,
-effetti, `LMX.tick`) → `updateCamera` → `updateEnv` (ora del giorno, nebbia, luci, `envHooks`) → `render` → `drawHUD`.
+`frame()` in `main.js` → `update(dt)` (`core/update.js`) → `syncScene(dt)` (`render/sync.js`) → `updateCamera` e
+`updateEnv` (`render/camera.js`) → render → `drawHUD` (`ui/hud.js`) → audio.
 
-Ganci per i moduli:
-- `envHooks`: funzioni `dk => …` chiamate a ogni frame con il buio (0 giorno, 1 notte), per finestre e luci.
-- `kit.onTick((dt, t) => …)`: animazioni (LED dello stadio, bandiere, giostra, acqua).
-- `window.__nr`: stato del gioco per test e debug (`cam` per una telecamera libera, `setHour(h)`, `startGame()`, `L`, `toW`).
+Ganci: `envHooks` (funzioni `dk => …` col buio da 0 a 1) e `kit.onTick` per le animazioni dei landmark.
 
-## Come far crescere il progetto
+## Test e debug
 
-`src/main.js` è ancora un file unico (circa 1450 righe) perché è nato come artefatto a pagina singola.
-Il piano è spezzarlo un pezzo alla volta, senza riscritture, sempre con `npm test` verde a ogni passo:
+`npm test` avvia il gioco in Chromium headless, controlla che non ci siano errori, fotografa i landmark e gioca
+una breve partita (camminare, guidare, scendere, mappa, pausa, ricercato). `window.__nr` espone lo stato e alcuni
+comandi: `step(secondi)` fa avanzare la simulazione a passi fissi, `cam = {x,y,z,lx,ly,lz}` una telecamera libera,
+`setHour(h)`, `startGame()`.
 
-1. `src/core/` utilità, griglia, grafo stradale (sono funzioni pure: si spostano facilmente).
-2. `src/world/` costruzione della città (`buildCity`, facciate, tram, orizzonte).
-3. `src/vehicles/`, `src/peds/`, `src/police/` con lo stato condiviso passato in un oggetto `game`.
-4. `src/ui/` HUD, mappa, garage. `src/audio/` effetti e radio.
-5. `src/missions/` missioni come dati (JSON + piccoli script), per poter scrivere una storia.
-
-Quando i file diventano tanti conviene introdurre Vite (bundling e ricarica a caldo); finché sono moduli ES
-il gioco gira così com'è, anche pubblicato come pagina statica.
-
-## Cosa manca per un gioco "alla GTA"
-
-- Gioco a piedi completo: vita, pugni, armi, morte e ospedale.
-- Bande rivali e zone della città.
-- Missioni con trama scritte come dati.
-- Personaggi animati (rig e animazioni al posto dei blocchi).
-- Altri quartieri: basta allargare `CLIP` e aggiungere landmark (es. Stadio Filadelfia, Lingotto, Mirafiori).
+Formattazione: `npm run format` (Prettier, configurazione in `.prettierrc.json`).

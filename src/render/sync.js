@@ -1,0 +1,163 @@
+// Allinea a ogni frame le mesh 3D allo stato della simulazione.
+import { G } from '../core/game.js';
+import { scene } from '../core/render.js';
+import { offers, parts, peds, player } from '../core/state.js';
+import { clamp, tmpC } from '../core/util.js';
+import { syncExtras } from '../entities/heli.js';
+import { MT } from '../gameplay/missions.js';
+import {
+  brakeM,
+  buildCarMesh,
+  buildOfferMesh,
+  buildPedMesh,
+  charM,
+  glowB,
+  glowR,
+  nextRing,
+  sirB,
+  sirR,
+  tailM,
+  tgt,
+  tgtArrow,
+  tgtBeam,
+  tgtRing,
+} from './models.js';
+import { LMX, antM, tlAxis, tlLamps } from '../world/city.js';
+import { sigGreen } from '../world/map.js';
+import { updateRain } from '../world/weather.js';
+
+export let meshCars, meshPeds, meshOffers, lastLights;
+
+export function syncScene(dt) {
+  G.frameN++;
+  const on = Math.floor(G.gtime * 8) % 2 === 0;
+  for (const c of G.cars) {
+    c._f = G.frameN;
+    if (!c.mesh) {
+      buildCarMesh(c);
+      meshCars.push(c);
+    }
+    c.mesh.position.set(c.x, c.z || 0, c.y);
+    c.mesh.rotation.y = -c.a;
+    c.m.inner.rotation.x = c.wreck ? 0 : c.tilt;
+    c.m.inner.rotation.z = c.wreck ? 0 : c.pitch;
+    c.m.tails.material = c.brake ? brakeM : tailM;
+    if (c.m.red) {
+      c.m.red.material = sirR[c.siren && on ? 1 : 0];
+      c.m.blue.material = sirB[c.siren && !on ? 1 : 0];
+      c.m.glow.visible = c.siren;
+      c.m.glow.material = on ? glowR : glowB;
+    }
+    if (c.wreck && !c.m.wreckDone) {
+      c.m.wreckDone = true;
+      c.m.body.material = charM;
+      c.m.roof.material = charM;
+      c.m.cabin.material = charM;
+      c.m.heads.material = charM;
+    }
+    c.m.hd.visible = !c.wreck && !!c.driver && c.driver !== 'idle';
+  }
+  meshCars = meshCars.filter(c => {
+    if (c._f !== G.frameN) {
+      scene.remove(c.mesh);
+      return false;
+    }
+    return true;
+  });
+  const all = G.state !== 'title' ? peds.concat([player]) : peds;
+  for (const p of peds) {
+    p._f = G.frameN;
+    if (!p.m) {
+      buildPedMesh(p);
+      meshPeds.push(p);
+    }
+  }
+  meshPeds = meshPeds.filter(p => {
+    if (p._f !== G.frameN) {
+      scene.remove(p.m.g);
+      return false;
+    }
+    return true;
+  });
+  player.m.g.visible = G.state !== 'title' && !player.car;
+  for (const p of all) {
+    const m = p.m;
+    if (!m) continue;
+    m.g.position.set(p.x, 0, p.y);
+    m.g.rotation.y = -p.a;
+    const down = p.down > 0 || (p === player && p.stun > 0);
+    if (down) {
+      m.b.rotation.z = Math.PI / 2;
+      m.b.position.y = 2;
+    } else {
+      m.b.rotation.z = 0;
+      m.b.position.y = 0;
+    }
+    const s = p.moving && !down ? Math.sin(p.t * 11) * 0.7 : 0;
+    m.legs[0].rotation.z = s;
+    m.legs[1].rotation.z = -s;
+    m.arms[0].rotation.z = -s * 0.8;
+    m.arms[1].rotation.z = s * 0.8;
+    m.arms[1].rotation.x = p.wait ? -2.6 + Math.sin(G.gtime * 9) * 0.4 : 0;
+  }
+  for (const o of offers) {
+    o._f = G.frameN;
+    if (!o.mesh) {
+      buildOfferMesh(o);
+      meshOffers.push(o);
+    }
+    o.mesh.visible = !G.mission && G.state !== 'title';
+    o.icon.position.y = 34 + Math.sin(G.gtime * 3) * 3;
+  }
+  meshOffers = meshOffers.filter(o => {
+    if (o._f !== G.frameN) {
+      scene.remove(o.mesh);
+      return false;
+    }
+    return true;
+  });
+  if (G.mission && G.mission.type !== 'colpo' && G.state !== 'title') {
+    const s = G.mission.steps[G.mission.idx],
+      col = MT[G.mission.type].col;
+    tgt.visible = true;
+    tgt.position.set(s.x, 0, s.y);
+    tgtBeam.material.color.set(col);
+    tgtRing.material.color.set(col);
+    tgtArrow.material.color.set(col);
+    tgtArrow.position.y = 42 + Math.abs(Math.sin(G.gtime * 3)) * 10;
+    tgtArrow.rotation.y = G.gtime * 2;
+    const n = G.mission.steps[G.mission.idx + 1];
+    nextRing.visible = G.mission.type === 'corsa' && !!n;
+    if (n) nextRing.position.set(n.x, 1, n.y);
+  } else {
+    tgt.visible = false;
+    nextRing.visible = false;
+  }
+  for (const p of parts) {
+    p.s.position.set(p.x, p.h, p.y);
+    const sc = p.r * 2;
+    p.s.scale.set(sc, sc, 1);
+    p.s.material.opacity = clamp(p.life / p.max, 0, 1) * p.alpha;
+  }
+  if (tlLamps && !(lastLights > G.gtime)) {
+    lastLights = G.gtime + 0.2;
+    const cols = ['#2ecc71', '#f1c40f', '#ff4136'];
+    for (let i = 0; i < tlAxis.length; i++) {
+      const q = tlAxis[i];
+      tlLamps.setColorAt(i, tmpC.set(cols[sigGreen(q[0], q[1])]));
+    }
+    tlLamps.instanceColor.needsUpdate = true;
+  }
+  antM.color.set(Math.floor(G.gtime * 1.2) % 2 ? '#ff2030' : '#3a0005');
+  syncExtras(dt);
+  updateRain(dt);
+  LMX.tick(dt, G.gtime);
+}
+
+export function init() {
+  // ---------------- sincronizzazione scena ----------------
+  meshCars = [];
+  meshPeds = [];
+  meshOffers = [];
+  lastLights = -1;
+}

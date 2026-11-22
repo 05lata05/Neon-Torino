@@ -35,18 +35,14 @@ Tutti costruiti sull'impronta OSM reale (id OSM in `tools/build_map.py`, voce `L
 
 ```
 index.html                 pagina: canvas, import map di Three.js, carica src/main.js
-src/main.js                motore di gioco (mondo, veicoli, pedoni, polizia, missioni, HUD, audio)
-src/landmarks/             landmark modellati a mano, uno per modulo
-  index.js                 registro dei moduli
-  kit.js                   kit comune: geometrie, texture su canvas, collisioni, minimappa, giorno/notte
-  stadio.js                stadio, Torre Maratona, Braciere, Inalpi Arena
-  piscine.js · centrale-latte.js · sme.js · rignon.js
+src/main.js                avvio e ciclo di gioco
+src/core/ world/ entities/ gameplay/ render/ ui/ audio/   il motore, diviso per argomento
+src/landmarks/             landmark modellati a mano (kit comune + un modulo per zona)
 data/torino.json           mappa generata (non modificarla a mano)
-tools/fetch_osm.py         scarica i dati OSM della zona
-tools/build_map.py         OSM -> data/torino.json (strade, edifici, aree, tram, landmark)
-tools/serve.mjs            server statico per sviluppo e test
-tests/smoke.mjs            test: avvia il gioco, verifica che non ci siano errori, fotografa i landmark
-docs/ARCHITETTURA.md       come è fatto il motore e come farlo crescere
+tools/                     download OSM, generatore della mappa, server di sviluppo
+tests/smoke.mjs            test: avvio, foto dei landmark, partita simulata
+docs/ARCHITETTURA.md       come sono fatti i moduli e dove mettere le cose nuove
+ROADMAP.md                 le tappe del progetto e cosa fare dopo
 ```
 
 ## Rigenerare la mappa
@@ -62,9 +58,11 @@ e y verso sud): il motore ricava da lì i confini del mondo.
 ## Test
 
 ```bash
-npm install          # solo la prima volta: scarica three in locale per i test offline
+npm install          # solo la prima volta: three in locale per i test offline, Prettier
 npm test             # richiede Playwright con Chromium
 ```
+
+Formattazione del codice: `npm run format`.
 
 Le foto finiscono in `tests/out/` (una per landmark, di giorno e di notte per stadio, arena e parco).
 
