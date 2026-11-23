@@ -47,7 +47,9 @@ Goal: being able to grow the game without breaking it.
 Goal: anyone who knows Santa Rita recognises it. Everything according to `docs/REALISM.md`.
 - [x] Data sources: real heights from Arpa Piemonte "Edifici 3D 2017" (eaves height from the City of Turin); Overture rejected (few heights in Italy); terrain model postponed to M7 for Superga
 - [x] Real building heights in the generator: buildings without data down from 625 to 94
-- [ ] Light and atmosphere: ambient occlusion, realistic sky, haze, reflective wet asphalt; high and low graphics levels (needs review) (~2)
+- [x] Light and atmosphere 1/3: realistic sky (gradient dome with sun glow, night light pollution) and horizon haze that the fog blends into (needs review) (~1)
+- [ ] Light and atmosphere 2/3: high and low graphics levels, ambient occlusion on high (needs review) (~1)
+- [ ] Light and atmosphere 3/3: reflective wet asphalt when it rains (needs review) (~1)
 - [ ] Materials with CC0 photographic textures (plaster, asphalt, sidewalks, porphyry, stone) and `docs/CREDITS.md` (needs review) (~1)
 - [ ] Santa Rita buildings: façades by type and period (1950s–70s apartment blocks, continuous raised balconies, roller shutters, real colours) (needs review) (~2)
 - [ ] Santuario di Santa Rita da Cascia and its square with the market (needs review) (~1)

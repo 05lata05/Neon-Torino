@@ -25,7 +25,7 @@ export function setRainTarget(v) {
   rainTarget = v;
 }
 
-export let weatherT, cRain, cFogW, asphBase, RN, rainPos, rainGeo, rainM, rainL;
+export let weatherT, asphBase, RN, rainPos, rainGeo, rainM, rainL;
 
 export function updateWeather(dt) {
   weatherT -= dt;
@@ -69,8 +69,6 @@ export function init() {
   rainA = null;
   fogW = 0;
   fogTarget = 0;
-  cRain = new THREE.Color('#7f8a96');
-  cFogW = new THREE.Color('#c3c7cb');
   asphBase = new THREE.Color('#3b3e44');
   RN = 2200;
   rainPos = new Float32Array(RN * 6);

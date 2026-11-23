@@ -12,7 +12,8 @@ import { asphMat } from '../world/ground.js';
 import { SUN_OFF, hemi, sun } from '../world/lights.js';
 import { SPAWN, WORLD, heightAt } from '../world/map.js';
 import { updateSkyline } from '../world/skyline.js';
-import { asphBase, cFogW, cRain, fogW, rain } from '../world/weather.js';
+import { horizon, updateSky } from '../world/sky.js';
+import { asphBase, fogW, rain } from '../world/weather.js';
 
 // state owned by this module: other modules read it and change it with the set…() functions
 export let camOverride;
@@ -20,7 +21,7 @@ export function setCamOverride(v) {
   camOverride = v;
 }
 
-export let camPos, camLook, tPos, tLook, hour, cDay, cDusk, cNight, sDay, sDusk, sMoon, hNight, hDay;
+export let camPos, camLook, tPos, tLook, hour, sDay, sDusk, sMoon, hNight, hDay;
 
 // used by tests and tools: {x,y,z,lx,ly,lz,fov}
 export function updateCamera(dt, snap) {
@@ -98,9 +99,9 @@ export function updateEnv() {
   const h = hour(),
     dk = darkness(h),
     tn = sunsetTint(h);
-  SKY.copy(cDay)
-    .lerp(cDusk, tn * (1 - dk) * 0.8)
-    .lerp(cNight, dk);
+  // the fog takes the colour of the sky's horizon haze, so the city fades into the sky
+  updateSky(dk, tn);
+  SKY.copy(horizon);
   scene.background.copy(SKY);
   scene.fog.color.copy(SKY);
   sun.color
@@ -110,18 +111,7 @@ export function updateEnv() {
   sun.intensity = 2.4 * (1 - dk) + 0.4 * dk;
   hemi.color.copy(hDay).lerp(hNight, dk);
   hemi.intensity = 1.0 * (1 - dk) + 0.55 * dk;
-  if (rain > 0.01) {
-    SKY.lerp(cRain, rain * 0.55 * (1 - dk * 0.5));
-    scene.background.copy(SKY);
-    scene.fog.color.copy(SKY);
-    sun.intensity *= 1 - 0.65 * rain;
-  }
-  if (fogW > 0.01) {
-    SKY.lerp(cFogW, fogW * 0.8 * (1 - dk * 0.7));
-    scene.background.copy(SKY);
-    scene.fog.color.copy(SKY);
-    sun.intensity *= 1 - 0.45 * fogW;
-  }
+  sun.intensity *= (1 - 0.65 * rain) * (1 - 0.45 * fogW);
   scene.fog.near = Math.max(120, 1100 - 500 * rain - 900 * fogW);
   scene.fog.far = Math.max(750, 2800 - 1100 * rain - 2000 * fogW);
   if (asphMat) {
@@ -146,9 +136,6 @@ export function init() {
   tLook = new THREE.Vector3();
   camOverride = null;
   hour = () => (TIME.startHour + clockT / TIME.secondsPerHour) % 24;
-  cDay = new THREE.Color('#9fd0ff');
-  cDusk = new THREE.Color('#ff9a72');
-  cNight = new THREE.Color('#0b1236');
   sDay = new THREE.Color('#fff6e8');
   sDusk = new THREE.Color('#ffae70');
   sMoon = new THREE.Color('#8fa8ff');

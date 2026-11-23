@@ -100,6 +100,21 @@ await page.evaluate(() => {
 await page.waitForTimeout(500);
 await page.screenshot({ path: path.join(OUT, 'game.png') });
 
+// sky dome: visible, and its horizon haze (the fog colour) changes between day and night
+{
+  const sky = await page.evaluate(async () => {
+    const n = window.__nr,
+      day = n.sky;
+    n.setHour(23);
+    await new Promise(r => setTimeout(r, 300));
+    const night = n.sky;
+    n.setHour(12);
+    return { day, night };
+  });
+  if (!sky.day.visible) errors.push('sky: the sky dome is not visible');
+  if (sky.day.horizon === sky.night.horizon) errors.push(`sky: same horizon colour by day and night (#${sky.day.horizon})`);
+}
+
 // simulated play: real key presses, checks on the game state
 const st = () =>
   page.evaluate(() => {

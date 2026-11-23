@@ -29,6 +29,7 @@ import { init as init_world_ground } from './world/ground.js';
 import { init as init_world_lights } from './world/lights.js';
 import { init as init_world_city } from './world/city.js';
 import { init as init_world_skyline } from './world/skyline.js';
+import { init as init_world_sky, horizon, skyDome } from './world/sky.js';
 import { init as init_world_weather, rain, setFogTarget, setFogW, setRain, setRainTarget } from './world/weather.js';
 import { init as init_entities_trams } from './entities/trams.js';
 import { init as init_core_state } from './core/state.js';
@@ -85,6 +86,7 @@ init_world_ground();
 init_world_lights();
 init_world_city();
 init_world_skyline();
+init_world_sky();
 init_world_weather();
 init_entities_trams();
 init_core_state();
@@ -157,6 +159,10 @@ window.__nr = {
   },
   get rain() {
     return rain;
+  },
+  // sky dome and its horizon colour (the fog colour), for the test
+  get sky() {
+    return { visible: skyDome.visible, horizon: horizon.getHexString() };
   },
   set fogT(v) {
     setFogTarget(v);
