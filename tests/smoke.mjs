@@ -203,22 +203,22 @@ async function measure(pg, quality, name) {
       n.cam = f(n.SPAWN);
     }, cam.toString());
     await pg.waitForTimeout(600);
-    // DIAG: per-frame values over 8 frames
+    // median of 8 consecutive frames: on slow machines (GitHub) the first frames after moving the camera
+    // can give values up to twice the steady ones (seen on 23 Nov 2026: 590–638 instead of ~345)
     const frames = await pg.evaluate(
       () =>
         new Promise(res => {
           const o = [];
           const f = () => {
-            const p = window.__nr.perf();
-            o.push([p.calls, Math.round(p.triangles / 1000), Math.round(performance.now())]);
+            o.push(window.__nr.perf());
             if (o.length < 8) requestAnimationFrame(f);
             else res(o);
           };
           requestAnimationFrame(f);
         }),
     );
-    console.log('  DIAG', name, view, JSON.stringify(frames));
-    const p = await pg.evaluate(() => window.__nr.perf());
+    const median = k => frames.map(fr => fr[k]).sort((a, b) => a - b)[frames.length >> 1];
+    const p = { calls: median('calls'), triangles: median('triangles') };
     out.calls = Math.max(out.calls, p.calls);
     out.triangles = Math.max(out.triangles, p.triangles);
     await pg.screenshot({ path: path.join(OUT, `perf-${name}-${view}.png`) });

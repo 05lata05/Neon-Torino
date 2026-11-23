@@ -121,7 +121,6 @@ window.__nr = {
     for (let t = 0; t < sec; t += 1 / 30) update(1 / 30);
     syncScene(0);
   },
-  // spawns a parked car next to the player, aligned with the starting street
   // performance of the last drawn frame and graphics quality (0 low, 1 high)
   perf() {
     return perfStats();
@@ -129,6 +128,7 @@ window.__nr = {
   setQuality(q) {
     setQuality(q);
   },
+  // spawns a parked car next to the player, aligned with the starting street
   spawnCar(type, dist = 10) {
     const a = SPAWN.a,
       c = makeCar(type, player.x + Math.cos(a) * dist, player.y + Math.sin(a) * dist, a);
