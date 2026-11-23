@@ -1,7 +1,6 @@
 // GPS e mappa grande.
-import { G } from '../core/game.js';
 import { H, W, ctx } from '../core/render.js';
-import { offers, peds, player } from '../core/state.js';
+import { cars, gtime, mission, offers, peds, player } from '../core/state.js';
 import { TAU } from '../core/util.js';
 import { heli } from '../entities/heli.js';
 import { roadPath } from '../entities/police.js';
@@ -13,17 +12,17 @@ import { WORLD, WX, WY } from '../world/map.js';
 
 // ---------------- GPS e mappa grande ----------------
 export function gpsTarget() {
-  if (G.mission && G.mission.type !== 'colpo') {
-    const s = G.mission.steps[G.mission.idx];
-    return { x: s.x, y: s.y, col: MT[G.mission.type].col };
+  if (mission && mission.type !== 'colpo') {
+    const s = mission.steps[mission.idx];
+    return { x: s.x, y: s.y, col: MT[mission.type].col };
   }
   return null;
 }
 export function clearPax() {
-  if (G.mission && G.mission.pax) {
-    const i = peds.indexOf(G.mission.pax);
+  if (mission && mission.pax) {
+    const i = peds.indexOf(mission.pax);
     if (i >= 0) peds.splice(i, 1);
-    G.mission.pax = null;
+    mission.pax = null;
   }
 }
 export function drawBigMap() {
@@ -71,8 +70,8 @@ export function drawBigMap() {
     icon(gp.x, gp.y, gp.col, 8);
   }
   icon(GARAGE.x, GARAGE.y, '#38bdf8', 10, 'G');
-  if (!G.mission) for (const o of offers) icon(o.x, o.y, MT[o.type].col, 10, MT[o.type].ic);
-  for (const c of G.cars) if (c.driver === 'cop') icon(c.x, c.y, Math.floor(G.gtime * 6) % 2 ? '#ff2d3c' : '#2d7bff', 4);
+  if (!mission) for (const o of offers) icon(o.x, o.y, MT[o.type].col, 10, MT[o.type].ic);
+  for (const c of cars) if (c.driver === 'cop') icon(c.x, c.y, Math.floor(gtime * 6) % 2 ? '#ff2d3c' : '#2d7bff', 4);
   if (heli) icon(heli.x, heli.y, '#e2e8f0', 7, 'H');
   {
     const [X, Y] = Pp(player.x, player.y);

@@ -1,8 +1,7 @@
 // Elicottero della polizia con il faro.
 import * as THREE from 'three';
-import { G } from '../core/game.js';
 import { scene } from '../core/render.js';
-import { player, wanted } from '../core/state.js';
+import { bustT, gtime, player, state, wanted } from '../core/state.js';
 import { angDiff, boxAt, mergeGeo } from '../core/util.js';
 import { garageIcon, garageMesh } from '../gameplay/garage.js';
 import { tokens } from '../gameplay/tokens.js';
@@ -70,11 +69,11 @@ export function removeHeli() {
   heli = null;
 }
 export function updateHeli(dt) {
-  if (G.state !== 'play') return;
-  if (!heli && wanted.level >= 3 && G.bustT <= 0) spawnHeli();
+  if (state !== 'play') return;
+  if (!heli && wanted.level >= 3 && bustT <= 0) spawnHeli();
   if (!heli) return;
   heli.t += dt;
-  if ((wanted.level < 3 || G.bustT > 0) && !heli.leaving) {
+  if ((wanted.level < 3 || bustT > 0) && !heli.leaving) {
     heli.leaving = true;
     heli.leaveT = 0;
     const dx = heli.x - player.x,
@@ -121,11 +120,11 @@ export function updateHeli(dt) {
 export function syncExtras(dt) {
   for (const t of tokens)
     if (t.mesh && !t.got) {
-      t.coin.rotation.y = G.gtime * 2.6 + t.id;
-      t.mesh.position.y = 12 + Math.sin(G.gtime * 2 + t.id) * 2.5;
+      t.coin.rotation.y = gtime * 2.6 + t.id;
+      t.mesh.position.y = 12 + Math.sin(gtime * 2 + t.id) * 2.5;
     }
-  garageMesh.visible = G.state !== 'title';
-  garageIcon.position.y = 36 + Math.sin(G.gtime * 3) * 3;
+  garageMesh.visible = state !== 'title';
+  garageIcon.position.y = 36 + Math.sin(gtime * 3) * 3;
   if (heli) {
     const h = heli,
       sp = Math.hypot(h.vx, h.vy);

@@ -1,8 +1,7 @@
 // Telecamera, ora del giorno, luci e nebbia.
 import * as THREE from 'three';
-import { G } from '../core/game.js';
 import { SKY, camera, scene } from '../core/render.js';
-import { player } from '../core/state.js';
+import { camMode, camYaw, clockT, gtime, player, setCamYaw, shake, state } from '../core/state.js';
 import { angDiff } from '../core/util.js';
 import { _v } from '../entities/spawn.js';
 import { tramWinM } from '../entities/trams.js';
@@ -12,14 +11,20 @@ import { asphMat } from '../world/ground.js';
 import { SUN_OFF, hemi, sun } from '../world/lights.js';
 import { SPAWN, WORLD, heightAt } from '../world/map.js';
 import { updateSkyline } from '../world/skyline.js';
-import { asphBase, cFogW, cRain } from '../world/weather.js';
+import { asphBase, cFogW, cRain, fogW, rain } from '../world/weather.js';
+
+// stato di proprietà di questo modulo: gli altri moduli lo leggono e lo cambiano con le funzioni set…()
+export let camOverride;
+export function setCamOverride(v) {
+  camOverride = v;
+}
 
 export let camPos, camLook, tPos, tLook, hour, cDay, cDusk, cNight, sDay, sDusk, sMoon, hNight, hDay;
 
 // usata dai test e dagli strumenti: {x,y,z,lx,ly,lz,fov}
 export function updateCamera(dt, snap) {
-  if (G.camOverride) {
-    const o = G.camOverride;
+  if (camOverride) {
+    const o = camOverride;
     camera.position.set(o.x, o.y, o.z);
     camera.fov = o.fov || 55;
     camera.updateProjectionMatrix();
@@ -28,8 +33,8 @@ export function updateCamera(dt, snap) {
     sun.target.position.set(o.lx, 0, o.lz);
     return;
   }
-  if (G.state === 'title') {
-    const a = G.gtime * 0.05;
+  if (state === 'title') {
+    const a = gtime * 0.05;
     camPos.set(SPAWN.x + Math.cos(a) * 1050, 650, SPAWN.y + Math.sin(a) * 1050);
     camLook.set(SPAWN.x, 0, SPAWN.y);
     camera.fov = 55;
@@ -38,10 +43,10 @@ export function updateCamera(dt, snap) {
       tg = car || player,
       sp = car ? Math.hypot(car.vx, car.vy) : 0;
     const head = car ? car.a : player.a;
-    G.camYaw = snap ? head : G.camYaw + angDiff(head, G.camYaw) * (1 - Math.exp(-dt * (car ? 3.2 : 5)));
-    const fx = Math.cos(G.camYaw),
-      fy = Math.sin(G.camYaw);
-    if (G.camMode === 0) {
+    setCamYaw(snap ? head : camYaw + angDiff(head, camYaw) * (1 - Math.exp(-dt * (car ? 3.2 : 5))));
+    const fx = Math.cos(camYaw),
+      fy = Math.sin(camYaw);
+    if (camMode === 0) {
       const dist = car ? 84 + sp * 0.06 : 50,
         hgt = car ? 40 + sp * 0.02 : 26;
       let dd = dist;
@@ -71,8 +76,8 @@ export function updateCamera(dt, snap) {
   }
   camera.updateProjectionMatrix();
   camera.position.copy(camPos);
-  if (G.shake > 0.05)
-    camera.position.add(_v.set((Math.random() - 0.5) * G.shake, (Math.random() - 0.5) * G.shake, (Math.random() - 0.5) * G.shake));
+  if (shake > 0.05)
+    camera.position.add(_v.set((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake));
   camera.lookAt(camLook);
   sun.position.set(camLook.x + SUN_OFF.x, SUN_OFF.y, camLook.z + SUN_OFF.z);
   sun.target.position.set(camLook.x, 0, camLook.z);
@@ -104,23 +109,23 @@ export function updateEnv() {
   sun.intensity = 2.4 * (1 - dk) + 0.4 * dk;
   hemi.color.copy(hDay).lerp(hNight, dk);
   hemi.intensity = 1.0 * (1 - dk) + 0.55 * dk;
-  if (G.rain > 0.01) {
-    SKY.lerp(cRain, G.rain * 0.55 * (1 - dk * 0.5));
+  if (rain > 0.01) {
+    SKY.lerp(cRain, rain * 0.55 * (1 - dk * 0.5));
     scene.background.copy(SKY);
     scene.fog.color.copy(SKY);
-    sun.intensity *= 1 - 0.65 * G.rain;
+    sun.intensity *= 1 - 0.65 * rain;
   }
-  if (G.fogW > 0.01) {
-    SKY.lerp(cFogW, G.fogW * 0.8 * (1 - dk * 0.7));
+  if (fogW > 0.01) {
+    SKY.lerp(cFogW, fogW * 0.8 * (1 - dk * 0.7));
     scene.background.copy(SKY);
     scene.fog.color.copy(SKY);
-    sun.intensity *= 1 - 0.45 * G.fogW;
+    sun.intensity *= 1 - 0.45 * fogW;
   }
-  scene.fog.near = Math.max(120, 1100 - 500 * G.rain - 900 * G.fogW);
-  scene.fog.far = Math.max(750, 2800 - 1100 * G.rain - 2000 * G.fogW);
+  scene.fog.near = Math.max(120, 1100 - 500 * rain - 900 * fogW);
+  scene.fog.far = Math.max(750, 2800 - 1100 * rain - 2000 * fogW);
   if (asphMat) {
-    asphMat.roughness = 0.9 - 0.6 * G.rain;
-    asphMat.color.copy(asphBase).multiplyScalar(1 - 0.3 * G.rain);
+    asphMat.roughness = 0.9 - 0.6 * rain;
+    asphMat.color.copy(asphBase).multiplyScalar(1 - 0.3 * rain);
   }
   updateSkyline(dk);
   for (const k in FAC_M) FAC_M[k].emissiveIntensity = k === 'shop' ? 0.06 + dk * 1.15 : 0.02 + dk * 0.9;
@@ -138,8 +143,8 @@ export function init() {
   camLook = new THREE.Vector3(WORLD / 2, 0, WORLD / 2);
   tPos = new THREE.Vector3();
   tLook = new THREE.Vector3();
-  G.camOverride = null;
-  hour = () => (17 + G.clockT / 15) % 24;
+  camOverride = null;
+  hour = () => (17 + clockT / 15) % 24;
   cDay = new THREE.Color('#9fd0ff');
   cDusk = new THREE.Color('#ff9a72');
   cNight = new THREE.Color('#0b1236');

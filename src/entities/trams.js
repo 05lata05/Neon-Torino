@@ -1,9 +1,8 @@
 // Tram GTT sui binari veri: linee, fermate, pensiline, guida e collisioni.
 import * as THREE from 'three';
 import { AC, sfx, tone } from '../audio/sfx.js';
-import { G } from '../core/game.js';
 import { camera, scene } from '../core/render.js';
-import { peds, player } from '../core/state.js';
+import { cars, gtime, peds, player, setShake, shake, state } from '../core/state.js';
 import { STD, canvasTex, clamp, mkCv, rand } from '../core/util.js';
 import { pushCar } from './collisions.js';
 import { tryMovePed } from './peds.js';
@@ -84,13 +83,13 @@ export function updateTrams(dt) {
       if (al < -6 || al > 170) return;
       if (Math.abs(-dx * fy + dy * fx) < TRAM_W / 2 + r) ob = Math.min(ob, al - r);
     };
-    for (const c of G.cars) if (Math.abs(c.x - hx) < 200 && Math.abs(c.y - hy) < 200) chk(c.x, c.y, c.d.wid * 0.55);
-    if (!player.car && G.state === 'play') chk(player.x, player.y, 5);
+    for (const c of cars) if (Math.abs(c.x - hx) < 200 && Math.abs(c.y - hy) < 200) chk(c.x, c.y, c.d.wid * 0.55);
+    if (!player.car && state === 'play') chk(player.x, player.y, 5);
     for (const p of peds) if (p.down <= 0 && Math.abs(p.x - hx) < 180 && Math.abs(p.y - hy) < 180) chk(p.x, p.y, 4);
     if (ob < 999) {
       target = Math.min(target, Math.max(0, (ob - 14) * 1.5));
-      if (ob < 110 && t.v > 15 && !(t.bellT > G.gtime)) {
-        t.bellT = G.gtime + 2.5;
+      if (ob < 110 && t.v > 15 && !(t.bellT > gtime)) {
+        t.bellT = gtime + 2.5;
         if (AC && Math.hypot(hx - camera.position.x, hy - camera.position.z) < 700) {
           tone(1320, 0.5, 'triangle', 0.09);
           tone(1320, 0.5, 'triangle', 0.09, 0.28);
@@ -125,7 +124,7 @@ export function updateTrams(dt) {
         const g = lf >= 0 ? 1 : -1;
         return [cs * g, sn * g, ox];
       };
-      for (const c of G.cars) {
+      for (const c of cars) {
         const dx = c.x - S.x,
           dy = c.y - S.y;
         if (dx * dx + dy * dy > 8100) continue;
@@ -139,12 +138,12 @@ export function updateTrams(dt) {
           if (rv < 0) {
             c.vx -= nx * rv * 1.4;
             c.vy -= ny * rv * 1.4;
-            if (-rv > 60 && !(c.tramHit > G.gtime)) {
-              c.tramHit = G.gtime + 0.4;
+            if (-rv > 60 && !(c.tramHit > gtime)) {
+              c.tramHit = gtime + 0.4;
               damage(c, -rv * 0.08);
               sparks(p[0], p[1], -rv);
               if (c === player.car) {
-                G.shake = Math.max(G.shake, Math.min(9, -rv / 35));
+                setShake(Math.max(shake, Math.min(9, -rv / 35)));
                 sfx.crash(-rv);
               }
             }
@@ -158,7 +157,7 @@ export function updateTrams(dt) {
           if (t.v > 40 && player.stun <= 0) {
             player.stun = 1;
             say(player, 'Ahi!', 1.2);
-            G.shake = Math.max(G.shake, 5);
+            setShake(Math.max(shake, 5));
           }
         }
       }

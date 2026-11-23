@@ -1,6 +1,5 @@
 // Pedoni: camminata sui marciapiedi, fuga, schivate.
-import { G } from '../core/game.js';
-import { SKINS, peds, player } from '../core/state.js';
+import { SKINS, cars, peds, player, setShake, shake } from '../core/state.js';
 import { TAU, pick, rand } from '../core/util.js';
 import { addHeat, copNear } from './police.js';
 import { pedNext, pedStart } from './traffic.js';
@@ -141,7 +140,7 @@ export function updatePeds(dt) {
       movePed(p, dt);
       continue;
     }
-    for (const c of G.cars) {
+    for (const c of cars) {
       const dx = p.x - c.x,
         dy = p.y - c.y;
       if (dx > 70 || dx < -70 || dy > 70 || dy < -70 || c.z > 8) continue;
@@ -160,7 +159,7 @@ export function updatePeds(dt) {
           tryMovePed(p, c.vx * 0.06, c.vy * 0.06);
           if (Math.random() < 0.7) say(p, pick(['Ahi!', 'Ouch!', 'Mamma mia!', 'Ma che fai?!']));
           if (c === player.car) {
-            G.shake = Math.max(G.shake, 3);
+            setShake(Math.max(shake, 3));
             if (copNear(p.x, p.y, 450)) addHeat(1);
           }
         } else tryMovePed(p, (dx / d) * 3, (dy / d) * 3);

@@ -1,9 +1,16 @@
 // Audio: motore, sirene, elicottero, pioggia ed effetti.
-import { G } from '../core/game.js';
+import { rain, rainA, setRainA } from '../world/weather.js';
+import { radioStation } from './radio.js';
 import { keys } from '../core/input.js';
-import { player } from '../core/state.js';
+import { bustT, camYaw, cars, gtime, player, state } from '../core/state.js';
 import { clamp } from '../core/util.js';
 import { heli } from '../entities/heli.js';
+
+// stato di proprietà di questo modulo: gli altri moduli lo leggono e lo cambiano con le funzioni set…()
+export let audioOn;
+export function setAudioOn(v) {
+  audioOn = v;
+}
 
 export let AC, master, noiseBuf, eng, skidA, sirenA, heliA, radioBus, sfx;
 
@@ -19,7 +26,7 @@ export function initAudio() {
     return;
   }
   master = AC.createGain();
-  master.gain.value = G.audioOn ? 0.8 : 0;
+  master.gain.value = audioOn ? 0.8 : 0;
   const comp = AC.createDynamicsCompressor();
   master.connect(comp);
   comp.connect(AC.destination);
@@ -113,7 +120,7 @@ export function initAudio() {
     bp.connect(g);
     g.connect(master);
     n.start();
-    G.rainA = { g };
+    setRainA({ g });
   }
   radioBus = AC.createGain();
   radioBus.gain.value = 0;
@@ -155,7 +162,7 @@ export function noiseHit(vol, dur, freq) {
 export function updateAudio(dt) {
   if (!AC) return;
   const t = AC.currentTime,
-    live = G.state === 'play' && G.bustT <= 0;
+    live = state === 'play' && bustT <= 0;
   const c = live && player.car && !player.car.wreck ? player.car : null;
   if (c) {
     const sp = Math.hypot(c.vx, c.vy),
@@ -184,7 +191,7 @@ export function updateAudio(dt) {
   let best = null,
     bd = 900;
   if (live)
-    for (const o of G.cars)
+    for (const o of cars)
       if (o.siren) {
         const d = Math.hypot(o.x - player.x, o.y - player.y);
         if (d < bd) {
@@ -193,17 +200,17 @@ export function updateAudio(dt) {
         }
       }
   if (best) {
-    sirenA.o.frequency.setTargetAtTime(Math.floor(G.gtime * 1.7) % 2 ? 740 : 988, t, 0.01);
+    sirenA.o.frequency.setTargetAtTime(Math.floor(gtime * 1.7) % 2 ? 740 : 988, t, 0.01);
     sirenA.g.gain.setTargetAtTime(0.05 * (1 - bd / 900), t, 0.1);
     if (sirenA.pan) {
-      const rx = Math.cos(G.camYaw + Math.PI / 2),
-        ry = Math.sin(G.camYaw + Math.PI / 2);
+      const rx = Math.cos(camYaw + Math.PI / 2),
+        ry = Math.sin(camYaw + Math.PI / 2);
       sirenA.pan.pan.setTargetAtTime(clamp(((best.x - player.x) * rx + (best.y - player.y) * ry) / Math.max(60, bd), -1, 1) * 0.8, t, 0.1);
     }
   } else sirenA.g.gain.setTargetAtTime(0, t, 0.15);
   heliA.g.gain.setTargetAtTime(live && heli ? 0.16 * clamp(1 - Math.hypot(heli.x - player.x, heli.y - player.y) / 1400, 0, 1) : 0, t, 0.2);
-  radioBus.gain.setTargetAtTime(live && player.car && G.radioStation ? 0.32 : 0, t, 0.3);
-  if (G.rainA) G.rainA.g.gain.setTargetAtTime(G.state !== 'title' ? 0.05 * G.rain : 0, t, 0.3);
+  radioBus.gain.setTargetAtTime(live && player.car && radioStation ? 0.32 : 0, t, 0.3);
+  if (rainA) rainA.g.gain.setTargetAtTime(state !== 'title' ? 0.05 * rain : 0, t, 0.3);
 }
 
 export function init() {
@@ -216,7 +223,7 @@ export function init() {
   sirenA = null;
   heliA = null;
   radioBus = null;
-  G.audioOn = true;
+  audioOn = true;
   sfx = {
     crash(imp) {
       if (!AC) return;

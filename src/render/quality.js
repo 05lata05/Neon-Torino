@@ -1,8 +1,14 @@
 // Qualità grafica automatica e manuale.
-import { G } from '../core/game.js';
+import { state } from '../core/state.js';
 import { H, W, renderer, scene } from '../core/render.js';
 import { toast } from '../world/effects.js';
 import { sun } from '../world/lights.js';
+
+// stato di proprietà di questo modulo: gli altri moduli lo leggono e lo cambiano con le funzioni set…()
+export let perfDone;
+export function setPerfDone(v) {
+  perfDone = v;
+}
 
 export let quality, perfAcc, perfN;
 
@@ -18,11 +24,11 @@ export function setQuality(q) {
   });
 }
 export function perfCheck(raw) {
-  if (G.perfDone || G.state !== 'play' || raw > 0.5) return;
+  if (perfDone || state !== 'play' || raw > 0.5) return;
   perfAcc += raw;
   perfN++;
   if (perfAcc > 5) {
-    G.perfDone = true;
+    perfDone = true;
     const fps = perfN / perfAcc;
     if (fps < 40 && quality === 1) {
       setQuality(0);
@@ -36,5 +42,5 @@ export function init() {
   quality = 1;
   perfAcc = 0;
   perfN = 0;
-  G.perfDone = false;
+  perfDone = false;
 }

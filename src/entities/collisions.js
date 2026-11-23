@@ -1,7 +1,6 @@
 // Urti tra auto.
 import { sfx } from '../audio/sfx.js';
-import { G } from '../core/game.js';
-import { player } from '../core/state.js';
+import { cars, player, setShake, shake } from '../core/state.js';
 import { pick } from '../core/util.js';
 import { addHeat, copNear, makeCop } from './police.js';
 import { blockedN, circles, damage } from './vehicles.js';
@@ -16,10 +15,10 @@ export function pushCar(c, dx, dy) {
   }
 }
 export function collideCars() {
-  for (let i = 0; i < G.cars.length; i++) {
-    const a = G.cars[i];
-    for (let j = i + 1; j < G.cars.length; j++) {
-      const b = G.cars[j];
+  for (let i = 0; i < cars.length; i++) {
+    const a = cars[i];
+    for (let j = i + 1; j < cars.length; j++) {
+      const b = cars[j];
       const dx = b.x - a.x,
         dy = b.y - a.y;
       if (dx * dx + dy * dy > 3600) continue;
@@ -74,7 +73,7 @@ export function onCrash(a, b, imp) {
   const pc = player.car;
   if (!pc || (a !== pc && b !== pc)) return;
   const o = a === pc ? b : a;
-  G.shake = Math.max(G.shake, Math.min(8, imp / 40));
+  setShake(Math.max(shake, Math.min(8, imp / 40)));
   sfx.crash(imp);
   if (o.heatCd > 0) return;
   o.heatCd = 2.5;

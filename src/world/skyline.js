@@ -1,6 +1,6 @@
 // Orizzonte: Alpi, collina e Mole Antonelliana.
+import { fogW, rain } from './weather.js';
 import * as THREE from 'three';
-import { G } from '../core/game.js';
 import { camera, scene } from '../core/render.js';
 
 export let skyline, skyM, moleM, moleDay;
@@ -8,10 +8,10 @@ export let skyline, skyM, moleM, moleDay;
 export function updateSkyline(dk) {
   skyline.position.set(camera.position.x, 0, camera.position.z);
   skyM.color.setScalar(1 - 0.78 * dk);
-  skyM.opacity = 0.92 * (1 - 0.7 * G.rain) * (1 - G.fogW);
+  skyM.opacity = 0.92 * (1 - 0.7 * rain) * (1 - fogW);
   moleM.color.copy(moleDay).multiplyScalar(1 - 0.45 * dk);
-  moleM.opacity = 0.95 * (1 - 0.6 * G.rain) * (1 - G.fogW);
-  skyline.visible = G.fogW < 0.97;
+  moleM.opacity = 0.95 * (1 - 0.6 * rain) * (1 - fogW);
+  skyline.visible = fogW < 0.97;
 }
 
 export function init() {

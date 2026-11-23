@@ -1,6 +1,14 @@
 // Radio con musica generata al momento.
 import { AC, noiseBuf, radioBus } from './sfx.js';
-import { G } from '../core/game.js';
+
+// stato di proprietà di questo modulo: gli altri moduli lo leggono e lo cambiano con le funzioni set…()
+export let nextNoteT, radioStation;
+export function setNextNoteT(v) {
+  nextNoteT = v;
+}
+export function setRadioStation(v) {
+  radioStation = v;
+}
 
 export let RADIO, rStep, mf, SYN, LNG;
 
@@ -80,13 +88,13 @@ export function playStep(st, s, t, s16) {
   }
 }
 export function scheduleRadio() {
-  if (!AC || !radioBus || G.radioStation === 0) return;
-  const st = RADIO[G.radioStation],
+  if (!AC || !radioBus || radioStation === 0) return;
+  const st = RADIO[radioStation],
     s16 = 60 / st.bpm / 4;
-  if (G.nextNoteT < AC.currentTime - 0.1) G.nextNoteT = AC.currentTime + 0.05;
-  while (G.nextNoteT < AC.currentTime + 0.15) {
-    playStep(st, rStep, G.nextNoteT, s16);
-    G.nextNoteT += s16;
+  if (nextNoteT < AC.currentTime - 0.1) nextNoteT = AC.currentTime + 0.05;
+  while (nextNoteT < AC.currentTime + 0.15) {
+    playStep(st, rStep, nextNoteT, s16);
+    nextNoteT += s16;
     rStep = (rStep + 1) % 64;
   }
 }
@@ -94,8 +102,8 @@ export function scheduleRadio() {
 export function init() {
   // ---------------- radio (musica generata) ----------------
   RADIO = [null, { name: 'Radio Mole FM', bpm: 104, kind: 'synth' }, { name: 'Po Lounge', bpm: 86, kind: 'lounge' }];
-  G.radioStation = 1;
-  G.nextNoteT = 0;
+  radioStation = 1;
+  nextNoteT = 0;
   rStep = 0;
   mf = m => 440 * Math.pow(2, (m - 69) / 12);
   SYN = [

@@ -1,9 +1,8 @@
 // Rampe e salti con premio.
 import * as THREE from 'three';
 import { sfx } from '../audio/sfx.js';
-import { G } from '../core/game.js';
 import { scene } from '../core/render.js';
-import { player, saveMoney } from '../core/state.js';
+import { money, player, saveMoney, setMoney, setShake, shake } from '../core/state.js';
 import { canvasTex } from '../core/util.js';
 import { damage } from '../entities/vehicles.js';
 import { bigMsg } from '../world/effects.js';
@@ -38,11 +37,11 @@ export function rampAt(c) {
 export function landed(c, imp) {
   if (imp > 300) damage(c, (imp - 300) * 0.05);
   if (c === player.car) {
-    G.shake = Math.max(G.shake, Math.min(10, imp / 50));
+    setShake(Math.max(shake, Math.min(10, imp / 50)));
     sfx.land(imp);
     if (c.air > 0.55) {
       const r = Math.round((c.air * 150) / 10) * 10;
-      G.money += r;
+      setMoney(money + r);
       saveMoney();
       bigMsg('SALTO!', c.air.toFixed(1).replace('.', ',') + ' s in volo   +€' + r, '#00e5ff', 2.2);
       sfx.stunt();

@@ -1,6 +1,5 @@
 // Traffico: auto che seguono le strade, semafori, ostacoli, comparsa delle auto.
-import { G } from '../core/game.js';
-import { peds, player } from '../core/state.js';
+import { cars, peds, player, state } from '../core/state.js';
 import { angDiff, clamp, pick, rand } from '../core/util.js';
 import { makePed } from './peds.js';
 import { onScreen } from './spawn.js';
@@ -73,7 +72,7 @@ export function obstacleAhead(c) {
     look = 110,
     hl = c.d.len / 2;
   let best = 999;
-  for (const o of G.cars) {
+  for (const o of cars) {
     if (o === c) continue;
     const dx = o.x - c.x,
       dy = o.y - c.y;
@@ -98,7 +97,7 @@ export function obstacleAhead(c) {
       if (g < best) best = g;
     }
   };
-  if (!player.car && G.state === 'play') chk(player.x, player.y, 14);
+  if (!player.car && state === 'play') chk(player.x, player.y, 14);
   for (const p of peds) if (tileAtPx(p.x, p.y) === ROAD) chk(p.x, p.y, 12);
   for (const t of trams)
     for (const S of t.secs) {
@@ -198,11 +197,11 @@ export function spawnTrafficCar(fx, fy, minD, maxD, allowVisible, forceType) {
     const d = Math.hypot(x - fx, y - fy);
     if (d < minD || d > maxD) continue;
     if (!allowVisible && onScreen(x, y, 80)) continue;
-    if (G.cars.some(o => Math.abs(o.x - x) < 60 && Math.abs(o.y - y) < 60)) continue;
+    if (cars.some(o => Math.abs(o.x - x) < 60 && Math.abs(o.y - y) < 60)) continue;
     const r = Math.random(),
       type =
         forceType ||
-        ((e.cls === 'P' || e.cls === 'S') && Math.random() < (G.cars.filter(o => o.type === 'autobus').length < 3 ? 0.5 : 0.08)
+        ((e.cls === 'P' || e.cls === 'S') && Math.random() < (cars.filter(o => o.type === 'autobus').length < 3 ? 0.5 : 0.08)
           ? 'autobus'
           : r < 0.34
             ? 'utilitaria'
@@ -223,7 +222,7 @@ export function spawnTrafficCar(fx, fy, minD, maxD, allowVisible, forceType) {
     const sp = c.ai.cruise * 0.6;
     c.vx = Math.cos(ang) * sp;
     c.vy = Math.sin(ang) * sp;
-    G.cars.push(c);
+    cars.push(c);
     return c;
   }
   return null;

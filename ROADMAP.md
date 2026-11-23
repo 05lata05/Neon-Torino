@@ -38,7 +38,7 @@ Obiettivo: poter far crescere il gioco senza romperlo.
 - [x] Dividere `src/main.js` in moduli per argomento (`core`, `world`, `entities`, `gameplay`, `render`, `ui`, `audio`)
 - [x] Test con partita simulata (camminare, guidare, scendere, mappa, pausa, ricercato)
 - [x] Test automatico su GitHub a ogni push (GitHub Actions + Playwright) (~1)
-- [ ] Ridurre l'oggetto condiviso `G`: ogni modulo espone funzioni (`setState()`, `addMoney()`…) invece di variabili scritte da fuori (~1–2)
+- [x] Eliminare l'oggetto condiviso `G`: ogni variabile ha un modulo proprietario con `export let` e una funzione `set…()`
 - [ ] Spostare le costanti di bilanciamento (velocità auto, premi, tempi) in `src/config.js` (~1)
 - [ ] Misura delle prestazioni nel test: fps e chiamate di disegno su PC e in emulazione telefono, con soglia minima (~1)
 
