@@ -1,4 +1,5 @@
 // Comparsa e rimozione di auto, pedoni e volanti attorno al giocatore.
+import { TRAFFICO } from '../config.js';
 import * as THREE from 'three';
 import { camera } from '../core/render.js';
 import { cars, peds, player, state, wanted } from '../core/state.js';
@@ -69,8 +70,8 @@ export function manageSpawns(dt, fx, fy) {
 
 export function init() {
   // ---------------- spawn ----------------
-  TRAFFIC_N = 30;
-  PED_N = 40;
+  TRAFFIC_N = TRAFFICO.auto;
+  PED_N = TRAFFICO.pedoni;
   spawnT = 0;
   _v = new THREE.Vector3();
 }

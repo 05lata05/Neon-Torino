@@ -1,4 +1,5 @@
 // Dati OSM: griglia di collisione, strade, edifici, grafo stradale, semafori, punto di partenza.
+import { TRAFFICO } from '../config.js';
 import { lightT } from '../core/state.js';
 import { angDiff, clamp } from '../core/util.js';
 
@@ -274,7 +275,7 @@ export async function init() {
   toW = p => [(p[0] - OXm) * S5, (p[1] - OYm) * S5];
   llToW = (lat, lon) => [((lon - DATA.origin[1]) * DATA.k[0] - OXm) * S5, ((DATA.origin[0] - lat) * DATA.k[1] - OYm) * S5];
   RW = { P: 15, S: 11, T: 9, R: 7.5, V: 5, X: 8 };
-  CRUISE = { P: 205, S: 185, T: 165, R: 135, V: 90, X: 60 };
+  CRUISE = TRAFFICO.velocita;
   roads = [];
   for (const r of DATA.R) {
     const cls = r[0];

@@ -1,4 +1,5 @@
 // Tastiera e mouse, avvio della partita.
+import { togglePerf } from '../ui/perf.js';
 import { RADIO, radioStation, setNextNoteT, setRadioStation } from '../audio/radio.js';
 import { AC, audioOn, initAudio, master, setAudioOn } from '../audio/sfx.js';
 import { glc } from './render.js';
@@ -36,6 +37,10 @@ export function onPress(k) {
     setAudioOn(!audioOn);
     if (master) master.gain.setTargetAtTime(audioOn ? 0.8 : 0, AC.currentTime, 0.05);
     toast(audioOn ? 'Audio attivo' : 'Audio disattivato', 1.2);
+    return;
+  }
+  if (k === 'KeyI') {
+    togglePerf();
     return;
   }
   if (k === 'KeyQ') {

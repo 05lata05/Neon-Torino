@@ -1,4 +1,5 @@
 // Garage: riparazioni e auto da comprare.
+import { GARAGE_PREZZI } from '../config.js';
 import * as THREE from 'three';
 import { sfx } from '../audio/sfx.js';
 import { H, W, ctx, scene } from '../core/render.js';
@@ -172,10 +173,10 @@ export function init() {
   garageLatch = true;
   garageSel = 0;
   SHOP = [
-    { id: 'repair', label: "Ripara l'auto", desc: 'Torna come nuova', price: 100 },
-    { id: 'fulmine', label: 'Fulmine', desc: 'Supercar: la più veloce della città', price: 1500 },
-    { id: 'corazzato', label: 'Corazzato', desc: 'Blindato pesante: sfonda le volanti', price: 2500 },
-    { id: 'sportiva', label: 'Sportiva Neon', desc: 'La tua prima auto, sempre gratis', price: 0 },
+    { id: 'repair', label: "Ripara l'auto", desc: 'Torna come nuova', price: GARAGE_PREZZI.riparazione },
+    { id: 'fulmine', label: 'Fulmine', desc: 'Supercar: la più veloce della città', price: GARAGE_PREZZI.fulmine },
+    { id: 'corazzato', label: 'Corazzato', desc: 'Blindato pesante: sfonda le volanti', price: GARAGE_PREZZI.corazzato },
+    { id: 'sportiva', label: 'Sportiva Neon', desc: 'La tua prima auto, sempre gratis', price: GARAGE_PREZZI.sportiva },
   ];
 
   {

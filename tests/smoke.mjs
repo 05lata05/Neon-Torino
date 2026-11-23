@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { serve } from '../tools/serve.mjs';
 
 const require = createRequire(import.meta.url);
-const { chromium } = require('playwright');
+const { chromium, devices } = require('playwright');
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'tests', 'out');
 fs.mkdirSync(OUT, { recursive: true });
@@ -174,6 +174,84 @@ await page.keyboard.press('KeyR');
 await page.keyboard.press('KeyH');
 await page.waitForTimeout(500);
 await page.screenshot({ path: path.join(OUT, 'partita.png') });
+// ---------------- prestazioni ----------------
+// Senza scheda video (qui e su GitHub) gli fps non hanno senso: misuriamo il lavoro chiesto alla scheda video
+// (chiamate di disegno, triangoli) e il tempo di calcolo della simulazione. Gli fps veri si vedono nel gioco col tasto I.
+// Valori di partenza (fine M1): pc 350–400 chiamate e ~640k triangoli, telefono ~200 e ~630k, simulazione ~1–1,5 ms.
+// Le soglie lasciano circa il 50% di margine per Santa Rita verosimile (M2); alzarle solo con un motivo scritto qui.
+const SOGLIE = {
+  pc: { calls: 600, triangles: 1_500_000 }, // grafica alta, 1280×760
+  telefono: { calls: 350, triangles: 1_000_000 }, // grafica bassa, iPhone 13 emulato
+  msPerFrame: 6, // simulazione (traffico, pedoni, polizia…) per frame, sul processore
+};
+const VISTE = [
+  ['strada', v => ({ x: v.x - 60, y: 26, z: v.y - 10, lx: v.x + 60, ly: 12, lz: v.y + 10, fov: 62 })],
+  ['dall_alto', v => ({ x: v.x - 500, y: 420, z: v.y + 500, lx: v.x, ly: 0, lz: v.y, fov: 55 })],
+];
+async function misura(pg, quality, nome) {
+  await pg.evaluate(q => window.__nr.setQuality(q), quality);
+  const out = { calls: 0, triangles: 0 };
+  for (const [vista, cam] of VISTE) {
+    await pg.evaluate(src => {
+      const n = window.__nr,
+        f = eval(src);
+      n.cam = f(n.SPAWN);
+    }, cam.toString());
+    await pg.waitForTimeout(600);
+    const p = await pg.evaluate(() => window.__nr.perf());
+    out.calls = Math.max(out.calls, p.calls);
+    out.triangles = Math.max(out.triangles, p.triangles);
+    await pg.screenshot({ path: path.join(OUT, `prestazioni-${nome}-${vista}.png`) });
+  }
+  await pg.evaluate(() => {
+    window.__nr.cam = null;
+  });
+  return out;
+}
+console.log('prestazioni:');
+// ogni misura parte da una partita nuova, con traffico e pedoni come all'avvio
+async function nuovaPartita(opzioni, nome) {
+  const ctxB = await browser.newContext(opzioni),
+    pg = await ctxB.newPage();
+  pg.on('pageerror', e => errors.push(`${nome} pageerror: ${e.message}`));
+  if (LOCAL_THREE)
+    await pg.route('https://cdn.jsdelivr.net/npm/three@0.160.0/**', r => r.fulfill({ path: LOCAL_THREE, contentType: 'text/javascript' }));
+  await pg.goto(`http://localhost:${port}/`);
+  await pg.waitForFunction(() => window.__nr && window.__nr.landmarks, null, { timeout: 120000 });
+  await pg.evaluate(() => window.__nr.startGame());
+  return [ctxB, pg];
+}
+const risultati = {};
+{
+  const [c, pg] = await nuovaPartita({ viewport: { width: 1280, height: 760 } }, 'pc');
+  risultati.pc = await misura(pg, 1, 'pc');
+  risultati.msPerFrame = await pg.evaluate(() => {
+    const n = window.__nr,
+      t0 = performance.now();
+    n.step(3);
+    return (performance.now() - t0) / 90;
+  });
+  await c.close();
+}
+{
+  const [c, pg] = await nuovaPartita({ ...devices['iPhone 13'] }, 'telefono');
+  risultati.telefono = await misura(pg, 0, 'telefono');
+  await c.close();
+}
+fs.writeFileSync(path.join(OUT, 'prestazioni.json'), JSON.stringify(risultati, null, 2));
+const riga = (nome, r, s) => {
+  console.log(
+    `  ${nome.padEnd(9)} ${String(r.calls).padStart(4)} chiamate (max ${s.calls})   ${(r.triangles / 1000).toFixed(0).padStart(5)}k triangoli (max ${s.triangles / 1000}k)`,
+  );
+  if (r.calls > s.calls) errors.push(`prestazioni ${nome}: ${r.calls} chiamate di disegno, soglia ${s.calls}`);
+  if (r.triangles > s.triangles) errors.push(`prestazioni ${nome}: ${r.triangles} triangoli, soglia ${s.triangles}`);
+};
+riga('pc', risultati.pc, SOGLIE.pc);
+riga('telefono', risultati.telefono, SOGLIE.telefono);
+console.log(`  simulazione ${risultati.msPerFrame.toFixed(2)} ms per frame (max ${SOGLIE.msPerFrame})`);
+if (risultati.msPerFrame > SOGLIE.msPerFrame)
+  errors.push(`prestazioni: simulazione ${risultati.msPerFrame.toFixed(2)} ms per frame, soglia ${SOGLIE.msPerFrame}`);
+
 await browser.close();
 srv.close();
 if (errors.length) {

@@ -1,8 +1,10 @@
 // Avvio: inizializza i moduli nell'ordine giusto, popola la città e fa girare il ciclo di gioco.
+import { drawPerf, recordFrame, stats as perfStats } from './ui/perf.js';
+import { TEMPO } from './config.js';
 import { scheduleRadio } from './audio/radio.js';
 import { updateAudio } from './audio/sfx.js';
 import { startGame } from './core/input.js';
-import { camera, renderer, scene } from './core/render.js';
+import { W, camera, ctx, renderer, scene } from './core/render.js';
 import { cars, mission, money, offers, peds, player, setClockT, setMoney, state, wanted } from './core/state.js';
 import { update } from './core/update.js';
 import { heli } from './entities/heli.js';
@@ -12,7 +14,7 @@ import { GARAGE } from './gameplay/garage.js';
 import { ramps } from './gameplay/ramps.js';
 import { tokens } from './gameplay/tokens.js';
 import { camOverride, setCamOverride, updateCamera, updateEnv } from './render/camera.js';
-import { perfCheck } from './render/quality.js';
+import { perfCheck, setQuality } from './render/quality.js';
 import { syncScene } from './render/sync.js';
 import { drawHUD } from './ui/hud.js';
 import { LMX } from './world/city.js';
@@ -64,6 +66,8 @@ export function frame(now) {
     refreshChunks(dt);
     renderer.render(scene, camera);
     drawHUD();
+    drawPerf(ctx, W);
+    recordFrame(raw);
     updateAudio(dt);
     scheduleRadio();
     perfCheck(raw);
@@ -117,6 +121,13 @@ window.__nr = {
     syncScene(0);
   },
   // fa comparire un'auto ferma accanto al giocatore, orientata come la strada di partenza
+  // prestazioni del frame appena disegnato e qualità grafica (0 bassa, 1 alta)
+  perf() {
+    return perfStats();
+  },
+  setQuality(q) {
+    setQuality(q);
+  },
   spawnCar(type, dist = 10) {
     const a = SPAWN.a,
       c = makeCar(type, player.x + Math.cos(a) * dist, player.y + Math.sin(a) * dist, a);
@@ -138,7 +149,7 @@ window.__nr = {
     return camOverride;
   },
   setHour(h) {
-    setClockT(((h - 17 + 24) % 24) * 15);
+    setClockT(((h - TEMPO.oraInizio + 24) % 24) * TEMPO.secondiPerOra);
   },
   get rain() {
     return rain;

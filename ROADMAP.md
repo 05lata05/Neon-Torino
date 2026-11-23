@@ -33,16 +33,16 @@ Pilastri, in ordine di importanza:
 - [x] Landmark reali: Stadio Olimpico Grande Torino, Torre Maratona, Braciere, Inalpi Arena, piscine, Centrale del Latte, Economia (SME), Parco Rignon e Villa Amoretti
 - [x] Generatore della mappa da OSM (`tools/build_map.py`) e repository GitHub
 
-## M1 · Fondamenta — in corso
+## M1 · Fondamenta — fatto
 Obiettivo: poter far crescere il gioco senza romperlo.
 - [x] Dividere `src/main.js` in moduli per argomento (`core`, `world`, `entities`, `gameplay`, `render`, `ui`, `audio`)
 - [x] Test con partita simulata (camminare, guidare, scendere, mappa, pausa, ricercato)
 - [x] Test automatico su GitHub a ogni push (GitHub Actions + Playwright) (~1)
 - [x] Eliminare l'oggetto condiviso `G`: ogni variabile ha un modulo proprietario con `export let` e una funzione `set…()`
-- [ ] Spostare le costanti di bilanciamento (velocità auto, premi, tempi) in `src/config.js` (~1)
-- [ ] Misura delle prestazioni nel test: fps e chiamate di disegno su PC e in emulazione telefono, con soglia minima (~1)
+- [x] Costanti di bilanciamento (auto, premi, polizia, traffico, tempi, prezzi) in `src/config.js`
+- [x] Misura delle prestazioni nel test (chiamate di disegno, triangoli, tempo di simulazione) su PC e telefono emulato, con soglie; indicatore fps nel gioco (tasto I)
 
-## M2 · Santa Rita verosimile
+## M2 · Santa Rita verosimile — in corso
 Obiettivo: chi conosce Santa Rita la riconosce. Tutto secondo `docs/REALISMO.md`.
 - [x] Fonti dati: altezze reali da Arpa Piemonte "Edifici 3D 2017" (quota di gronda del Comune di Torino); Overture scartata (in Italia ha poche altezze); modello del terreno rimandato a M7 per Superga
 - [x] Altezze reali degli edifici nel generatore: edifici senza dato da 625 a 94
@@ -66,7 +66,7 @@ Obiettivo: guidare a Santa Rita deve essere divertente da solo.
 ## M4 · Gioca ovunque
 Obiettivo: mandare il link agli amici e farli giocare, anche dal telefono.
 - [ ] Comandi touch: levetta virtuale, pulsanti per freno a mano, nitro, sali/scendi (~1–2)
-- [ ] Interfaccia che si adatta allo schermo del telefono (HUD, mappa, menu) (~1)
+- [ ] Interfaccia che si adatta allo schermo del telefono (HUD, mappa, menu): oggi in verticale i testi escono dallo schermo, vedi `tests/out/prestazioni-telefono-strada.png` (~1)
 - [ ] Grafica che si regola da sola in base alle prestazioni (~1)
 - [ ] Menu iniziale con opzioni (audio, grafica, comandi) e salvataggio affidabile (~1)
 - [ ] Link pubblico aggiornato a ogni versione e istruzioni per gli amici (manuale) (~1)
