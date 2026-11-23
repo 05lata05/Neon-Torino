@@ -1,4 +1,5 @@
 // Polizia: inseguimento, livello di ricercato, arresto.
+import { POLIZIA } from '../config.js';
 import { sfx } from '../audio/sfx.js';
 import {
   cars,
@@ -228,7 +229,7 @@ export function updateWanted(dt) {
     wanted.lastY = player.y;
   } else {
     wanted.lost += dt;
-    if (wanted.lost > 7 + wanted.level * 2.5) {
+    if (wanted.lost > POLIZIA.seminareBase + wanted.level * POLIZIA.seminarePerLivello) {
       wanted.level--;
       wanted.lost = 0;
       if (wanted.level === 0) {
@@ -248,11 +249,11 @@ export function updateWanted(dt) {
     }
   if (near && mySp < 38) {
     wanted.bust += dt;
-    if (wanted.bust > 1.5) busted();
+    if (wanted.bust > POLIZIA.secondiArresto) busted();
   } else wanted.bust = Math.max(0, wanted.bust - dt * 0.7);
 }
 export function busted() {
-  const fine = Math.min(money, 200 + wanted.level * 150);
+  const fine = Math.min(money, POLIZIA.multaBase + wanted.level * POLIZIA.multaPerLivello);
   setMoney(money - fine);
   saveMoney();
   setBustT(3.2);
@@ -282,5 +283,5 @@ export function respawnAfterBust() {
 
 export function init() {
   // ---------------- polizia ----------------
-  COPS_BY = [0, 1, 2, 3, 5, 6];
+  COPS_BY = POLIZIA.volantiPerLivello;
 }

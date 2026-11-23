@@ -15,13 +15,14 @@ OpenStreetMap ──fetch_osm.py──▶ .osm-cache/*.osm ──build_map.py─
 
 ```
 src/
+  config.js          bilanciamento: auto, premi, polizia, traffico, tempi, prezzi (tutti i numeri da regolare)
   main.js            avvio: chiama gli init() in ordine, popola la città, ciclo di gioco, strumenti di debug
   core/              render.js · util.js · state.js (stato della partita) · update.js · input.js
   world/             map.js (dati, griglia, grafo stradale) · ground.js · lights.js · city.js · skyline.js · weather.js · effects.js
   entities/          vehicles.js · traffic.js · peds.js · police.js · heli.js · trams.js · collisions.js · spawn.js
   gameplay/          player.js · missions.js · garage.js · tokens.js · ramps.js
   render/            models.js · sync.js · camera.js · quality.js
-  ui/                hud.js · map.js
+  ui/                hud.js · map.js · perf.js (indicatore prestazioni, tasto I)
   audio/             sfx.js · radio.js
   landmarks/         kit.js · stadio.js · piscine.js · centrale-latte.js · sme.js · rignon.js
 ```
@@ -75,5 +76,11 @@ Ganci: `envHooks` (funzioni `dk => …` col buio da 0 a 1) e `kit.onTick` per le
 una breve partita (camminare, guidare, scendere, mappa, pausa, ricercato). `window.__nr` espone lo stato e alcuni
 comandi: `step(secondi)` fa avanzare la simulazione a passi fissi, `cam = {x,y,z,lx,ly,lz}` una telecamera libera,
 `setHour(h)`, `startGame()`.
+
+**Prestazioni:** il test misura chiamate di disegno, triangoli e tempo di simulazione su PC (grafica alta) e su un
+telefono emulato (grafica bassa) e fallisce se si superano le soglie scritte in `tests/smoke.mjs`; i valori finiscono
+in `tests/out/prestazioni.json`. Senza scheda video gli fps non si possono misurare: si guardano nel gioco col tasto I.
+
+**Bilanciamento:** per cambiare premi, prezzi, velocità o difficoltà si modifica solo `src/config.js`.
 
 Formattazione: `npm run format` (Prettier, configurazione in `.prettierrc.json`).

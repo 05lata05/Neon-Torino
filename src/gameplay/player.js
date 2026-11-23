@@ -1,4 +1,5 @@
 // Giocatore: salire e scendere dalle auto, clacson, movimento a piedi, confini della mappa.
+import { NITRO } from '../config.js';
 import { sfx } from '../audio/sfx.js';
 import { keys } from '../core/input.js';
 import { cars, gtime, peds, player, setShake, shake } from '../core/state.js';
@@ -94,7 +95,7 @@ export function updatePlayer(dt) {
     if (boost && !player.boosting) sfx.nitro();
     player.boosting = boost;
     if (boost) {
-      c.nitro = Math.max(0, c.nitro - dt / 3.2);
+      c.nitro = Math.max(0, c.nitro - dt / NITRO.durata);
       if (Math.random() < 0.85) {
         const bx = c.x - (Math.cos(c.a) * c.d.len) / 2,
           by = c.y - (Math.sin(c.a) * c.d.len) / 2;
@@ -112,7 +113,7 @@ export function updatePlayer(dt) {
           rand(0, 10),
         );
       }
-    } else c.nitro = Math.min(1, c.nitro + dt / 9);
+    } else c.nitro = Math.min(1, c.nitro + dt / NITRO.ricarica);
     carPhysics(c, thr, (rt ? 1 : 0) - (lf ? 1 : 0), !!keys.Space, dt, boost);
     if (player.car) {
       player.x = c.x;

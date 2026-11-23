@@ -1,4 +1,5 @@
 // Gettoni neon da collezionare.
+import { PREMI } from '../config.js';
 import * as THREE from 'three';
 import { sfx } from '../audio/sfx.js';
 import { scene } from '../core/render.js';
@@ -15,14 +16,14 @@ export function updateTokens() {
       t.got = true;
       if (t.mesh) scene.remove(t.mesh);
       save.tokens.push(t.id);
-      setMoney(money + 50);
+      setMoney(money + PREMI.gettone);
       const n = tokens.filter(o => o.got).length;
       sfx.coin();
       if (n === tokens.length) {
-        setMoney(money + 5000);
-        bigMsg('TUTTI I GETTONI!', 'Hai esplorato tutta la città: +€5.000', '#ffd23f', 4);
+        setMoney(money + PREMI.tuttiIGettoni);
+        bigMsg('TUTTI I GETTONI!', 'Hai esplorato tutta la città: +€' + PREMI.tuttiIGettoni.toLocaleString('it-IT'), '#ffd23f', 4);
         sfx.win();
-      } else toast('Gettone neon ' + n + '/' + tokens.length + '  (+€50)', 2);
+      } else toast('Gettone neon ' + n + '/' + tokens.length + '  (+€' + PREMI.gettone + ')', 2);
       saveMoney();
     }
   }

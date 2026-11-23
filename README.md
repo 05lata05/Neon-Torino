@@ -14,7 +14,7 @@ npm run dev          # server locale su http://localhost:8080
 Serve un server, non basta aprire `index.html` con doppio clic: il gioco carica `data/torino.json` e i moduli ES.
 
 Comandi: **WASD** guida/cammina · **Spazio** freno a mano · **Shift** nitro/corsa · **E** sali/scendi/ruba ·
-**M** mappa · **R** radio · **C** telecamera · **H** clacson · **V** audio · **Q** grafica · **P** pausa.
+**M** mappa · **R** radio · **C** telecamera · **H** clacson · **V** audio · **Q** grafica · **I** prestazioni · **P** pausa.
 
 ## Landmark di Santa Rita
 

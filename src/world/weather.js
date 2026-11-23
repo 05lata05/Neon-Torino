@@ -1,4 +1,5 @@
 // Meteo: pioggia e nebbia.
+import { METEO } from '../config.js';
 import { state } from '../core/state.js';
 import * as THREE from 'three';
 import { camera, scene } from '../core/render.js';
@@ -28,7 +29,7 @@ export let weatherT, cRain, cFogW, asphBase, RN, rainPos, rainGeo, rainM, rainL;
 export function updateWeather(dt) {
   weatherT -= dt;
   if (weatherT <= 0) {
-    weatherT = rand(80, 180);
+    weatherT = rand(METEO.intervalloMin, METEO.intervalloMax);
     const wr = rainTarget,
       wf = fogTarget,
       r = Math.random();
@@ -63,7 +64,7 @@ export function init() {
   // ---------------- meteo: pioggia ----------------
   rain = 0;
   rainTarget = 0;
-  weatherT = 75;
+  weatherT = METEO.primoCambio;
   rainA = null;
   fogW = 0;
   fogTarget = 0;

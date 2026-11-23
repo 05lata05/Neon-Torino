@@ -486,6 +486,7 @@ export function init() {
     ['R', 'cambia stazione radio'],
     ['C', 'cambia telecamera'],
     ['H · V · Q', 'clacson · audio · grafica'],
+    ['I', 'prestazioni (fps)'],
     ['P / Esc', 'pausa'],
   ];
 }
