@@ -23,7 +23,7 @@ Legenda: `[x]` fatto · `[ ]` da fare · `(~N sessioni)` stima indicativa
 Obiettivo: poter far crescere il gioco senza romperlo.
 - [x] Dividere `src/main.js` in moduli per argomento (`core`, `world`, `entities`, `gameplay`, `render`, `ui`, `audio`)
 - [x] Test con partita simulata (camminare, guidare, scendere, mappa, pausa, ricercato)
-- [ ] Test automatico su GitHub a ogni push (GitHub Actions + Playwright) (~1)
+- [x] Test automatico su GitHub a ogni push (GitHub Actions + Playwright) (~1)
 - [ ] Ridurre l'oggetto condiviso `G`: ogni modulo espone funzioni (`setState()`, `addMoney()`…) invece di variabili scritte da fuori (~1–2)
 - [ ] Spostare le costanti di bilanciamento (velocità auto, premi, tempi) in `src/config.js` (~1)
 

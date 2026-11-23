@@ -66,6 +66,9 @@ Formattazione del codice: `npm run format`.
 
 Le foto finiscono in `tests/out/` (una per landmark, di giorno e di notte per stadio, arena e parco).
 
+Su GitHub lo stesso test parte da solo a ogni push e a ogni pull request (`.github/workflows/test.yml`,
+con controllo di Prettier); le foto si scaricano dall'artefatto `foto-test` della corsa.
+
 ## Aggiungere un landmark
 
 1. Trova gli id su openstreetmap.org (way `w…`, relation `r…`, node `n…`) e aggiungili a `LANDMARKS` in `tools/build_map.py`.
