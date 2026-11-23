@@ -12,7 +12,7 @@ import { WORLD, WX, WY } from '../world/map.js';
 
 // ---------------- GPS e mappa grande ----------------
 export function gpsTarget() {
-  if (mission && mission.type !== 'colpo') {
+  if (mission && mission.type !== 'heist') {
     const s = mission.steps[mission.idx];
     return { x: s.x, y: s.y, col: MT[mission.type].col };
   }

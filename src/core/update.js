@@ -47,7 +47,7 @@ export function updateWorld(dt) {
     if (c === player.car) continue;
     if (c.wreck || !c.driver || c.driver === 'idle') carPhysics(c, 0, 0, true, dt);
     else if (c.driver === 'npc') {
-      if (wanted.level > 0 && c.type === 'polizia' && state === 'play' && Math.hypot(c.x - player.x, c.y - player.y) < 650) {
+      if (wanted.level > 0 && c.type === 'police' && state === 'play' && Math.hypot(c.x - player.x, c.y - player.y) < 650) {
         makeCop(c);
         copAI(c, dt);
       } else trafficAI(c, dt);

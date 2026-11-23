@@ -28,10 +28,10 @@ export function tryEnterCar() {
   const c = best;
   if (c.driver === 'npc' || c.driver === 'cop' || c.driver === 'idle') {
     const p = ejectDriver(c);
-    say(p, c.type === 'polizia' ? 'Ehi! Quella è dello Stato!' : pick(['La mia macchina!', 'Al ladro!', 'Mamma mia!', 'Ma che fai?!']));
-    if (c.type === 'polizia') addHeat(2);
+    say(p, c.type === 'police' ? 'Ehi! Quella è dello Stato!' : pick(['La mia macchina!', 'Al ladro!', 'Mamma mia!', 'Ma che fai?!']));
+    if (c.type === 'police') addHeat(2);
     else if (copNear(c.x, c.y, 450)) addHeat(1);
-  } else if (c.type === 'polizia') addHeat(2);
+  } else if (c.type === 'police') addHeat(2);
   c.driver = 'player';
   c.ai = null;
   c.siren = false;
@@ -40,7 +40,7 @@ export function tryEnterCar() {
   if (player.lastCar && player.lastCar !== c) player.lastCar.keep = false;
   player.lastCar = c;
   c.keep = true;
-  toast((c.type === 'polizia' && c.col === '#16213e' ? 'Carabinieri' : c.d.name) + (c.type === 'polizia' ? ' — ottima idea…?' : ''), 1.6);
+  toast((c.type === 'police' && c.col === '#16213e' ? 'Carabinieri' : c.d.name) + (c.type === 'police' ? ' — ottima idea…?' : ''), 1.6);
 }
 export function exitCar(forced) {
   const c = player.car;
@@ -95,7 +95,7 @@ export function updatePlayer(dt) {
     if (boost && !player.boosting) sfx.nitro();
     player.boosting = boost;
     if (boost) {
-      c.nitro = Math.max(0, c.nitro - dt / NITRO.durata);
+      c.nitro = Math.max(0, c.nitro - dt / NITRO.duration);
       if (Math.random() < 0.85) {
         const bx = c.x - (Math.cos(c.a) * c.d.len) / 2,
           by = c.y - (Math.sin(c.a) * c.d.len) / 2;
@@ -113,7 +113,7 @@ export function updatePlayer(dt) {
           rand(0, 10),
         );
       }
-    } else c.nitro = Math.min(1, c.nitro + dt / NITRO.ricarica);
+    } else c.nitro = Math.min(1, c.nitro + dt / NITRO.recharge);
     carPhysics(c, thr, (rt ? 1 : 0) - (lf ? 1 : 0), !!keys.Space, dt, boost);
     if (player.car) {
       player.x = c.x;

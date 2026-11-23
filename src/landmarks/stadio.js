@@ -3,9 +3,9 @@
 // altezze: torre 40 m e braciere 57 m da OSM, arena 12 m da OSM, tribune e copertura stimate.
 
 export default function build(kit, L) {
-  if (L.stadio) stadio(kit, L.stadio);
-  if (L.torreMaratona) torre(kit, L.torreMaratona);
-  if (L.braciere) braciere(kit, L.braciere);
+  if (L.stadium) stadium(kit, L.stadium);
+  if (L.maratonaTower) maratonaTower(kit, L.maratonaTower);
+  if (L.cauldron) cauldron(kit, L.cauldron);
   if (L.arena) arena(kit, L.arena);
 }
 
@@ -26,7 +26,7 @@ function rayHit(ring, cx, cz, dx, dz, far) {
   return best > 0 && best < 1e9 ? best : null;
 }
 
-function stadio(kit, S) {
+function stadium(kit, S) {
   const { THREE, M, GB } = kit;
   const outer = kit.W(S.outer),
     hole = S.holes && S.holes[0] ? kit.W(S.holes[0]) : null;
@@ -364,7 +364,7 @@ function stadio(kit, S) {
   kit.label('Stadio Olimpico Grande Torino', cx, cz, 48, '#c0394b');
 }
 
-function torre(kit, T) {
+function maratonaTower(kit, T) {
   const { THREE, M, GB } = kit;
   const ring = kit.W(T.outer),
     ob = kit.obb(ring),
@@ -436,7 +436,7 @@ function torre(kit, T) {
   kit.label('Torre Maratona', ob.cx, ob.cz, H + 12, '#ffd166');
 }
 
-function braciere(kit, B) {
+function cauldron(kit, B) {
   const { THREE, M, GB } = kit;
   const [x, z] = kit.P(B.pos),
     H = (B.h || 57) * M;

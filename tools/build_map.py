@@ -194,20 +194,20 @@ def area_kind(t):
 # ---------------------------------------------------------------- landmark (forme reali, modellati a mano nel gioco)
 # id OSM: w = way, r = relation, n = node
 LANDMARKS = {
-    'stadio':        {'outer': 'r1695662', 'pitch': 'w124253933', 'nome': 'Stadio Olimpico Grande Torino'},
-    'torreMaratona': {'shape': 'w106487762', 'h': 40, 'nome': 'Torre Maratona'},
-    'braciere':      {'node': 'n1765623646', 'h': 57, 'nome': 'Braciere Olimpico'},
-    'arena':         {'shape': 'w41753512', 'h': 12, 'nome': 'Inalpi Arena'},
-    'piscinaMonumentale': {'shape': 'w49054011', 'levels': 2, 'nome': 'Piscina Stadio Monumentale'},
-    'piscinaOlimpica':    {'shape': 'w106357922', 'levels': 2, 'nome': 'Nuova Piscina Olimpica'},
-    'aquatica':           {'shape': 'w106487528', 'levels': 1, 'nome': 'Aquatica'},
-    'vascaEsterna':       {'shape': 'w106403249', 'nome': 'Vasca esterna'},
-    'piscinaSebastopoli': {'shape': 'w211767603', 'nome': 'Piscina Sebastopoli'},
-    'torinoNuoto':        {'shape': 'w243270140', 'nome': 'Torino Nuoto'},
-    'villaAmoretti':      {'shape': 'w56250013', 'nome': 'Villa Amoretti'},
-    'centraleLatte':      {'area': 'w242182366', 'nome': 'Centrale del Latte di Torino'},
-    'sme':                {'area': 'w49046716', 'univ': True, 'nome': 'Scuola di Management ed Economia'},
-    'rignon':             {'area': 'w48135024', 'detail': True, 'nome': 'Parco Rignon'},
+    'stadium':       {'outer': 'r1695662', 'pitch': 'w124253933', 'name': 'Stadio Olimpico Grande Torino'},
+    'maratonaTower': {'shape': 'w106487762', 'h': 40, 'name': 'Torre Maratona'},
+    'cauldron':      {'node': 'n1765623646', 'h': 57, 'name': 'Braciere Olimpico'},
+    'arena':         {'shape': 'w41753512', 'h': 12, 'name': 'Inalpi Arena'},
+    'piscinaMonumentale': {'shape': 'w49054011', 'levels': 2, 'name': 'Piscina Stadio Monumentale'},
+    'piscinaOlimpica':    {'shape': 'w106357922', 'levels': 2, 'name': 'Nuova Piscina Olimpica'},
+    'aquatica':           {'shape': 'w106487528', 'levels': 1, 'name': 'Aquatica'},
+    'outdoorPool':        {'shape': 'w106403249', 'name': 'Vasca esterna'},
+    'piscinaSebastopoli': {'shape': 'w211767603', 'name': 'Piscina Sebastopoli'},
+    'torinoNuoto':        {'shape': 'w243270140', 'name': 'Torino Nuoto'},
+    'villaAmoretti':      {'shape': 'w56250013', 'name': 'Villa Amoretti'},
+    'centraleLatte':      {'area': 'w242182366', 'name': 'Centrale del Latte di Torino'},
+    'sme':                {'area': 'w49046716', 'univ': True, 'name': 'Scuola di Management ed Economia'},
+    'rignon':             {'area': 'w48135024', 'detail': True, 'name': 'Parco Rignon'},
 }
 KEEP_TAGS = ('building', 'building:levels', 'height', 'roof:shape', 'roof:height', 'roof:levels', 'roof:orientation', 'man_made',
              'name', 'building:colour', 'roof:colour', 'building:material', 'roof:material', 'leisure', 'sport', 'surface',
@@ -220,7 +220,7 @@ class Heights:
         self.grid = defaultdict(list)
         if not os.path.exists(path):
             return
-        for f in json.load(open(path))['edifici']:
+        for f in json.load(open(path))['buildings']:
             if not f.get('h') or f['h'] <= 0:
                 continue
             r = [to_xy(y, x) for x, y in f['rings'][0]]
@@ -303,7 +303,7 @@ def build(geo, clip, landmark_ids=True, heights=None):
         return out
     if landmark_ids:
         for lid, spec in LANDMARKS.items():
-            o = {'nome': spec['nome']}
+            o = {'name': spec['name']}
             if 'node' in spec:
                 n = N.get(spec['node'][1:])
                 if not n: print('landmark mancante', lid, file=sys.stderr); continue

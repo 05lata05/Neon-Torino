@@ -1,5 +1,5 @@
 // Polizia: inseguimento, livello di ricercato, arresto.
-import { POLIZIA } from '../config.js';
+import { POLICE } from '../config.js';
 import { sfx } from '../audio/sfx.js';
 import {
   cars,
@@ -127,7 +127,7 @@ export function makeCop(c) {
 }
 export function copNear(x, y, r) {
   for (const c of cars)
-    if (!c.wreck && (c.driver === 'cop' || (c.type === 'polizia' && c.driver === 'npc')) && Math.hypot(c.x - x, c.y - y) < r) return true;
+    if (!c.wreck && (c.driver === 'cop' || (c.type === 'police' && c.driver === 'npc')) && Math.hypot(c.x - x, c.y - y) < r) return true;
   return false;
 }
 export function addHeat(n) {
@@ -229,12 +229,12 @@ export function updateWanted(dt) {
     wanted.lastY = player.y;
   } else {
     wanted.lost += dt;
-    if (wanted.lost > POLIZIA.seminareBase + wanted.level * POLIZIA.seminarePerLivello) {
+    if (wanted.lost > POLICE.loseBase + wanted.level * POLICE.losePerLevel) {
       wanted.level--;
       wanted.lost = 0;
       if (wanted.level === 0) {
         calmCops();
-        if (mission && mission.type === 'colpo') completeMission();
+        if (mission && mission.type === 'heist') completeMission();
         else bigMsg('SEMINATI!', 'La polizia ha perso le tue tracce', '#4da3ff', 2.5);
       } else toast('Calore in calo…');
     }
@@ -249,11 +249,11 @@ export function updateWanted(dt) {
     }
   if (near && mySp < 38) {
     wanted.bust += dt;
-    if (wanted.bust > POLIZIA.secondiArresto) busted();
+    if (wanted.bust > POLICE.bustSeconds) busted();
   } else wanted.bust = Math.max(0, wanted.bust - dt * 0.7);
 }
 export function busted() {
-  const fine = Math.min(money, POLIZIA.multaBase + wanted.level * POLIZIA.multaPerLivello);
+  const fine = Math.min(money, POLICE.fineBase + wanted.level * POLICE.finePerLevel);
   setMoney(money - fine);
   saveMoney();
   setBustT(3.2);
@@ -283,5 +283,5 @@ export function respawnAfterBust() {
 
 export function init() {
   // ---------------- polizia ----------------
-  COPS_BY = POLIZIA.volantiPerLivello;
+  COPS_BY = POLICE.carsPerLevel;
 }

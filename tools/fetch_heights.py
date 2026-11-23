@@ -39,7 +39,7 @@ def main():
         for f in got:
             a, g = f['attributes'], f.get('geometry') or {}
             if g.get('rings'):
-                feats.append({'h': a.get('ELEV'), 'uso': a.get('USO'), 'des': a.get('DES'),
+                feats.append({'h': a.get('ELEV'), 'use': a.get('USO'), 'method': a.get('DES'),
                               'rings': [[[round(x, 7), round(y, 7)] for x, y in r] for r in g['rings']]})
         print(f'  {offset + len(got)} edifici')
         if len(got) < PAGE and not d.get('exceededTransferLimit'):
@@ -48,7 +48,7 @@ def main():
         time.sleep(0.5)
     out = os.path.join(ROOT, '.osm-cache', 'arpa_edifici.json')
     os.makedirs(os.path.dirname(out), exist_ok=True)
-    json.dump({'fonte': 'Arpa Piemonte - Geoportale, Edifici 3D 2017 (CC BY 2.5 IT)', 'edifici': feats}, open(out, 'w'))
+    json.dump({'source': 'Arpa Piemonte - Geoportale, Edifici 3D 2017 (CC BY 2.5 IT)', 'buildings': feats}, open(out, 'w'))
     print('scritto', out, len(feats), 'edifici')
 
 if __name__ == '__main__':

@@ -45,15 +45,15 @@ export function carGeo(type) {
     L = d.len,
     Wd = d.wid,
     G = {},
-    wr = type === 'utilitaria' ? 3.1 : type === 'autobus' ? 4.8 : type === 'furgone' || type === 'corazzato' ? 4.2 : 3.6;
-  if (type === 'autobus') {
+    wr = type === 'compact' ? 3.1 : type === 'bus' ? 4.8 : type === 'van' || type === 'armored' ? 4.2 : 3.6;
+  if (type === 'bus') {
     G.body = boxAt(L, 13, Wd, 0, 9, 0);
     G.cabin = boxAt(L * 0.86, 5, Wd + 0.3, -1.5, 11.8, 0);
     G.roof = boxAt(L - 4, 0.9, Wd - 2, 0, 15.9, 0);
     G.ly = 6;
     G.wind = boxAt(1.2, 6.5, Wd - 3, L / 2 + 0.2, 11, 0);
     G.stripe = boxAt(L + 0.2, 2.2, Wd + 0.25, 0, 5, 0);
-  } else if (type === 'fulmine') {
+  } else if (type === 'lightning') {
     G.body = boxAt(L, 4.2, Wd, 0, 4.2, 0);
     G.cabin = boxAt(L * 0.36, 3.2, Wd - 3, -L * 0.06, 7.9, 0);
     G.roof = boxAt(L * 0.28, 0.6, Wd - 3.6, -L * 0.07, 9.7, 0);
@@ -63,23 +63,23 @@ export function carGeo(type) {
       boxAt(1, 3.6, 1, -L / 2 + 2.5, 8.6, -Wd * 0.3),
       boxAt(1, 3.6, 1, -L / 2 + 2.5, 8.6, Wd * 0.3),
     ]);
-  } else if (type === 'corazzato') {
+  } else if (type === 'armored') {
     G.body = boxAt(L, 12, Wd, 0, 8.5, 0);
     G.cabin = boxAt(L * 0.16, 4, Wd + 0.3, L / 2 - L * 0.08 - 0.5, 11.2, 0);
     G.roof = boxAt(L - 8, 1.5, Wd - 2, -3, 15.2, 0);
     G.ly = 6;
     G.armor = mergeGeo([boxAt(2.4, 6, Wd - 2, L / 2 + 1.2, 5.5, 0), boxAt(L * 0.62, 4.5, Wd + 0.8, -2, 6.5, 0)]);
-  } else if (type === 'sportiva') {
+  } else if (type === 'sports') {
     G.body = boxAt(L, 5, Wd, 0, 4.6, 0);
     G.cabin = boxAt(L * 0.42, 3.6, Wd - 2.4, -L * 0.08, 8.9, 0);
     G.roof = boxAt(L * 0.34, 0.8, Wd - 3, -L * 0.09, 10.9, 0);
     G.ly = 4.8;
-  } else if (type === 'furgone') {
+  } else if (type === 'van') {
     G.body = boxAt(L, 11, Wd, 0, 8, 0);
     G.cabin = boxAt(L * 0.2, 5, Wd + 0.3, L / 2 - L * 0.1 - 0.5, 10.4, 0);
     G.roof = boxAt(L - 6, 0.8, Wd - 2, -2, 13.9, 0);
     G.ly = 5.5;
-  } else if (type === 'utilitaria') {
+  } else if (type === 'compact') {
     G.body = boxAt(L, 6, Wd, 0, 5.2, 0);
     G.cabin = boxAt(L * 0.62, 5.6, Wd - 1.4, -L * 0.04, 10.9, 0);
     G.roof = boxAt(L * 0.56, 0.8, Wd - 2, -L * 0.05, 14.1, 0);
@@ -98,12 +98,12 @@ export function carGeo(type) {
   G.heads = mergeGeo([boxAt(1, 1.8, 3.2, L / 2 + 0.3, G.ly, -(Wd / 2 - 2.6)), boxAt(1, 1.8, 3.2, L / 2 + 0.3, G.ly, Wd / 2 - 2.6)]);
   G.tails = mergeGeo([boxAt(1, 1.8, 3.2, -L / 2 - 0.3, G.ly, -(Wd / 2 - 2.6)), boxAt(1, 1.8, 3.2, -L / 2 - 0.3, G.ly, Wd / 2 - 2.6)]);
   if (type === 'taxi') G.extra = boxAt(5, 2.6, 7, -L * 0.07, 15.1, 0);
-  if (type === 'polizia') {
+  if (type === 'police') {
     G.stripe = boxAt(L * 0.84, 2.8, Wd + 0.3, -0.5, 5.4, 0);
     G.red = boxAt(3, 1.8, Wd * 0.38, -L * 0.07, 14.75, -Wd * 0.21);
     G.blue = boxAt(3, 1.8, Wd * 0.38, -L * 0.07, 14.75, Wd * 0.21);
   }
-  if (type === 'sportiva') G.stripes = mergeGeo([boxAt(L * 0.98, 0.3, 1.2, 0, 7.2, -1.3), boxAt(L * 0.98, 0.3, 1.2, 0, 7.2, 1.3)]);
+  if (type === 'sports') G.stripes = mergeGeo([boxAt(L * 0.98, 0.3, 1.2, 0, 7.2, -1.3), boxAt(L * 0.98, 0.3, 1.2, 0, 7.2, 1.3)]);
   return (geoCache[type] = G);
 }
 export function sm(hex, o) {
@@ -158,7 +158,7 @@ export function buildCarMesh(c) {
     inner,
     body: add(G.body, bm, true),
     cabin: add(G.cabin, carGlassM, true),
-    roof: add(G.roof, c.type === 'polizia' ? sm('#f4f6f8') : bm, false),
+    roof: add(G.roof, c.type === 'police' ? sm('#f4f6f8') : bm, false),
     wheels: add(G.wheels, tireM, false),
     heads: add(G.heads, headM),
     tails: add(G.tails, tailM),
@@ -166,15 +166,15 @@ export function buildCarMesh(c) {
   };
   if (G.extra) add(G.extra, sm('#fff3c4'));
   if (G.wind) add(G.wind, carGlassM);
-  if (G.stripe) add(G.stripe, c.type === 'polizia' ? livM(c.col) : sm(c.type === 'autobus' ? '#f2f2f2' : '#1e2a4a'));
-  if (c.type !== 'autobus') {
+  if (G.stripe) add(G.stripe, c.type === 'police' ? livM(c.col) : sm(c.type === 'bus' ? '#f2f2f2' : '#1e2a4a'));
+  if (c.type !== 'bus') {
     const pg = plateGeo(c.type);
     if (pg) add(pg, plateM);
   }
   if (G.stripes) add(G.stripes, sm('#ffffff'));
   if (G.wing) add(G.wing, sm('#111111'));
   if (G.armor) add(G.armor, sm('#3a3f44', { metalness: 0.6, roughness: 0.5 }));
-  if (c.type === 'fulmine') {
+  if (c.type === 'lightning') {
     const ug = new THREE.Mesh(new THREE.PlaneGeometry(c.d.len + 20, c.d.wid + 20).rotateX(-Math.PI / 2), underglowM);
     ug.position.y = 0.7;
     ug.renderOrder = 2;

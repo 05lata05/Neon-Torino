@@ -6,7 +6,7 @@ import { STD, canvasTex, glowCanvas, labelTex, mkCv, noiseFill, rpick, tmpC, tmp
 import { MS, miniCv } from './ground.js';
 import {
   BUILD,
-  CHIESA,
+  CHURCH,
   DATA,
   GH,
   GW,
@@ -46,9 +46,9 @@ export function makeRes(kind) {
   ge.fillRect(0, 0, 512, 512);
   noiseFill(g, 512, 512, '#f3efe8', 2600);
   const SH = {
-    balc: ['#6b4a32', '#7a5a40', '#8a8a86', '#6b4a32'],
-    tapp: ['#6b4a32', '#9a9890', '#e6e2da', '#7a5a40'],
-    pers: ['#3e5b3a', '#4a6640', '#35503a', '#5f4630'],
+    balcony: ['#6b4a32', '#7a5a40', '#8a8a86', '#6b4a32'],
+    shutters: ['#6b4a32', '#9a9890', '#e6e2da', '#7a5a40'],
+    louvers: ['#3e5b3a', '#4a6640', '#35503a', '#5f4630'],
   }[kind];
   const AW = ['#2f7d4f', '#c2562c', '#2f5f9a', '#b8892f', '#8a2f3a'];
   const lit = (x, y, w, h) => {
@@ -59,8 +59,8 @@ export function makeRes(kind) {
   };
   for (let r = 0; r < 4; r++) {
     const y0 = r * 128,
-      balcRow = kind === 'balc' || (kind === 'tapp' && Math.random() < 0.3);
-    if (kind === 'pers') {
+      balcRow = kind === 'balcony' || (kind === 'shutters' && Math.random() < 0.3);
+    if (kind === 'louvers') {
       g.fillStyle = 'rgba(0,0,0,0.10)';
       g.fillRect(0, y0 + 120, 512, 6);
       g.fillStyle = 'rgba(255,255,255,0.4)';
@@ -71,12 +71,12 @@ export function makeRes(kind) {
     }
     for (let k = 0; k < 4; k++) {
       const x0 = k * 128,
-        door = balcRow && (kind === 'balc' ? k % 2 === 0 : k === 1 || k === 2);
+        door = balcRow && (kind === 'balcony' ? k % 2 === 0 : k === 1 || k === 2);
       const ww = 46,
         wh = door ? 100 : 64,
         wx = x0 + 41,
         wy = door ? y0 + 18 : y0 + 30;
-      g.fillStyle = kind === 'pers' ? '#ebe5d8' : '#ddd7cc';
+      g.fillStyle = kind === 'louvers' ? '#ebe5d8' : '#ddd7cc';
       g.fillRect(wx - 5, wy - 5, ww + 10, wh + (door ? 5 : 10));
       g.fillStyle = '#2b3746';
       g.fillRect(wx, wy, ww, wh);
@@ -84,7 +84,7 @@ export function makeRes(kind) {
       g.fillRect(wx + 3, wy + 3, 14, wh - 6);
       g.fillStyle = '#d8d2c6';
       g.fillRect(wx + ww / 2 - 1, wy, 2, wh);
-      if (kind === 'pers') {
+      if (kind === 'louvers') {
         const sc = rpick(SH);
         if (Math.random() < 0.35) {
           g.fillStyle = sc;
@@ -128,7 +128,7 @@ export function makeRes(kind) {
       }
     }
     if (balcRow) {
-      const segs = kind === 'balc' ? [[0, 512]] : [[128, 384]];
+      const segs = kind === 'balcony' ? [[0, 512]] : [[128, 384]];
       for (const [a, b] of segs) {
         g.fillStyle = '#ebe7de';
         g.fillRect(a, y0 + 118, b - a, 8);
@@ -440,7 +440,7 @@ export function buildCity() {
         ua = left ? u : -u,
         ub = left ? u1 : -u1;
       if (!base) {
-        const V = style === 'chiesa' ? h : 60;
+        const V = style === 'church' ? h : 60;
         wall(WA[style], p[0], p[1], q[0], q[1], 0, h, ua / 80, ub / 80, 0, h / V, nx, ny, col, left);
       } else {
         const lv = isHole ? 0 : streetFn((p[0] + q[0]) / 2, (p[1] + q[1]) / 2, nx, ny),
@@ -500,7 +500,7 @@ export function buildCity() {
       holes = b.holes.map(clean).filter(h => h.length >= 3);
     if (outer.length < 3) continue;
     const col = new THREE.Color(b.col),
-      hasBase = b.style !== 'chiesa' && b.style !== 'stadio' && b.floors >= 3;
+      hasBase = b.style !== 'church' && b.style !== 'stadium' && b.floors >= 3;
     const base = hasBase ? { col: col.clone().multiplyScalar(0.84), s2: brnd() < 0.88, s1: brnd() < 0.38 } : null,
       off = brnd() * 640;
     addWalls(outer, false, b.h3, b.style, col, base, off, gridStreet);
@@ -639,7 +639,7 @@ export function buildCity() {
             const fl = 5 + Math.floor(brnd() * 5),
               h = GF + (fl - 1) * FLOOR,
               col = new THREE.Color(PAL[Math.floor(brnd() * PAL.length)]),
-              st = brnd() < 0.55 ? 'balc' : brnd() < 0.5 ? 'tapp' : 'pers';
+              st = brnd() < 0.55 ? 'balcony' : brnd() < 0.5 ? 'shutters' : 'louvers';
             const base = { col: col.clone().multiplyScalar(0.84), s2: brnd() < 0.55, s1: false };
             addWalls(ring, false, h, st, col, base, brnd() * 640, (mx, my, nx, ny) => ((mx - bx) * nx + (my - by) * ny > 100 ? 2 : 0));
             addRoof(ring, [], h, new THREE.Color(ROOFC[Math.floor(brnd() * ROOFC.length)]));
@@ -834,7 +834,7 @@ export function buildCity() {
     sp.position.set(x, h, y);
     scene.add(sp);
   };
-  label('Santa Rita', CHIESA[0], CHIESA[1], 150, '#ffd166'); // le etichette dei landmark le mettono i moduli in src/landmarks/
+  label('Santa Rita', CHURCH[0], CHURCH[1], 150, '#ffd166'); // le etichette dei landmark le mettono i moduli in src/landmarks/
 }
 
 export function init() {
@@ -861,13 +861,13 @@ export function init() {
     ['TRATTORIA', '#5c3a21', '#f5e6c8'],
   ];
   FT = {
-    balc: makeRes('balc'),
-    tapp: makeRes('tapp'),
-    pers: makeRes('pers'),
+    balcony: makeRes('balcony'),
+    shutters: makeRes('shutters'),
+    louvers: makeRes('louvers'),
     shop: makeShops(),
     plain: makePlain(),
-    chiesa: makeChurch(),
-    stadio: makeStadium(),
+    church: makeChurch(),
+    stadium: makeStadium(),
   };
   FAC_M = {};
   for (const k in FT)
@@ -879,8 +879,8 @@ export function init() {
       vertexColors: true,
       roughness: 0.85,
     });
-  stuccoM = FAC_M.balc;
-  glassBM = FAC_M.tapp;
+  stuccoM = FAC_M.balcony;
+  glassBM = FAC_M.shutters;
   roofM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
   neonM = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
   bulbM = new THREE.MeshBasicMaterial({ color: 0x888888, toneMapped: false });

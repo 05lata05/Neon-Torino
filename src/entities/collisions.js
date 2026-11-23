@@ -77,7 +77,7 @@ export function onCrash(a, b, imp) {
   sfx.crash(imp);
   if (o.heatCd > 0) return;
   o.heatCd = 2.5;
-  if (o.type === 'polizia' && (o.driver === 'npc' || o.driver === 'cop' || o.driver === 'idle')) {
+  if (o.type === 'police' && (o.driver === 'npc' || o.driver === 'cop' || o.driver === 'idle')) {
     addHeat(1);
     if (o.driver !== 'cop') makeCop(o);
     say(o, 'Accosti subito!', 1.6);

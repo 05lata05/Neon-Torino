@@ -84,7 +84,7 @@ export function drawHUD() {
   }
   ctx.globalAlpha = 1;
   let tg = null;
-  if (mission && mission.type !== 'colpo') tg = mission.steps[mission.idx];
+  if (mission && mission.type !== 'heist') tg = mission.steps[mission.idx];
   if (tg) {
     const pr = project(tg.x, tg.y, 30);
     if (!pr.in) {
@@ -156,7 +156,7 @@ export function drawHUD() {
   ctx.textBaseline = 'alphabetic';
   ctx.font = 'bold 13px system-ui,sans-serif';
   outlineText('GETTONI ' + tokens.filter(t => t.got).length + '/' + tokens.length, rx, 124, '#ffd23f', 3);
-  if (mission && mission.type !== 'colpo') {
+  if (mission && mission.type !== 'heist') {
     const t = Math.max(0, mission.time),
       s = Math.floor(t) % 60,
       m = Math.floor(t / 60);
@@ -170,7 +170,7 @@ export function drawHUD() {
     col = '#fff';
   if (mission) {
     label =
-      mission.type === 'colpo'
+      mission.type === 'heist'
         ? wanted.level > 0
           ? 'Semina la polizia! (resta fuori dalla loro vista)'
           : 'Fatto!'
@@ -209,7 +209,7 @@ export function drawHUD() {
       }
     }
     if (best) {
-      const t = best.type === 'polizia' ? "[E] Ruba l'auto della polizia" : best.driver === 'npc' ? "[E] Ruba l'auto" : '[E] Sali';
+      const t = best.type === 'police' ? "[E] Ruba l'auto della polizia" : best.driver === 'npc' ? "[E] Ruba l'auto" : '[E] Sali';
       const pr = project(best.x, best.y, 24);
       if (pr.in) {
         ctx.font = 'bold 13px system-ui,sans-serif';
@@ -315,7 +315,7 @@ export function drawHUD() {
     for (const t of tokens) if (!t.got && Math.hypot(t.x - cx, t.y - cy) < 260) blip(t.x, t.y, '#ffd23f', 2.6);
     blip(GARAGE.x, GARAGE.y, '#38bdf8', 6, 'G');
     if (!mission) for (const o of offers) blip(o.x, o.y, MT[o.type].col, 6, MT[o.type].ic);
-    if (mission && mission.type !== 'colpo') {
+    if (mission && mission.type !== 'heist') {
       const s = mission.steps[mission.idx];
       blip(s.x, s.y, MT[mission.type].col, 5 + Math.sin(gtime * 6) * 1.5);
     }
@@ -352,7 +352,7 @@ export function drawHUD() {
   ctx.textBaseline = 'middle';
   ctx.font = 'bold 15px system-ui,sans-serif';
   toasts.forEach((t, i) => {
-    const y = (mission && mission.type !== 'colpo' ? 88 : 40) + i * 32,
+    const y = (mission && mission.type !== 'heist' ? 88 : 40) + i * 32,
       w = ctx.measureText(t.s).width + 30;
     ctx.globalAlpha = Math.min(1, t.t * 2.5);
     ctx.fillStyle = 'rgba(8,10,20,0.78)';

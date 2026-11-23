@@ -201,23 +201,23 @@ export function spawnTrafficCar(fx, fy, minD, maxD, allowVisible, forceType) {
     const r = Math.random(),
       type =
         forceType ||
-        ((e.cls === 'P' || e.cls === 'S') && Math.random() < (cars.filter(o => o.type === 'autobus').length < 3 ? 0.5 : 0.08)
-          ? 'autobus'
+        ((e.cls === 'P' || e.cls === 'S') && Math.random() < (cars.filter(o => o.type === 'bus').length < 3 ? 0.5 : 0.08)
+          ? 'bus'
           : r < 0.34
-            ? 'utilitaria'
+            ? 'compact'
             : r < 0.6
-              ? 'berlina'
+              ? 'sedan'
               : r < 0.68
                 ? 'taxi'
                 : r < 0.8
-                  ? 'furgone'
+                  ? 'van'
                   : r < 0.88
-                    ? 'sportiva'
-                    : 'polizia');
+                    ? 'sports'
+                    : 'police');
     const c = makeCar(type, x, y, ang);
     if (blockedN(c, x, y, ang) > 0) continue;
     c.driver = 'npc';
-    c.ai = { k: rand(0.88, 1.1) * (type === 'autobus' ? 0.72 : 1), ignore: 0, wait: 0 };
+    c.ai = { k: rand(0.88, 1.1) * (type === 'bus' ? 0.72 : 1), ignore: 0, wait: 0 };
     setPath(c, e, dir, j);
     const sp = c.ai.cruise * 0.6;
     c.vx = Math.cos(ang) * sp;

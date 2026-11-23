@@ -1,5 +1,5 @@
 // Dati OSM: griglia di collisione, strade, edifici, grafo stradale, semafori, punto di partenza.
-import { TRAFFICO } from '../config.js';
+import { TRAFFIC } from '../config.js';
 import { lightT } from '../core/state.js';
 import { angDiff, clamp } from '../core/util.js';
 
@@ -51,9 +51,9 @@ export let DATA,
   egW,
   egH,
   egrid,
-  PIAZZA,
-  CHIESA,
-  STADIO,
+  SQUARE,
+  CHURCH,
+  STADIUM,
   sp0,
   SPAWN,
   gs0,
@@ -275,7 +275,7 @@ export async function init() {
   toW = p => [(p[0] - OXm) * S5, (p[1] - OYm) * S5];
   llToW = (lat, lon) => [((lon - DATA.origin[1]) * DATA.k[0] - OXm) * S5, ((DATA.origin[0] - lat) * DATA.k[1] - OYm) * S5];
   RW = { P: 15, S: 11, T: 9, R: 7.5, V: 5, X: 8 };
-  CRUISE = TRAFFICO.velocita;
+  CRUISE = TRAFFIC.speed;
   roads = [];
   for (const r of DATA.R) {
     const cls = r[0];
@@ -335,16 +335,16 @@ export async function init() {
       col: b.kind === 1 ? '#efe6d2' : b.kind === 2 ? '#c9ccd2' : PAL[Math.floor(brnd() * PAL.length)],
       style:
         b.kind === 1
-          ? 'chiesa'
+          ? 'church'
           : b.kind === 2
-            ? 'stadio'
+            ? 'stadium'
             : floors <= 2
-              ? 'tapp'
+              ? 'shutters'
               : floors <= 5 && brnd() < 0.45
-                ? 'pers'
+                ? 'louvers'
                 : brnd() < 0.6
-                  ? 'balc'
-                  : 'tapp',
+                  ? 'balcony'
+                  : 'shutters',
       neon: brnd() < 0.02 ? NEONS[Math.floor(brnd() * NEONS.length)] : null,
     });
     buildings.push(bb);
@@ -425,12 +425,12 @@ export async function init() {
         y1 = Math.min(egH - 1, Math.floor((Math.max(ay, by) + e.w) / EG));
       for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) egrid[cy * egW + cx].push([e, j]);
     }
-  PIAZZA = llToW(45.0467, 7.6466);
-  CHIESA = llToW(45.046, 7.64694);
-  STADIO = llToW(45.04175, 7.65002);
-  sp0 = sidewalkNear(PIAZZA[0] + 90, PIAZZA[1] + 170);
+  SQUARE = llToW(45.0467, 7.6466);
+  CHURCH = llToW(45.046, 7.64694);
+  STADIUM = llToW(45.04175, 7.65002);
+  sp0 = sidewalkNear(SQUARE[0] + 90, SQUARE[1] + 170);
   SPAWN = { x: sp0[0], y: sp0[1], a: sp0[2] };
-  gs0 = sidewalkNear(PIAZZA[0] - 260, PIAZZA[1] - 60);
+  gs0 = sidewalkNear(SQUARE[0] - 260, SQUARE[1] - 60);
   signals = [];
   CLW = { P: 3, S: 2, T: 1 };
   for (const n of nodes) {

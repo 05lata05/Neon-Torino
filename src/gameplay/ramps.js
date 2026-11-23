@@ -1,5 +1,5 @@
 // Rampe e salti con premio.
-import { PREMI } from '../config.js';
+import { REWARDS } from '../config.js';
 import * as THREE from 'three';
 import { sfx } from '../audio/sfx.js';
 import { scene } from '../core/render.js';
@@ -41,7 +41,7 @@ export function landed(c, imp) {
     setShake(Math.max(shake, Math.min(10, imp / 50)));
     sfx.land(imp);
     if (c.air > 0.55) {
-      const r = Math.round((c.air * PREMI.saltoPerSecondoInVolo) / 10) * 10;
+      const r = Math.round((c.air * REWARDS.perSecondInAir) / 10) * 10;
       setMoney(money + r);
       saveMoney();
       bigMsg('SALTO!', c.air.toFixed(1).replace('.', ',') + ' s in volo   +€' + r, '#00e5ff', 2.2);

@@ -1,5 +1,5 @@
 // Telecamera, ora del giorno, luci e nebbia.
-import { TEMPO } from '../config.js';
+import { TIME } from '../config.js';
 import * as THREE from 'three';
 import { SKY, camera, scene } from '../core/render.js';
 import { camMode, camYaw, clockT, gtime, player, setCamYaw, shake, state } from '../core/state.js';
@@ -145,7 +145,7 @@ export function init() {
   tPos = new THREE.Vector3();
   tLook = new THREE.Vector3();
   camOverride = null;
-  hour = () => (TEMPO.oraInizio + clockT / TEMPO.secondiPerOra) % 24;
+  hour = () => (TIME.startHour + clockT / TIME.secondsPerHour) % 24;
   cDay = new THREE.Color('#9fd0ff');
   cDusk = new THREE.Color('#ff9a72');
   cNight = new THREE.Color('#0b1236');

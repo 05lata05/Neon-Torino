@@ -1,6 +1,6 @@
 // Avvio: inizializza i moduli nell'ordine giusto, popola la città e fa girare il ciclo di gioco.
 import { drawPerf, recordFrame, stats as perfStats } from './ui/perf.js';
-import { TEMPO } from './config.js';
+import { TIME } from './config.js';
 import { scheduleRadio } from './audio/radio.js';
 import { updateAudio } from './audio/sfx.js';
 import { startGame } from './core/input.js';
@@ -149,7 +149,7 @@ window.__nr = {
     return camOverride;
   },
   setHour(h) {
-    setClockT(((h - TEMPO.oraInizio + 24) % 24) * TEMPO.secondiPerOra);
+    setClockT(((h - TIME.startHour + 24) % 24) * TIME.secondsPerHour);
   },
   get rain() {
     return rain;

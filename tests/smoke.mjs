@@ -52,14 +52,14 @@ const views = await page.evaluate(() => {
     }
     return { cx: (x0 + x1) / 2, cz: (z0 + z1) / 2, s: Math.max(x1 - x0, z1 - z0) };
   };
-  const st = L.stadio ? box(L.stadio.outer) : null;
+  const st = L.stadium ? box(L.stadium.outer) : null;
   for (const id in L) {
     const o = L[id];
     const b = o.outer ? box(o.outer) : { ...(([x, z]) => ({ cx: x, cz: z }))(toW(o.pos)), s: 60 };
     // vicino allo stadio la telecamera si mette dalla parte opposta, per non finire sotto la copertura
     let dx = -0.66,
       dz = 0.75;
-    if (st && id !== 'stadio') {
+    if (st && id !== 'stadium') {
       const ex = b.cx - st.cx,
         ez = b.cz - st.cz,
         l = Math.hypot(ex, ez);
@@ -77,10 +77,10 @@ for (const v of views) {
   if (only.length && !only.includes(v.id)) continue;
   const d = Math.max(260, Math.min(v.s * 1.1, 950));
   for (const [tag, hour] of [
-    ['giorno', 12],
-    ['notte', 22],
+    ['day', 12],
+    ['night', 22],
   ]) {
-    if (tag === 'notte' && !['stadio', 'rignon', 'arena'].includes(v.id)) continue;
+    if (tag === 'night' && !['stadium', 'rignon', 'arena'].includes(v.id)) continue;
     await page.evaluate(
       ({ v, d, hour }) => {
         window.__nr.setHour(hour);
@@ -129,7 +129,7 @@ const toSpawn = () =>
     n.cars.splice(0, n.cars.length);
   });
 await toSpawn();
-await page.evaluate(() => window.__nr.spawnCar('sportiva'));
+await page.evaluate(() => window.__nr.spawnCar('sports'));
 await page.keyboard.press('KeyE');
 await page.waitForTimeout(200);
 check((await st()).car, 'sale in auto con E');
@@ -154,21 +154,21 @@ await page.waitForTimeout(200);
 check((await st()).state === 'pause', 'mette in pausa con P');
 await page.keyboard.press('KeyP');
 await toSpawn();
-await page.evaluate(() => window.__nr.spawnCar('polizia'));
+await page.evaluate(() => window.__nr.spawnCar('police'));
 await page.keyboard.press('KeyE');
 await page.evaluate(() => window.__nr.step(0.5));
 check((await st()).wanted > 0, "rubare un'auto della polizia fa salire il livello di ricercato");
-const gettone = await page.evaluate(() => {
+const token = await page.evaluate(() => {
   const n = window.__nr,
     t = n.tokens.find(t => !t.got);
   if (!t) return null;
-  const prima = n.money;
+  const before = n.money;
   if (n.player.car) n.player.car = null;
   n.teleport(t.x, t.y);
   n.step(0.2);
-  return n.money - prima;
+  return n.money - before;
 });
-check(gettone === null || gettone >= 50, 'raccogliere un gettone dà 50 €');
+check(token === null || token >= 50, 'raccogliere un gettone dà 50 €');
 await page.keyboard.press('KeyC');
 await page.keyboard.press('KeyR');
 await page.keyboard.press('KeyH');
@@ -179,19 +179,19 @@ await page.screenshot({ path: path.join(OUT, 'partita.png') });
 // (chiamate di disegno, triangoli) e il tempo di calcolo della simulazione. Gli fps veri si vedono nel gioco col tasto I.
 // Valori di partenza (fine M1): pc 350–400 chiamate e ~640k triangoli, telefono ~200 e ~630k, simulazione ~1–1,5 ms.
 // Le soglie lasciano circa il 50% di margine per Santa Rita verosimile (M2); alzarle solo con un motivo scritto qui.
-const SOGLIE = {
+const LIMITS = {
   pc: { calls: 600, triangles: 1_500_000 }, // grafica alta, 1280×760
-  telefono: { calls: 350, triangles: 1_000_000 }, // grafica bassa, iPhone 13 emulato
+  phone: { calls: 350, triangles: 1_000_000 }, // grafica bassa, iPhone 13 emulato
   msPerFrame: 6, // simulazione (traffico, pedoni, polizia…) per frame, sul processore
 };
-const VISTE = [
-  ['strada', v => ({ x: v.x - 60, y: 26, z: v.y - 10, lx: v.x + 60, ly: 12, lz: v.y + 10, fov: 62 })],
-  ['dall_alto', v => ({ x: v.x - 500, y: 420, z: v.y + 500, lx: v.x, ly: 0, lz: v.y, fov: 55 })],
+const VIEWS = [
+  ['street', v => ({ x: v.x - 60, y: 26, z: v.y - 10, lx: v.x + 60, ly: 12, lz: v.y + 10, fov: 62 })],
+  ['aerial', v => ({ x: v.x - 500, y: 420, z: v.y + 500, lx: v.x, ly: 0, lz: v.y, fov: 55 })],
 ];
-async function misura(pg, quality, nome) {
+async function measure(pg, quality, name) {
   await pg.evaluate(q => window.__nr.setQuality(q), quality);
   const out = { calls: 0, triangles: 0 };
-  for (const [vista, cam] of VISTE) {
+  for (const [vista, cam] of VIEWS) {
     await pg.evaluate(src => {
       const n = window.__nr,
         f = eval(src);
@@ -201,7 +201,7 @@ async function misura(pg, quality, nome) {
     const p = await pg.evaluate(() => window.__nr.perf());
     out.calls = Math.max(out.calls, p.calls);
     out.triangles = Math.max(out.triangles, p.triangles);
-    await pg.screenshot({ path: path.join(OUT, `prestazioni-${nome}-${vista}.png`) });
+    await pg.screenshot({ path: path.join(OUT, `prestazioni-${name}-${vista}.png`) });
   }
   await pg.evaluate(() => {
     window.__nr.cam = null;
@@ -210,10 +210,10 @@ async function misura(pg, quality, nome) {
 }
 console.log('prestazioni:');
 // ogni misura parte da una partita nuova, con traffico e pedoni come all'avvio
-async function nuovaPartita(opzioni, nome) {
-  const ctxB = await browser.newContext(opzioni),
+async function newGame(options, name) {
+  const ctxB = await browser.newContext(options),
     pg = await ctxB.newPage();
-  pg.on('pageerror', e => errors.push(`${nome} pageerror: ${e.message}`));
+  pg.on('pageerror', e => errors.push(`${name} pageerror: ${e.message}`));
   if (LOCAL_THREE)
     await pg.route('https://cdn.jsdelivr.net/npm/three@0.160.0/**', r => r.fulfill({ path: LOCAL_THREE, contentType: 'text/javascript' }));
   await pg.goto(`http://localhost:${port}/`);
@@ -221,11 +221,11 @@ async function nuovaPartita(opzioni, nome) {
   await pg.evaluate(() => window.__nr.startGame());
   return [ctxB, pg];
 }
-const risultati = {};
+const results = {};
 {
-  const [c, pg] = await nuovaPartita({ viewport: { width: 1280, height: 760 } }, 'pc');
-  risultati.pc = await misura(pg, 1, 'pc');
-  risultati.msPerFrame = await pg.evaluate(() => {
+  const [c, pg] = await newGame({ viewport: { width: 1280, height: 760 } }, 'pc');
+  results.pc = await measure(pg, 1, 'pc');
+  results.msPerFrame = await pg.evaluate(() => {
     const n = window.__nr,
       t0 = performance.now();
     n.step(3);
@@ -234,23 +234,23 @@ const risultati = {};
   await c.close();
 }
 {
-  const [c, pg] = await nuovaPartita({ ...devices['iPhone 13'] }, 'telefono');
-  risultati.telefono = await misura(pg, 0, 'telefono');
+  const [c, pg] = await newGame({ ...devices['iPhone 13'] }, 'phone');
+  results.phone = await measure(pg, 0, 'phone');
   await c.close();
 }
-fs.writeFileSync(path.join(OUT, 'prestazioni.json'), JSON.stringify(risultati, null, 2));
-const riga = (nome, r, s) => {
+fs.writeFileSync(path.join(OUT, 'prestazioni.json'), JSON.stringify(results, null, 2));
+const row = (name, r, s) => {
   console.log(
-    `  ${nome.padEnd(9)} ${String(r.calls).padStart(4)} chiamate (max ${s.calls})   ${(r.triangles / 1000).toFixed(0).padStart(5)}k triangoli (max ${s.triangles / 1000}k)`,
+    `  ${name.padEnd(9)} ${String(r.calls).padStart(4)} chiamate (max ${s.calls})   ${(r.triangles / 1000).toFixed(0).padStart(5)}k triangoli (max ${s.triangles / 1000}k)`,
   );
-  if (r.calls > s.calls) errors.push(`prestazioni ${nome}: ${r.calls} chiamate di disegno, soglia ${s.calls}`);
-  if (r.triangles > s.triangles) errors.push(`prestazioni ${nome}: ${r.triangles} triangoli, soglia ${s.triangles}`);
+  if (r.calls > s.calls) errors.push(`prestazioni ${name}: ${r.calls} chiamate di disegno, soglia ${s.calls}`);
+  if (r.triangles > s.triangles) errors.push(`prestazioni ${name}: ${r.triangles} triangoli, soglia ${s.triangles}`);
 };
-riga('pc', risultati.pc, SOGLIE.pc);
-riga('telefono', risultati.telefono, SOGLIE.telefono);
-console.log(`  simulazione ${risultati.msPerFrame.toFixed(2)} ms per frame (max ${SOGLIE.msPerFrame})`);
-if (risultati.msPerFrame > SOGLIE.msPerFrame)
-  errors.push(`prestazioni: simulazione ${risultati.msPerFrame.toFixed(2)} ms per frame, soglia ${SOGLIE.msPerFrame}`);
+row('pc', results.pc, LIMITS.pc);
+row('phone', results.phone, LIMITS.phone);
+console.log(`  simulazione ${results.msPerFrame.toFixed(2)} ms per frame (max ${LIMITS.msPerFrame})`);
+if (results.msPerFrame > LIMITS.msPerFrame)
+  errors.push(`prestazioni: simulazione ${results.msPerFrame.toFixed(2)} ms per frame, soglia ${LIMITS.msPerFrame}`);
 
 await browser.close();
 srv.close();

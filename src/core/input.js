@@ -83,13 +83,13 @@ export function startGame() {
     for (const dd of [45, -45, 70, -70, 30, 95]) {
       const x = SPAWN.x + Math.cos(SPAWN.a) * dd,
         y = SPAWN.y + Math.sin(SPAWN.a) * dd,
-        t = makeCar('sportiva', x, y, SPAWN.a);
+        t = makeCar('sports', x, y, SPAWN.a);
       if (blockedN(t, x, y, SPAWN.a) === 0) {
         s = t;
         break;
       }
     }
-    if (!s) s = makeCar('sportiva', SPAWN.x, SPAWN.y, SPAWN.a);
+    if (!s) s = makeCar('sports', SPAWN.x, SPAWN.y, SPAWN.a);
     s.col = '#ff2e88';
     s.keep = true;
     cars.push(s);
@@ -97,9 +97,9 @@ export function startGame() {
       const c = cars[i];
       if (Math.hypot(c.x - s.x, c.y - s.y) < 70) cars.splice(i, 1);
     }
-    newOffer('consegna');
-    newOffer('corsa');
-    newOffer('colpo');
+    newOffer('delivery');
+    newOffer('race');
+    newOffer('heist');
     newOffer('taxi');
     toast("Benvenuto a Santa Rita, Torino! C'è una sportiva rosa qui accanto…", 4);
     updateCamera(0, true);

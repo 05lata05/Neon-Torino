@@ -19,7 +19,7 @@ const POOLS = {
 
 export default function build(kit, L) {
   for (const id in POOLS) if (L[id]) hall(kit, L[id], POOLS[id]);
-  if (L.vascaEsterna) vasca(kit, L.vascaEsterna);
+  if (L.outdoorPool) outdoorPool(kit, L.outdoorPool);
 }
 
 function hall(kit, P, o) {
@@ -57,10 +57,10 @@ function hall(kit, P, o) {
     kit.lit(null, null, { glow: '#bfe6ff', day: 0.05, night: 0.8, mat: { color: '#6f93ab', roughness: 0.15, metalness: 0.3 } }),
     { cast: false },
   );
-  kit.label(P.nome, ob.cx, ob.cz, o.h + 10, '#38bdf8');
+  kit.label(P.name, ob.cx, ob.cz, o.h + 10, '#38bdf8');
 }
 
-function vasca(kit, V) {
+function outdoorPool(kit, V) {
   const { THREE, M, GB } = kit;
   const ring = kit.W(V.outer),
     ob = kit.obb(ring);

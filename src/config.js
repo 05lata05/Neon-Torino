@@ -2,12 +2,12 @@
 // Unità: velocità e distanze in unità di gioco (5 unità = 1 m), tempi in secondi reali, soldi in euro.
 
 // Tempo del gioco: la partita comincia alle 17:00 e un'ora di gioco dura 15 secondi reali.
-export const TEMPO = { oraInizio: 17, secondiPerOra: 15 };
+export const TIME = { startHour: 17, secondsPerHour: 15 };
 
 // Veicoli: dimensioni, velocità massima (max), accelerazione (acc), aderenza (grip), sterzo (turn),
 // resistenza ai danni (hp), velocità di crociera nel traffico (cruise), colori possibili, massa relativa.
-export const VEICOLI = {
-  berlina: {
+export const VEHICLES = {
+  sedan: {
     name: 'Berlina',
     len: 34,
     wid: 17,
@@ -19,7 +19,7 @@ export const VEICOLI = {
     cruise: 165,
     cols: ['#a9adb3', '#eceef0', '#1c1f24', '#2b4c7e', '#a3262a', '#5b6169', '#2f5d50', '#8c7b6b'],
   },
-  utilitaria: {
+  compact: {
     name: 'Utilitaria',
     len: 28,
     wid: 15,
@@ -31,7 +31,7 @@ export const VEICOLI = {
     cruise: 160,
     cols: ['#e9ecef', '#b3202a', '#9aa3ab', '#2d3436', '#e1b12c', '#5d7f99', '#7a8f4a', '#d9d4c7'],
   },
-  sportiva: {
+  sports: {
     name: 'Sportiva',
     len: 35,
     wid: 16,
@@ -43,7 +43,7 @@ export const VEICOLI = {
     cruise: 205,
     cols: ['#ff3f6c', '#feca57', '#00d2d3', '#ff9f43', '#1e272e'],
   },
-  furgone: {
+  van: {
     name: 'Furgone',
     len: 44,
     wid: 20,
@@ -56,7 +56,7 @@ export const VEICOLI = {
     cols: ['#dfe4ea', '#a4b0be', '#e1b12c', '#6ab04c'],
   },
   taxi: { name: 'Taxi', len: 34, wid: 17, max: 345, acc: 280, grip: 7, turn: 2.7, hp: 100, cruise: 195, cols: ['#f4f4f2'] },
-  polizia: {
+  police: {
     name: 'Polizia',
     len: 36,
     wid: 17,
@@ -68,7 +68,7 @@ export const VEICOLI = {
     cruise: 170,
     cols: ['#1f4e96', '#16213e'],
   },
-  fulmine: {
+  lightning: {
     name: 'Fulmine',
     len: 36,
     wid: 17,
@@ -80,7 +80,7 @@ export const VEICOLI = {
     cruise: 220,
     cols: ['#7c3aed', '#00e5ff', '#ff2e88', '#f8fafc'],
   },
-  corazzato: {
+  armored: {
     name: 'Corazzato',
     len: 46,
     wid: 22,
@@ -93,7 +93,7 @@ export const VEICOLI = {
     cols: ['#2f3b2f', '#1f2937'],
     mass: 2.2,
   },
-  autobus: {
+  bus: {
     name: 'Autobus',
     len: 66,
     wid: 21,
@@ -109,40 +109,40 @@ export const VEICOLI = {
 };
 
 // Nitro: secondi per svuotare il serbatoio e per riempirlo di nuovo.
-export const NITRO = { durata: 3.2, ricarica: 9 };
+export const NITRO = { duration: 3.2, recharge: 9 };
 
 // Traffico: quante auto e pedoni attorno al giocatore, velocità di crociera per tipo di strada
 // (P primaria, S secondaria, T terziaria, R residenziale, V servizio, X pedonale).
-export const TRAFFICO = { auto: 30, pedoni: 40, velocita: { P: 205, S: 185, T: 165, R: 135, V: 90, X: 60 } };
+export const TRAFFIC = { auto: 30, pedestrians: 40, speed: { P: 205, S: 185, T: 165, R: 135, V: 90, X: 60 } };
 
 // Polizia: volanti per livello di ricercato (0–5), secondi fuori vista per scendere di un livello
 // (base + perLivello × livello), secondi fermi vicino a una volante per l'arresto, multa all'arresto.
-export const POLIZIA = {
-  volantiPerLivello: [0, 1, 2, 3, 5, 6],
-  seminareBase: 7,
-  seminarePerLivello: 2.5,
-  secondiArresto: 1.5,
-  multaBase: 200,
-  multaPerLivello: 150,
+export const POLICE = {
+  carsPerLevel: [0, 1, 2, 3, 5, 6],
+  loseBase: 7,
+  losePerLevel: 2.5,
+  bustSeconds: 1.5,
+  fineBase: 200,
+  finePerLevel: 150,
 };
 
 // Premi in euro.
-export const PREMI = {
-  gettone: 50,
-  tuttiIGettoni: 5000,
-  saltoPerSecondoInVolo: 150,
+export const REWARDS = {
+  token: 50,
+  allTokens: 5000,
+  perSecondInAir: 150,
 };
 
 // Missioni: premio = base + perUnita × distanza (arrotondato a 10 €); tempo = distanza / velocità + margine.
-export const MISSIONI = {
-  consegna: { premioBase: 150, premioPerUnita: 0.12, velocita: 180, margine: 18 },
-  corsa: { premio: 700, velocita: 230, margine: 8, bonusCheckpoint: 2.5 },
-  taxi: { premioBase: 220, premioPerUnita: 0.1, velocita: 170, margine: 22, penalitaPerDanno: 4, premioMinimo: 60 },
-  colpo: { premio: 900, calore: 3 },
+export const MISSIONS = {
+  delivery: { rewardBase: 150, rewardPerUnit: 0.12, speed: 180, margin: 18 },
+  race: { reward: 700, speed: 230, margin: 8, bonusCheckpoint: 2.5 },
+  taxi: { rewardBase: 220, rewardPerUnit: 0.1, speed: 170, margin: 22, penaltyPerDamage: 4, rewardMin: 60 },
+  heist: { reward: 900, heat: 3 },
 };
 
 // Garage: prezzi.
-export const GARAGE_PREZZI = { riparazione: 100, fulmine: 1500, corazzato: 2500, sportiva: 0 };
+export const GARAGE_PRICES = { repair: 100, lightning: 1500, armored: 2500, sports: 0 };
 
 // Meteo: secondi prima del primo cambio e intervallo (minimo, massimo) tra un cambio e l'altro.
-export const METEO = { primoCambio: 75, intervalloMin: 80, intervalloMax: 180 };
+export const WEATHER = { firstChange: 75, intervalMin: 80, intervalMax: 180 };

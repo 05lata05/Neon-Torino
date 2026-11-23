@@ -170,11 +170,11 @@ export function updateAudio(dt) {
       gear = Math.min(4, Math.floor(ratio)),
       rpm = gear < 4 ? ratio - gear : 1 + (ratio - 4) * 0.5;
     const base =
-        c.type === 'furgone' || c.type === 'corazzato' || c.type === 'autobus'
+        c.type === 'van' || c.type === 'armored' || c.type === 'bus'
           ? 36
-          : c.type === 'utilitaria'
+          : c.type === 'compact'
             ? 58
-            : c.type === 'fulmine'
+            : c.type === 'lightning'
               ? 62
               : 50,
       f = base + (0.25 + rpm * 0.75) * 120 + (player.boosting ? 40 : 0),

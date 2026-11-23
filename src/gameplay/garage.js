@@ -1,5 +1,5 @@
 // Garage: riparazioni e auto da comprare.
-import { GARAGE_PREZZI } from '../config.js';
+import { GARAGE_PRICES } from '../config.js';
 import * as THREE from 'three';
 import { sfx } from '../audio/sfx.js';
 import { H, W, ctx, scene } from '../core/render.js';
@@ -96,7 +96,7 @@ export function deliverCar(type) {
   }
   if (player.car) exitCar(true);
   const c = makeCar(type, x, y, GARAGE.a);
-  if (type === 'sportiva') c.col = '#ff2e88';
+  if (type === 'sports') c.col = '#ff2e88';
   cars.push(c);
   player.x = x;
   player.y = y;
@@ -173,10 +173,10 @@ export function init() {
   garageLatch = true;
   garageSel = 0;
   SHOP = [
-    { id: 'repair', label: "Ripara l'auto", desc: 'Torna come nuova', price: GARAGE_PREZZI.riparazione },
-    { id: 'fulmine', label: 'Fulmine', desc: 'Supercar: la più veloce della città', price: GARAGE_PREZZI.fulmine },
-    { id: 'corazzato', label: 'Corazzato', desc: 'Blindato pesante: sfonda le volanti', price: GARAGE_PREZZI.corazzato },
-    { id: 'sportiva', label: 'Sportiva Neon', desc: 'La tua prima auto, sempre gratis', price: GARAGE_PREZZI.sportiva },
+    { id: 'repair', label: "Ripara l'auto", desc: 'Torna come nuova', price: GARAGE_PRICES.repair },
+    { id: 'lightning', label: 'Fulmine', desc: 'Supercar: la più veloce della città', price: GARAGE_PRICES.lightning },
+    { id: 'armored', label: 'Corazzato', desc: 'Blindato pesante: sfonda le volanti', price: GARAGE_PRICES.armored },
+    { id: 'sports', label: 'Sportiva Neon', desc: 'La tua prima auto, sempre gratis', price: GARAGE_PRICES.sports },
   ];
 
   {
