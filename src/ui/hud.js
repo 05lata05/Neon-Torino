@@ -446,7 +446,11 @@ export function drawOverlay(title, lines, showControls) {
   ctx.globalAlpha = 1;
   ctx.font = '12px system-ui,sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  ctx.fillText('Dati mappa © OpenStreetMap contributors (ODbL) · Altezze edifici: Arpa Piemonte - Geoportale (CC BY 2.5 IT)', W / 2, H - 12);
+  ctx.fillText(
+    'Dati mappa © OpenStreetMap contributors (ODbL) · Altezze edifici: Arpa Piemonte - Geoportale (CC BY 2.5 IT)',
+    W / 2,
+    H - 12,
+  );
 }
 
 export function init() {
