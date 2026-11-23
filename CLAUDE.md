@@ -1,16 +1,19 @@
-# Neon Torino — note per chi ci lavora
+# Neon Torino — notes for whoever works on it
 
-- Lingua: testi del gioco, commenti e documentazione in italiano.
-- Niente build: moduli ES caricati dal browser, Three.js 0.160 da import map (index.html).
-- `data/torino.json` si genera con `python3 tools/build_map.py`, non si modifica a mano.
-- Unità: 1 m = 5 unità di gioco (`M` nel kit dei landmark); mondo x = est, z = sud.
-- Nuovi landmark: modulo in `src/landmarks/`, forme OSM in `LANDMARKS` di `tools/build_map.py` (vedi README).
-- Prima di consegnare: `npm test` (Playwright) e guardare le foto in `tests/out/`.
-- Realismo: ogni zona nuova o modificata deve rispettare `docs/REALISMO.md` (fonti, lista di controllo, regole sui negozi reali).
-- Dettagli inventati (non presenti in OSM) vanno dichiarati nel commento in testa al modulo.
-- Cosa fare: la prima casella libera di `ROADMAP.md`; a fine lavoro spuntala.
-- Un ramo per funzionalità (`feature/<nome>`), poi pull request su `main`.
-- Moduli: leggi `docs/ARCHITETTURA.md` (regole su `init()`, `export let` e funzioni `set…()` per lo stato) prima di aggiungerne.
-- Numeri di bilanciamento (premi, prezzi, velocità, difficoltà) solo in `src/config.js`.
-- Prestazioni: `npm test` controlla le soglie; non alzarle senza scrivere il motivo in `tests/smoke.mjs`.
-- Dopo le modifiche: `npm run format`.
+- Language: code, comments, documentation, commit messages and pull requests in English.
+- Player-facing text is bilingual (Italian and English): never write it inline, add a key to `src/i18n/strings.js`
+  with both `it` and `en` and use `t('key')`. Real Italian names stay Italian in both languages: shop signs,
+  landmark lettering, street names, radio station names.
+- No build: ES modules loaded by the browser, Three.js 0.160 from the import map (index.html).
+- `data/torino.json` is generated with `python3 tools/build_map.py`, never edited by hand.
+- Units: 1 m = 5 game units (`M` in the landmark kit); world x = east, z = south.
+- New landmarks: module in `src/landmarks/`, OSM shapes in `LANDMARKS` of `tools/build_map.py` (see README).
+- Before delivering: `npm test` (Playwright) and look at the pictures in `tests/out/`.
+- Realism: every new or changed zone must follow `docs/REALISM.md` (sources, checklist, rules on real shops).
+- Invented details (not in OSM) must be declared in the comment at the top of the module.
+- What to do: the first unchecked box in `ROADMAP.md`; tick it when done.
+- One branch per feature (`feature/<name>`), then a pull request into `main`.
+- Modules: read `docs/ARCHITECTURE.md` (rules on `init()`, `export let` and `set…()` functions for state) before adding any.
+- Balance numbers (rewards, prices, speeds, difficulty) only in `src/config.js`.
+- Performance: `npm test` checks the limits; do not raise them without writing the reason in `tests/smoke.mjs`.
+- After changes: `npm run format`.

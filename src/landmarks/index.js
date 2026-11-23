@@ -1,8 +1,8 @@
 // Landmark registry. To add one: create a module exporting `default function build(kit, L)`,
 // add its OSM shapes to tools/build_map.py (LANDMARKS) and import it here.
 import { makeKit } from './kit.js';
-import stadium from './stadio.js';
-import pools from './piscine.js';
+import stadium from './stadium.js';
+import pools from './pools.js';
 import centraleLatte from './centrale-latte.js';
 import sme from './sme.js';
 import rignon from './rignon.js';

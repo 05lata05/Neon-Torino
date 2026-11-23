@@ -1,107 +1,108 @@
-# Roadmap di Neon Torino
+# Neon Torino roadmap
 
-Lavoro automatico: ATTIVO
+Automatic work: ON
 
-> Ogni notte una sessione di Claude fa la prima casella libera e, se il test su GitHub è verde, la unisce a `main` da
-> sola (regole in `docs/LAVORO-AUTOMATICO.md`). Le caselle `(da rivedere)` restano in una pull request che approvi tu.
-> Le caselle `(manuale)` le salta. Per fermarla scrivi `IN PAUSA` qui sopra.
+> Every night a Claude session does the first unchecked box and, if the GitHub test is green, merges it into `main`
+> by itself (rules in `docs/AUTOMATION.md`). Boxes marked `(needs review)` stay in a pull request that you approve.
+> Boxes marked `(manual)` are skipped. To stop it write `PAUSED` instead of `ON` above.
 
-Come si usa: ogni sessione di lavoro prende **la prima casella libera** della tappa in corso, lavora su un ramo
-dedicato (`feature/<nome>`), passa `npm test`, apre una pull request e spunta la casella qui.
-Una tappa finita = una versione giocabile con qualcosa di nuovo da provare.
+How to use it: each work session takes **the first unchecked box** of the current milestone, works on a dedicated
+branch (`feature/<name>`), passes `npm test`, opens a pull request and ticks the box here.
+A finished milestone = a playable version with something new to try.
 
-Legenda: `[x]` fatto · `[ ]` da fare · `(~N sessioni)` stima indicativa · `(manuale)` la fa una sessione con il proprietario · `(da rivedere)` cambia l'aspetto del gioco: il merge lo fa il proprietario
+Legend: `[x]` done · `[ ]` to do · `(~N sessions)` rough estimate · `(manual)` done in a session with the owner · `(needs review)` changes how the game looks: the owner does the merge
 
-## Visione
+## Vision
 
-**Neon Torino è un crime open-world alla GTA nella Torino vera.** Guidi tanto, scappi dalla polizia, scopri i luoghi
-simbolo della città e costruisci un piccolo impero di attività partendo da Santa Rita. Si gioca nel browser, su PC e
-telefono, e si condivide con un link.
+**Neon Torino is a GTA-style crime open world set in the real Turin.** You drive a lot, escape the police, discover
+the city's landmarks and build a small empire of businesses starting from Santa Rita. It runs in the browser, on PC
+and phone, and is shared with a link.
 
-Pilastri, in ordine di importanza:
-1. **Torino riconoscibile**: ogni zona rispetta lo standard di realismo (`docs/REALISMO.md`).
-2. **Guida e inseguimenti**: il cuore del divertimento.
-3. **Soldi e impero**: comprare e far crescere attività nel quartiere.
-4. **Crime alla GTA**: polizia, bande, armi, con ironia torinese. La storia è leggera, legata alle attività.
-5. **Gioca ovunque**: anche sul telefono degli amici.
-
----
-
-## M0 · Base del progetto — fatto
-- [x] Città di Santa Rita dai dati OpenStreetMap (strade, palazzi, parchi, tram 4 e 10)
-- [x] Guida, traffico, pedoni, polizia con elicottero, 4 tipi di missione, garage, radio, meteo, giorno e notte
-- [x] Landmark reali: Stadio Olimpico Grande Torino, Torre Maratona, Braciere, Inalpi Arena, piscine, Centrale del Latte, Economia (SME), Parco Rignon e Villa Amoretti
-- [x] Generatore della mappa da OSM (`tools/build_map.py`) e repository GitHub
-
-## M1 · Fondamenta — fatto
-Obiettivo: poter far crescere il gioco senza romperlo.
-- [x] Dividere `src/main.js` in moduli per argomento (`core`, `world`, `entities`, `gameplay`, `render`, `ui`, `audio`)
-- [x] Test con partita simulata (camminare, guidare, scendere, mappa, pausa, ricercato)
-- [x] Test automatico su GitHub a ogni push (GitHub Actions + Playwright) (~1)
-- [x] Eliminare l'oggetto condiviso `G`: ogni variabile ha un modulo proprietario con `export let` e una funzione `set…()`
-- [x] Costanti di bilanciamento (auto, premi, polizia, traffico, tempi, prezzi) in `src/config.js`
-- [x] Misura delle prestazioni nel test (chiamate di disegno, triangoli, tempo di simulazione) su PC e telefono emulato, con soglie; indicatore fps nel gioco (tasto I)
-
-## M2 · Santa Rita verosimile — in corso
-Obiettivo: chi conosce Santa Rita la riconosce. Tutto secondo `docs/REALISMO.md`.
-- [x] Fonti dati: altezze reali da Arpa Piemonte "Edifici 3D 2017" (quota di gronda del Comune di Torino); Overture scartata (in Italia ha poche altezze); modello del terreno rimandato a M7 per Superga
-- [x] Altezze reali degli edifici nel generatore: edifici senza dato da 625 a 94
-- [ ] Luce e atmosfera: occlusione ambientale, cielo realistico, foschia, asfalto bagnato che riflette; livelli grafici alto e basso (da rivedere) (~2)
-- [ ] Materiali con texture fotografiche CC0 (intonaci, asfalto, marciapiedi, porfido, pietra) e `docs/CREDITI.md` (da rivedere) (~1)
-- [ ] Palazzi di Santa Rita: facciate per tipo ed epoca (condomini anni '50–'70, balconi continui in rilievo, tapparelle, colori reali) (da rivedere) (~2)
-- [ ] Santuario di Santa Rita da Cascia e la piazza con il mercato (da rivedere) (~1)
-- [ ] Insegne vere dei negozi e locali OSM (circa 390) al piano terra, nella loro posizione (da rivedere) (~1)
-- [ ] Arredo urbano: i 666 alberi veri, fermate GTT, cassonetti, edicole, targhe delle vie, auto parcheggiate (da rivedere) (~2)
-- [ ] Foto prima/dopo di 5 punti del quartiere nel README (~1)
-
-## M3 · Guida e inseguimenti
-Obiettivo: guidare a Santa Rita deve essere divertente da solo.
-- [ ] Fisica delle auto più credibile: peso, trasferimento di carico, derapate controllabili, sospensioni (~2)
-- [ ] Danni visibili: ammaccature, vetri rotti, fumo, ruote che si staccano (~1)
-- [ ] Moto e nuovi veicoli, anche tipici torinesi (furgoni, utilitarie d'epoca, bus GTT da rubare) (~1–2)
-- [ ] Polizia più furba: posti di blocco, accerchiamenti, volanti che speronano a 4–5 stelle (~1–2)
-- [ ] Gare clandestine con percorsi fissi e record da battere (~1)
-- [ ] Acrobazie premiate: salti, derapate lunghe, quasi-incidenti (~1)
-
-## M4 · Gioca ovunque
-Obiettivo: mandare il link agli amici e farli giocare, anche dal telefono.
-- [ ] Comandi touch: levetta virtuale, pulsanti per freno a mano, nitro, sali/scendi (~1–2)
-- [ ] Interfaccia che si adatta allo schermo del telefono (HUD, mappa, menu): oggi in verticale i testi escono dallo schermo, vedi `tests/out/prestazioni-telefono-strada.png` (~1)
-- [ ] Grafica che si regola da sola in base alle prestazioni (~1)
-- [ ] Menu iniziale con opzioni (audio, grafica, comandi) e salvataggio affidabile (~1)
-- [ ] Link pubblico aggiornato a ogni versione e istruzioni per gli amici (manuale) (~1)
-
-## M5 · Soldi e impero
-Obiettivo: un motivo per fare soldi e un quartiere da conquistare.
-- [ ] Economia: entrate, spese, prezzi bilanciati in `src/config.js` (~1)
-- [ ] Attività da comprare (inventate): bar, officina, autolavaggio, edicola; rendono ogni giorno di gioco (~2)
-- [ ] Ogni attività porta 2–3 missioni del suo "capo" (la storia leggera del gioco) (~2)
-- [ ] Officina: elaborare le auto (motore, freni, gomme, colori, neon) (~1)
-- [ ] Casa a Santa Rita con salvataggio e garage personale (~1)
-
-## M6 · Crime alla GTA
-Obiettivo: il lato criminale.
-- [ ] Vita e armatura del giocatore, barra nell'HUD (~1)
-- [ ] Pugni e mira automatica sul bersaglio più vicino (~1)
-- [ ] Armi (pistola, poi altre) con munizioni e armeria (~2)
-- [ ] Morte → ospedale, arresto → caserma, con perdita di soldi o armi (~1)
-- [ ] Polizia a piedi che scende dalle volanti e insegue (~1)
-- [ ] Bande rivali che si contendono le zone e attaccano le tue attività; racket (~2)
-
-## M7 · Torino iconica
-Obiettivo: la mappa cresce lungo i corsi verso i luoghi simbolo. **Ogni zona passa la lista di controllo di `docs/REALISMO.md`.**
-- [ ] Borgo Filadelfia e Stadio Filadelfia (da rivedere) (~1–2)
-- [ ] Lingotto, con la pista sul tetto dell'ex fabbrica (da rivedere) (~2)
-- [ ] Porta Nuova e il centro fino a piazza Castello e la Mole (da rivedere) (~3)
-- [ ] Po e Murazzi, con i ponti (da rivedere) (~2)
-- [ ] Superga e la collina, con il terreno reale (da rivedere) (~2)
-- [ ] Segreti e collezionabili in ogni zona (~1)
-- [ ] Caricamento della città a pezzi (ed eventuale passaggio a Vite) quando la mappa diventa grande (~1)
+Pillars, in order of importance:
+1. **Recognisable Turin**: every zone follows the realism standard (`docs/REALISM.md`).
+2. **Driving and chases**: the heart of the fun.
+3. **Money and empire**: buying and growing businesses in the district.
+4. **GTA-style crime**: police, gangs, weapons, with Turin irony. The story is light, tied to the businesses.
+5. **Play anywhere**: on friends' phones too.
 
 ---
 
-## Idee in attesa (non ancora in una tappa)
-- Radio con conduttori e notiziario di quartiere
-- Partite allo stadio la domenica, con folla e traffico
-- Mercato rionale in piazza Santa Rita con bancarelle animate
-- Tram GTT guidabili
+## M0 · Project base — done
+- [x] Santa Rita city from OpenStreetMap data (roads, buildings, parks, trams 4 and 10)
+- [x] Driving, traffic, pedestrians, police with helicopter, 4 mission types, garage, radio, weather, day and night
+- [x] Real landmarks: Stadio Olimpico Grande Torino, Torre Maratona, Braciere, Inalpi Arena, pools, Centrale del Latte, Economia (SME), Parco Rignon and Villa Amoretti
+- [x] Map generator from OSM (`tools/build_map.py`) and GitHub repository
+
+## M1 · Foundations — done
+Goal: being able to grow the game without breaking it.
+- [x] Split `src/main.js` into modules by topic (`core`, `world`, `entities`, `gameplay`, `render`, `ui`, `audio`)
+- [x] Test with simulated play (walking, driving, getting out, map, pause, wanted level)
+- [x] Automatic test on GitHub on every push (GitHub Actions + Playwright) (~1)
+- [x] Remove the shared `G` object: every variable has an owner module with `export let` and a `set…()` function
+- [x] Balance constants (cars, rewards, police, traffic, timings, prices) in `src/config.js`
+- [x] Performance measurement in the test (draw calls, triangles, simulation time) on PC and emulated phone, with limits; in-game fps overlay (I key)
+- [x] Code, comments and docs in English; game text in Italian and English (L key switches language)
+
+## M2 · Believable Santa Rita — in progress
+Goal: anyone who knows Santa Rita recognises it. Everything according to `docs/REALISM.md`.
+- [x] Data sources: real heights from Arpa Piemonte "Edifici 3D 2017" (eaves height from the City of Turin); Overture rejected (few heights in Italy); terrain model postponed to M7 for Superga
+- [x] Real building heights in the generator: buildings without data down from 625 to 94
+- [ ] Light and atmosphere: ambient occlusion, realistic sky, haze, reflective wet asphalt; high and low graphics levels (needs review) (~2)
+- [ ] Materials with CC0 photographic textures (plaster, asphalt, sidewalks, porphyry, stone) and `docs/CREDITS.md` (needs review) (~1)
+- [ ] Santa Rita buildings: façades by type and period (1950s–70s apartment blocks, continuous raised balconies, roller shutters, real colours) (needs review) (~2)
+- [ ] Santuario di Santa Rita da Cascia and its square with the market (needs review) (~1)
+- [ ] Real signs of the OSM shops and venues (about 390) on the ground floor, in their position (needs review) (~1)
+- [ ] Street furniture: the 666 real trees, GTT stops, bins, newsstands, street name plates, parked cars (needs review) (~2)
+- [ ] Before/after pictures of 5 spots in the district in the README (~1)
+
+## M3 · Driving and chases
+Goal: driving around Santa Rita must be fun on its own.
+- [ ] More believable car physics: weight, load transfer, controllable drifts, suspension (~2)
+- [ ] Visible damage: dents, broken glass, smoke, wheels coming off (~1)
+- [ ] Motorbikes and new vehicles, including typical Turin ones (vans, vintage city cars, GTT buses to steal) (~1–2)
+- [ ] Smarter police: roadblocks, encirclements, cars ramming at 4–5 stars (~1–2)
+- [ ] Street races with fixed routes and records to beat (~1)
+- [ ] Rewarded stunts: jumps, long drifts, near misses (~1)
+
+## M4 · Play anywhere
+Goal: send the link to friends and let them play, from the phone too.
+- [ ] Touch controls: virtual stick, buttons for handbrake, nitro, get in/out (~1–2)
+- [ ] Interface that adapts to the phone screen (HUD, map, menus): today in portrait the text goes off screen, see `tests/out/perf-phone-street.png` (~1)
+- [ ] Graphics that adjust themselves to the performance (~1)
+- [ ] Start menu with options (audio, graphics, controls, language) and reliable saving (~1)
+- [ ] Public link updated with every version and instructions for friends (manual) (~1)
+
+## M5 · Money and empire
+Goal: a reason to make money and a district to conquer.
+- [ ] Economy: income, expenses, prices balanced in `src/config.js` (~1)
+- [ ] Businesses to buy (invented): bar, garage, car wash, newsstand; they earn every game day (~2)
+- [ ] Each business brings 2–3 missions from its "boss" (the game's light story) (~2)
+- [ ] Workshop: tuning cars (engine, brakes, tyres, colours, neon) (~1)
+- [ ] Home in Santa Rita with saving and a personal garage (~1)
+
+## M6 · GTA-style crime
+Goal: the criminal side.
+- [ ] Player health and armour, bar in the HUD (~1)
+- [ ] Punches and auto-aim on the nearest target (~1)
+- [ ] Weapons (pistol, then others) with ammo and a gun shop (~2)
+- [ ] Death → hospital, arrest → police station, losing money or weapons (~1)
+- [ ] Police on foot getting out of their cars and chasing (~1)
+- [ ] Rival gangs fighting over zones and attacking your businesses; racket (~2)
+
+## M7 · Iconic Turin
+Goal: the map grows along the boulevards towards the city's landmarks. **Every zone passes the `docs/REALISM.md` checklist.**
+- [ ] Borgo Filadelfia and Stadio Filadelfia (needs review) (~1–2)
+- [ ] Lingotto, with the track on the roof of the former factory (needs review) (~2)
+- [ ] Porta Nuova and the centre up to piazza Castello and the Mole (needs review) (~3)
+- [ ] The Po and the Murazzi, with the bridges (needs review) (~2)
+- [ ] Superga and the hill, with real terrain (needs review) (~2)
+- [ ] Secrets and collectibles in every zone (~1)
+- [ ] Loading the city in pieces (and possibly moving to Vite) when the map gets big (~1)
+
+---
+
+## Ideas on hold (not yet in a milestone)
+- Radio with hosts and neighbourhood news
+- Sunday matches at the stadium, with crowds and traffic
+- Neighbourhood market in piazza Santa Rita with animated stalls
+- Drivable GTT trams

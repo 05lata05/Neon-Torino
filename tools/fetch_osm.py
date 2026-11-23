@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Scarica i dati OpenStreetMap della zona di gioco (più un margine) in .osm-cache/.
+"""Downloads the OpenStreetMap data of the game area (plus a margin) into .osm-cache/.
 
-Usa l'API ufficiale (api.openstreetmap.org/api/0.6/map) a tasselli piccoli, perché ogni richiesta
-è limitata a 50.000 nodi. Per una zona più grande cambia CLIP in tools/build_map.py e rilancia.
+Uses the official API (api.openstreetmap.org/api/0.6/map) in small tiles, because each request
+is limited to 50,000 nodes. For a larger area change CLIP in tools/build_map.py and run again.
 
-    python3 tools/fetch_osm.py            # scarica solo i tasselli mancanti
-    python3 tools/fetch_osm.py --force    # riscarica tutto
+    python3 tools/fetch_osm.py            # downloads only the missing tiles
+    python3 tools/fetch_osm.py --force    # downloads everything again
 """
 import argparse, os, sys, time, urllib.request
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_map import CLIP, ROOT, to_ll
 
 STEP_LAT, STEP_LON = 0.006, 0.008
-MARGIN = 450  # metri attorno alla zona giocabile (tram, edifici all'orizzonte)
+MARGIN = 450  # metres around the playable area (trams, buildings on the horizon)
 
 def main():
     ap = argparse.ArgumentParser()
@@ -30,7 +30,7 @@ def main():
             tiles.append((round(lo, 4), round(la, 4), round(lo + STEP_LON, 4), round(la + STEP_LAT, 4)))
             lo += STEP_LON
         la += STEP_LAT
-    print(f'{len(tiles)} tasselli per lat {lat0:.4f}–{lat1:.4f}, lon {lon0:.4f}–{lon1:.4f}')
+    print(f'{len(tiles)} tiles for lat {lat0:.4f}–{lat1:.4f}, lon {lon0:.4f}–{lon1:.4f}')
     for i, (x0, y0, x1, y1) in enumerate(tiles):
         fn = os.path.join(a.out, f'tile_{y0}_{x0}.osm')
         if os.path.exists(fn) and not a.force:
@@ -42,13 +42,13 @@ def main():
                 with urllib.request.urlopen(req, timeout=120) as r, open(fn, 'wb') as f:
                     f.write(r.read())
                 break
-            except Exception as e:  # rete instabile: riprova con attesa crescente
-                print('  errore', e, '— riprovo'); time.sleep(2 ** attempt)
+            except Exception as e:  # flaky network: retry with growing waits
+                print('  error', e, '— retrying'); time.sleep(2 ** attempt)
         else:
-            sys.exit('download fallito: ' + url)
+            sys.exit('download failed: ' + url)
         print(f'  [{i + 1}/{len(tiles)}] {os.path.basename(fn)} {os.path.getsize(fn) // 1024} KB')
-        time.sleep(1)  # siamo ospiti dell'API OSM: niente raffiche
-    print('fatto. Ora: python3 tools/build_map.py')
+        time.sleep(1)  # we are guests of the OSM API: no bursts
+    print('done. Now: python3 tools/build_map.py')
 
 if __name__ == '__main__':
     main()

@@ -1,33 +1,33 @@
 #!/usr/bin/env python3
-"""Genera data/torino.json a partire dai dati OpenStreetMap.
+"""Builds data/torino.json from OpenStreetMap data.
 
-Uso:
-    python3 tools/fetch_osm.py            # scarica i tasselli OSM in .osm-cache/
-    python3 tools/fetch_heights.py        # altezze reali degli edifici (ARPA Piemonte)
-    python3 tools/build_map.py            # scrive data/torino.json
-    python3 tools/build_map.py --compare vecchio.json   # confronta con un file esistente
+Usage:
+    python3 tools/fetch_osm.py            # downloads the OSM tiles into .osm-cache/
+    python3 tools/fetch_heights.py        # real building heights (ARPA Piemonte)
+    python3 tools/build_map.py            # writes data/torino.json
+    python3 tools/build_map.py --compare old.json   # compares with an existing file
 
-Coordinate del gioco ("metri mappa"): x verso est, y verso sud, a partire da ORIGIN.
-Il motore le moltiplica per 5 (1 m = 5 unità) e le trasla di (clip.x0-50, clip.y0-50).
+Game coordinates ("map metres"): x towards east, y towards south, starting from ORIGIN.
+The engine multiplies them by 5 (1 m = 5 units) and shifts them by (clip.x0-50, clip.y0-50).
 
-Formato di uscita (tutte le linee sono codificate come polyline a interi, stile Google):
-  R  strade      [classe, senso_unico, indice_nome, corsie, polyline(1 m)]
-  B  edifici     [piani, tipo, esterno(qb m), buchi...]  tipo: 0 generico 1 chiesa 2 stadio 3 garage 4 scuola
-  A  aree        [tipo, esterno(qb m), buchi...]         tipo: g verde, p campo, k parcheggio, w acqua, r ferrovia
-  TW binari tram [[x,y],...]   TR linee tram [linea, [[x,y],...]]   TS/BS fermate tram/bus [x,y,nome]
-  L  landmark    {id: {...}}  forme reali degli edifici che il gioco modella a mano (src/landmarks/)
+Output format (all lines are encoded as integer polylines, Google style):
+  R  roads        [class, oneway, name_index, lanes, polyline(1 m)]
+  B  buildings    [levels, kind, outer(qb m), holes...]  kind: 0 generic 1 church 2 stadium 3 garage 4 school
+  A  areas        [kind, outer(qb m), holes...]          kind: g green, p pitch, k parking, w water, r railway
+  TW tram tracks  [[x,y],...]   TR tram lines [line, [[x,y],...]]   TS/BS tram/bus stops [x,y,name]
+  L  landmarks    {id: {...}}  real shapes of the buildings the game models by hand (src/landmarks/)
 """
 import argparse, glob, json, math, os, sys, xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ORIGIN = [45.0571, 7.6282]                 # lat, lon dell'angolo nord-ovest
-K = [78653.96734960107, 111132]            # metri per grado [lon, lat] a questa latitudine
-QB = 2                                     # risoluzione (m) di edifici e aree
-# zona giocabile in metri mappa: x0, y0, x1, y1 (la versione 1 era [500, 400, 2300, 2050])
+ORIGIN = [45.0571, 7.6282]                 # lat, lon of the north-west corner
+K = [78653.96734960107, 111132]            # metres per degree [lon, lat] at this latitude
+QB = 2                                     # resolution (m) of buildings and areas
+# playable area in map metres: x0, y0, x1, y1 (version 1 was [500, 400, 2300, 2050])
 CLIP = [500, 400, 2300, 2400]
 
-# ---------------------------------------------------------------- lettura OSM
+# ---------------------------------------------------------------- reading OSM
 def load_osm(paths):
     nodes, ways, rels = {}, {}, {}
     for f in paths:
@@ -47,7 +47,7 @@ def to_xy(lat, lon):
 def to_ll(x, y):
     return (ORIGIN[0] - y / K[1], ORIGIN[1] + x / K[0])
 
-# ---------------------------------------------------------------- codifica
+# ---------------------------------------------------------------- encoding
 def enc_num(v, out):
     v = ~(v << 1) if v < 0 else (v << 1)
     while v >= 0x20:
@@ -79,7 +79,7 @@ def half(v):
     return round(v * 2) / 2
 
 def rdp_idx(pts, a, b, tol):
-    """Ramer-Douglas-Peucker sugli indici a..b (inclusi); restituisce gli indici da tenere."""
+    """Ramer-Douglas-Peucker on indices a..b (inclusive); returns the indices to keep."""
     if b - a < 2:
         return [a, b]
     ax, ay = pts[a]; bx, by = pts[b]
@@ -92,7 +92,7 @@ def rdp_idx(pts, a, b, tol):
         return [a, b]
     return rdp_idx(pts, a, bi, tol)[:-1] + rdp_idx(pts, bi, b, tol)
 
-# ---------------------------------------------------------------- geometria OSM
+# ---------------------------------------------------------------- OSM geometry
 class Geo:
     def __init__(self, nodes, ways, rels):
         self.N, self.W, self.R = nodes, ways, rels
@@ -110,7 +110,7 @@ class Geo:
         return p[:-1]
 
     def stitch(self, wids):
-        """Unisce le vie in anelli chiusi (per i multipoligoni)."""
+        """Joins ways into closed rings (for multipolygons)."""
         segs = [list(self.W[w][0]) for w in wids if w in self.W and all(r in self.N for r in self.W[w][0])]
         rings = []
         while segs:
@@ -130,7 +130,7 @@ class Geo:
         return rings
 
     def polygons(self, pred):
-        """Restituisce [(tags, esterno, buchi, id)] per vie chiuse e multipoligoni che soddisfano pred(tags)."""
+        """Returns [(tags, outer, holes, id)] for closed ways and multipolygons that satisfy pred(tags)."""
         out = []
         for wid, (refs, t) in self.W.items():
             if pred(t):
@@ -157,7 +157,7 @@ def point_in(pt, ring):
 def in_box(p, box, m=0):
     return box[0] - m <= p[0] <= box[2] + m and box[1] - m <= p[1] <= box[3] + m
 
-# ---------------------------------------------------------------- classificazione
+# ---------------------------------------------------------------- classification
 ROAD_CLS = {'primary': 'P', 'primary_link': 'P', 'trunk': 'P', 'trunk_link': 'P',
             'secondary': 'S', 'secondary_link': 'S', 'tertiary': 'T', 'tertiary_link': 'T',
             'residential': 'R', 'unclassified': 'R', 'living_street': 'R', 'pedestrian': 'X'}
@@ -191,7 +191,7 @@ def area_kind(t):
         return 'r'
     return None
 
-# ---------------------------------------------------------------- landmark (forme reali, modellati a mano nel gioco)
+# ---------------------------------------------------------------- landmarks (real shapes, modelled by hand in the game)
 # id OSM: w = way, r = relation, n = node
 LANDMARKS = {
     'stadium':       {'outer': 'r1695662', 'pitch': 'w124253933', 'name': 'Stadio Olimpico Grande Torino'},
@@ -214,8 +214,8 @@ KEEP_TAGS = ('building', 'building:levels', 'height', 'roof:shape', 'roof:height
              'highway', 'natural', 'genus', 'attraction', 'amenity', 'playground', 'step_count', 'lit')
 
 class Heights:
-    """Altezze reali da ARPA Piemonte (tools/fetch_heights.py): per ogni edificio OSM senza numero di piani,
-    prende l'unità volumetrica più grande che cade dentro la sua impronta e converte i metri in piani."""
+    """Real heights from ARPA Piemonte (tools/fetch_heights.py): for each OSM building without a level count,
+    takes the largest volumetric unit inside its footprint and converts metres into levels."""
     def __init__(self, path):
         self.grid = defaultdict(list)
         if not os.path.exists(path):
@@ -236,7 +236,7 @@ class Heights:
                 for u in self.grid[(gx, gy)]:
                     if (best is None or u[1] > best[1]) and point_in(u[0], outer):
                         best = u
-        # taratura sugli edifici che hanno entrambi i dati: altezza ≈ 3,3 m per piano + 2 m
+        # calibrated on buildings that have both: height ≈ 3.3 m per level + 2 m
         return max(1, round((best[2] - 2) / 3.3)) if best else 0
 
 def build(geo, clip, landmark_ids=True, heights=None):
@@ -249,7 +249,7 @@ def build(geo, clip, landmark_ids=True, heights=None):
         if n not in name_idx: name_idx[n] = len(names); names.append(n)
         return name_idx[n]
 
-    # --- strade: vie intere che toccano la zona; semplificate tenendo sempre gli incroci
+    # --- roads: whole ways touching the area; simplified, always keeping junctions
     R_out, sel = [], []
     for wid, (refs, t) in W.items():
         cls = ROAD_CLS.get(t.get('highway'))
@@ -278,8 +278,8 @@ def build(geo, clip, landmark_ids=True, heights=None):
         if len(pts) < 2: continue
         R_out.append([cls, ow, nidx(t.get('name')), lanes, encode(pts, 1)])
 
-    # --- landmark: forme reali; gli edifici sostituiti vengono tolti dalla lista generica
-    L, skip_geo = {}, []          # skip_geo: (centroide, area) degli edifici modellati a mano
+    # --- landmarks: real shapes; the replaced buildings are removed from the generic list
+    L, skip_geo = {}, []          # skip_geo: (centroid, area) of the buildings modelled by hand
     def shape_of(ref):
         kind, i = ref[0], ref[1:]
         if kind == 'w' and i in W:
@@ -306,12 +306,12 @@ def build(geo, clip, landmark_ids=True, heights=None):
             o = {'name': spec['name']}
             if 'node' in spec:
                 n = N.get(spec['node'][1:])
-                if not n: print('landmark mancante', lid, file=sys.stderr); continue
+                if not n: print('missing landmark', lid, file=sys.stderr); continue
                 o['pos'] = [half(v) for v in to_xy(n[0], n[1])]
             ref = spec.get('shape') or spec.get('outer') or spec.get('area')
             if ref:
                 ring, holes = shape_of(ref)
-                if not ring: print('landmark mancante', lid, ref, file=sys.stderr); continue
+                if not ring: print('missing landmark', lid, ref, file=sys.stderr); continue
                 o['outer'] = q(ring); o['holes'] = [q(h) for h in holes]
                 if 'area' not in spec: skip_geo.append((centroid(ring), area(ring)))
                 t = (W.get(ref[1:]) or R.get(ref[1:]) or (None, {}))[1]
@@ -352,7 +352,7 @@ def build(geo, clip, landmark_ids=True, heights=None):
         c, a = centroid(outer), area(outer)
         return any(math.hypot(c[0] - s[0][0], c[1] - s[0][1]) < 3 and abs(a - s[1]) < 0.15 * s[1] + 5 for s in skip_geo)
 
-    # --- edifici (senza duplicati: alcuni stadi sono mappati due volte come relazione)
+    # --- buildings (no duplicates: some stadiums are mapped twice as a relation)
     B_out, seen, stats = [], set(), Counter()
     for t, outer, holes, oid in geo.polygons(lambda t: 'building' in t and t.get('building') != 'no' and t.get('layer', '0')[:1] != '-' and t.get('location') != 'underground'):
         if not any(in_box(p, clip) for p in outer): continue
@@ -365,15 +365,15 @@ def build(geo, clip, landmark_ids=True, heights=None):
         lv = levels(t)
         if not lv and heights:
             lv = heights.levels_for(outer)
-            if lv: stats['altezze_arpa'] += 1
-        elif lv: stats['piani_osm'] += 1
+            if lv: stats['arpa_heights'] += 1
+        elif lv: stats['osm_levels'] += 1
         row = [lv, building_kind(t), encode(o, QB)]
         for h in holes:
             hh = dedupe(h, QB)
             if len(hh) >= 3: row.append(encode(hh, QB))
         B_out.append(row)
 
-    # --- aree
+    # --- areas
     A_out = []
     for t, outer, holes, oid in geo.polygons(lambda t: area_kind(t) is not None and 'building' not in t):
         if not any(in_box(p, clip) for p in outer): continue
@@ -385,7 +385,7 @@ def build(geo, clip, landmark_ids=True, heights=None):
             if len(hh) >= 3: row.append(encode(hh, QB))
         A_out.append(row)
 
-    # --- tram: binari, linee, fermate; fermate bus
+    # --- trams: tracks, lines, stops; bus stops
     TW = []
     for wid, (refs, t) in W.items():
         if t.get('railway') != 'tram': continue
@@ -406,7 +406,7 @@ def build(geo, clip, landmark_ids=True, heights=None):
             elif refs[-1] == seq[-1]: seq += refs[::-1][1:]
             elif len(seq) == len(W[mem[0][1]][0]) and (refs[0] == seq[0] or refs[-1] == seq[0]):
                 seq = seq[::-1]; seq += refs[1:] if refs[0] == seq[-1] else refs[::-1][1:]
-            else: seq += refs  # salto: continua comunque
+            else: seq += refs  # gap: carry on anyway
         pts = [to_xy(*N[r][:2]) for r in seq]
         pts = [p for p in pts if in_box(p, tram_box, 1200)]
         inside = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(pts, pts[1:]) if in_box(a, clip, 60) and in_box(b, clip, 60))
@@ -423,23 +423,23 @@ def build(geo, clip, landmark_ids=True, heights=None):
         elif t.get('highway') == 'bus_stop' and in_box(p, clip, 80):
             BS.append([half(p[0]), half(p[1]), t.get('name', '')])
 
-    print('edifici:', len(B_out), '| piani da OSM:', stats['piani_osm'], '| altezze da ARPA:', stats['altezze_arpa'],
-          '| senza dato:', len(B_out) - stats['piani_osm'] - stats['altezze_arpa'])
+    print('buildings:', len(B_out), '| levels from OSM:', stats['osm_levels'], '| heights from ARPA:', stats['arpa_heights'],
+          '| no data:', len(B_out) - stats['osm_levels'] - stats['arpa_heights'])
     return {'v': 2, 'qb': QB, 'origin': ORIGIN, 'k': K, 'clip': clip, 'names': names,
             'R': R_out, 'B': B_out, 'A': A_out, 'TW': TW, 'TR': TR, 'TS': TS, 'BS': BS, 'L': L}
 
 def compare(new, old):
-    print('voce        nuovo  vecchio')
+    print('key           new      old')
     for k in ('R', 'B', 'A', 'TW', 'TR', 'TS', 'BS', 'names'):
         print(f'{k:8} {len(new[k]):8} {len(old.get(k, [])):8}')
-    print('classi strade nuovo  ', sorted(Counter(r[0] for r in new['R']).items()))
-    print('classi strade vecchio', sorted(Counter(r[0] for r in old['R']).items()))
-    print('tipi edificio nuovo  ', sorted(Counter(b[1] for b in new['B']).items()))
-    print('tipi edificio vecchio', sorted(Counter(b[1] for b in old['B']).items()))
-    print('aree nuovo  ', sorted(Counter(a[0] for a in new['A']).items()))
-    print('aree vecchio', sorted(Counter(a[0] for a in old['A']).items()))
-    print('linee tram nuovo  ', [(t[0], len(t[1])) for t in new['TR']])
-    print('linee tram vecchio', [(t[0], len(t[1])) for t in old['TR']])
+    print('road classes new     ', sorted(Counter(r[0] for r in new['R']).items()))
+    print('road classes old     ', sorted(Counter(r[0] for r in old['R']).items()))
+    print('building kinds new   ', sorted(Counter(b[1] for b in new['B']).items()))
+    print('building kinds old   ', sorted(Counter(b[1] for b in old['B']).items()))
+    print('areas new', sorted(Counter(a[0] for a in new['A']).items()))
+    print('areas old', sorted(Counter(a[0] for a in old['A']).items()))
+    print('tram lines new', [(t[0], len(t[1])) for t in new['TR']])
+    print('tram lines old', [(t[0], len(t[1])) for t in old['TR']])
 
 def main():
     ap = argparse.ArgumentParser()
@@ -450,18 +450,18 @@ def main():
     ap.add_argument('--no-landmarks', action='store_true')
     a = ap.parse_args()
     files = sorted(glob.glob(os.path.join(a.osm, '*.osm')))
-    if not files: sys.exit('Nessun file .osm in ' + a.osm + ' — esegui prima tools/fetch_osm.py')
+    if not files: sys.exit('No .osm files in ' + a.osm + ' — run tools/fetch_osm.py first')
     geo = Geo(*load_osm(files))
     clip = [int(v) for v in a.clip]
-    heights = Heights(os.path.join(a.osm, 'arpa_edifici.json'))
-    if not heights: print('attenzione: altezze ARPA assenti, esegui tools/fetch_heights.py')
+    heights = Heights(os.path.join(a.osm, 'arpa_buildings.json'))
+    if not heights: print('warning: ARPA heights missing, run tools/fetch_heights.py')
     data = build(geo, clip, not a.no_landmarks, heights)
     if a.compare:
         compare(data, json.load(open(a.compare)))
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     with open(a.out, 'w') as f:
         json.dump(data, f, separators=(',', ':'), ensure_ascii=False)
-    print('scritto', a.out, os.path.getsize(a.out), 'byte;', 'landmark:', ', '.join(data['L']))
+    print('wrote', a.out, os.path.getsize(a.out), 'bytes;', 'landmarks:', ', '.join(data['L']))
 
 if __name__ == '__main__':
     main()
