@@ -203,6 +203,21 @@ async function measure(pg, quality, name) {
       n.cam = f(n.SPAWN);
     }, cam.toString());
     await pg.waitForTimeout(600);
+    // DIAG: per-frame values over 8 frames
+    const frames = await pg.evaluate(
+      () =>
+        new Promise(res => {
+          const o = [];
+          const f = () => {
+            const p = window.__nr.perf();
+            o.push([p.calls, Math.round(p.triangles / 1000), Math.round(performance.now())]);
+            if (o.length < 8) requestAnimationFrame(f);
+            else res(o);
+          };
+          requestAnimationFrame(f);
+        }),
+    );
+    console.log('  DIAG', name, view, JSON.stringify(frames));
     const p = await pg.evaluate(() => window.__nr.perf());
     out.calls = Math.max(out.calls, p.calls);
     out.triangles = Math.max(out.triangles, p.triangles);
