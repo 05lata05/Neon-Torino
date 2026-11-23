@@ -1,8 +1,7 @@
 // Comparsa e rimozione di auto, pedoni e volanti attorno al giocatore.
 import * as THREE from 'three';
-import { G } from '../core/game.js';
 import { camera } from '../core/render.js';
-import { peds, player, wanted } from '../core/state.js';
+import { cars, peds, player, state, wanted } from '../core/state.js';
 import { COPS_BY, makeCop } from './police.js';
 import { spawnPed, spawnTrafficCar } from './traffic.js';
 
@@ -25,8 +24,8 @@ export function manageSpawns(dt, fx, fy) {
   spawnT -= dt;
   if (spawnT > 0) return;
   spawnT = 0.2;
-  for (let i = G.cars.length - 1; i >= 0; i--) {
-    const c = G.cars[i];
+  for (let i = cars.length - 1; i >= 0; i--) {
+    const c = cars[i];
     if (c === player.car) continue;
     const d = Math.hypot(c.x - fx, c.y - fy),
       vis = onScreen(c.x, c.y, 80);
@@ -34,7 +33,7 @@ export function manageSpawns(dt, fx, fy) {
     if (c.keep) kill = d > 2600 && !vis;
     else if (c.driver === 'npc' || c.driver === 'cop') kill = (d > 1800 && !vis) || (c.lost && !vis && d > 500);
     else kill = d > 1200 && !vis;
-    if (kill) G.cars.splice(i, 1);
+    if (kill) cars.splice(i, 1);
   }
   for (let i = peds.length - 1; i >= 0; i--) {
     const p = peds[i];
@@ -42,17 +41,17 @@ export function manageSpawns(dt, fx, fy) {
   }
   let tr = 0,
     cops = 0;
-  for (const c of G.cars) {
+  for (const c of cars) {
     if (c.driver === 'npc') tr++;
     else if (c.driver === 'cop') cops++;
   }
   if (tr < TRAFFIC_N) spawnTrafficCar(fx, fy, 500, 1500, false);
   if (peds.length < PED_N) spawnPed(fx, fy, 350, 1100, false);
-  const want = G.state === 'play' ? COPS_BY[wanted.level] : 0;
+  const want = state === 'play' ? COPS_BY[wanted.level] : 0;
   if (cops < want) {
     let best = null,
       bd = 800;
-    for (const c of G.cars)
+    for (const c of cars)
       if (c.type === 'polizia' && c.driver === 'npc' && !c.wreck) {
         const d = Math.hypot(c.x - fx, c.y - fy);
         if (d < bd) {

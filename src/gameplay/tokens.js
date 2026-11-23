@@ -1,9 +1,8 @@
 // Gettoni neon da collezionare.
 import * as THREE from 'three';
 import { sfx } from '../audio/sfx.js';
-import { G } from '../core/game.js';
 import { scene } from '../core/render.js';
-import { player, save, saveMoney } from '../core/state.js';
+import { money, player, save, saveMoney, setMoney } from '../core/state.js';
 import { bigMsg, puffTex, toast } from '../world/effects.js';
 import { GH, GW, OPEN, PARK, SPAWN, T, nearestEdge, tileAt } from '../world/map.js';
 
@@ -16,11 +15,11 @@ export function updateTokens() {
       t.got = true;
       if (t.mesh) scene.remove(t.mesh);
       save.tokens.push(t.id);
-      G.money += 50;
+      setMoney(money + 50);
       const n = tokens.filter(o => o.got).length;
       sfx.coin();
       if (n === tokens.length) {
-        G.money += 5000;
+        setMoney(money + 5000);
         bigMsg('TUTTI I GETTONI!', 'Hai esplorato tutta la città: +€5.000', '#ffd23f', 4);
         sfx.win();
       } else toast('Gettone neon ' + n + '/' + tokens.length + '  (+€50)', 2);

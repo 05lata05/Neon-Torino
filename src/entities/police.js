@@ -1,7 +1,19 @@
 // Polizia: inseguimento, livello di ricercato, arresto.
 import { sfx } from '../audio/sfx.js';
-import { G } from '../core/game.js';
-import { offerQueue, player, saveMoney, wanted } from '../core/state.js';
+import {
+  cars,
+  mission,
+  money,
+  offerQueue,
+  player,
+  saveMoney,
+  setBustT,
+  setCars,
+  setMission,
+  setMoney,
+  state,
+  wanted,
+} from '../core/state.js';
 import { angDiff, clamp } from '../core/util.js';
 import { heli } from './heli.js';
 import { carPhysics } from './vehicles.js';
@@ -113,12 +125,12 @@ export function makeCop(c) {
   c.ai = { path: [], repath: 0, stuck: 0, rev: 0, revSteer: 1 };
 }
 export function copNear(x, y, r) {
-  for (const c of G.cars)
+  for (const c of cars)
     if (!c.wreck && (c.driver === 'cop' || (c.type === 'polizia' && c.driver === 'npc')) && Math.hypot(c.x - x, c.y - y) < r) return true;
   return false;
 }
 export function addHeat(n) {
-  if (G.state !== 'play') return;
+  if (state !== 'play') return;
   const before = wanted.level;
   wanted.level = Math.min(5, wanted.level + n);
   wanted.lost = 0;
@@ -131,7 +143,7 @@ export function addHeat(n) {
   }
 }
 export function calmCops() {
-  for (const c of G.cars)
+  for (const c of cars)
     if (c.driver === 'cop') {
       c.driver = 'idle';
       c.siren = false;
@@ -201,7 +213,7 @@ export function updateWanted(dt) {
     return;
   }
   let seen = false;
-  for (const c of G.cars) {
+  for (const c of cars) {
     if (c.driver !== 'cop') continue;
     if (Math.hypot(c.x - player.x, c.y - player.y) < 450 && los(c.x, c.y, player.x, player.y)) {
       seen = true;
@@ -221,7 +233,7 @@ export function updateWanted(dt) {
       wanted.lost = 0;
       if (wanted.level === 0) {
         calmCops();
-        if (G.mission && G.mission.type === 'colpo') completeMission();
+        if (mission && mission.type === 'colpo') completeMission();
         else bigMsg('SEMINATI!', 'La polizia ha perso le tue tracce', '#4da3ff', 2.5);
       } else toast('Calore in calo…');
     }
@@ -229,7 +241,7 @@ export function updateWanted(dt) {
   const mySp = player.car ? Math.hypot(player.car.vx, player.car.vy) : player.moving ? 140 : 0;
   let near = false;
   const R = player.car ? 52 : 85;
-  for (const c of G.cars)
+  for (const c of cars)
     if (c.driver === 'cop' && Math.hypot(c.x - player.x, c.y - player.y) < R) {
       near = true;
       break;
@@ -240,15 +252,15 @@ export function updateWanted(dt) {
   } else wanted.bust = Math.max(0, wanted.bust - dt * 0.7);
 }
 export function busted() {
-  const fine = Math.min(G.money, 200 + wanted.level * 150);
-  G.money -= fine;
+  const fine = Math.min(money, 200 + wanted.level * 150);
+  setMoney(money - fine);
   saveMoney();
-  G.bustT = 3.2;
+  setBustT(3.2);
   bigMsg('ARRESTATO', fine > 0 ? 'Multa: -€' + fine : 'Niente multa: sei al verde', '#4da3ff', 3.2);
-  if (G.mission) {
+  if (mission) {
     clearPax();
-    offerQueue.push({ type: G.mission.type, t: 5 });
-    G.mission = null;
+    offerQueue.push({ type: mission.type, t: 5 });
+    setMission(null);
     toast('Missione fallita');
   }
   sfx.fail();
@@ -264,7 +276,7 @@ export function respawnAfterBust() {
   player.y = SPAWN.y;
   player.stun = 0;
   player.a = SPAWN.a;
-  G.cars = G.cars.filter(c => c.driver !== 'cop' && c.driver !== 'idle');
+  setCars(cars.filter(c => c.driver !== 'cop' && c.driver !== 'idle'));
   updateCamera(0, true);
 }
 

@@ -1,8 +1,7 @@
 // Particelle (fumo, scintille) e messaggi a schermo (fumetti, avvisi, titoli).
 import * as THREE from 'three';
-import { G } from '../core/game.js';
 import { scene } from '../core/render.js';
-import { parts, toasts } from '../core/state.js';
+import { bubbles, parts, setBig, setBubbles, toasts } from '../core/state.js';
 import { TAU, canvasTex, glowCanvas, rand } from '../core/util.js';
 import { onScreen } from '../entities/spawn.js';
 
@@ -39,15 +38,15 @@ export function sparks(x, y, imp) {
   }
 }
 export function say(ent, text, dur) {
-  G.bubbles = G.bubbles.filter(b => b.ent !== ent);
-  G.bubbles.push({ ent, text, t: dur || 2 });
+  setBubbles(bubbles.filter(b => b.ent !== ent));
+  bubbles.push({ ent, text, t: dur || 2 });
 }
 export function toast(s, d) {
   toasts.push({ s, t: d || 2.6 });
   if (toasts.length > 3) toasts.shift();
 }
 export function bigMsg(title, sub, col, d) {
-  G.big = { title, sub, col: col || '#ffd32a', t: d || 3, max: d || 3 };
+  setBig({ title, sub, col: col || '#ffd32a', t: d || 3, max: d || 3 });
 }
 
 export function init() {

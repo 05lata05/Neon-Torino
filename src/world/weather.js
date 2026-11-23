@@ -1,9 +1,27 @@
 // Meteo: pioggia e nebbia.
+import { state } from '../core/state.js';
 import * as THREE from 'three';
-import { G } from '../core/game.js';
 import { camera, scene } from '../core/render.js';
 import { rand } from '../core/util.js';
 import { toast } from './effects.js';
+
+// stato di proprietà di questo modulo: gli altri moduli lo leggono e lo cambiano con le funzioni set…()
+export let fogTarget, fogW, rain, rainA, rainTarget;
+export function setFogTarget(v) {
+  fogTarget = v;
+}
+export function setFogW(v) {
+  fogW = v;
+}
+export function setRain(v) {
+  rain = v;
+}
+export function setRainA(v) {
+  rainA = v;
+}
+export function setRainTarget(v) {
+  rainTarget = v;
+}
 
 export let weatherT, cRain, cFogW, asphBase, RN, rainPos, rainGeo, rainM, rainL;
 
@@ -11,24 +29,24 @@ export function updateWeather(dt) {
   weatherT -= dt;
   if (weatherT <= 0) {
     weatherT = rand(80, 180);
-    const wr = G.rainTarget,
-      wf = G.fogTarget,
+    const wr = rainTarget,
+      wf = fogTarget,
       r = Math.random();
-    G.rainTarget = r < 0.3 ? 1 : 0;
-    G.fogTarget = r >= 0.3 && r < 0.5 ? 1 : 0;
-    if (G.state === 'play') {
-      if (G.rainTarget && !wr) toast('Inizia a piovere: strade scivolose!', 2.5);
-      else if (G.fogTarget && !wf) toast('Scende la nebbia: visibilità ridotta', 2.5);
-      else if (!G.rainTarget && !G.fogTarget && (wr || wf)) toast(wr ? 'Smette di piovere.' : 'La nebbia si dirada.', 2.5);
+    rainTarget = r < 0.3 ? 1 : 0;
+    fogTarget = r >= 0.3 && r < 0.5 ? 1 : 0;
+    if (state === 'play') {
+      if (rainTarget && !wr) toast('Inizia a piovere: strade scivolose!', 2.5);
+      else if (fogTarget && !wf) toast('Scende la nebbia: visibilità ridotta', 2.5);
+      else if (!rainTarget && !fogTarget && (wr || wf)) toast(wr ? 'Smette di piovere.' : 'La nebbia si dirada.', 2.5);
     }
   }
-  G.rain += (G.rainTarget - G.rain) * Math.min(1, dt * 0.12);
-  G.fogW += (G.fogTarget - G.fogW) * Math.min(1, dt * 0.1);
+  rain += (rainTarget - rain) * Math.min(1, dt * 0.12);
+  fogW += (fogTarget - fogW) * Math.min(1, dt * 0.1);
 }
 export function updateRain(dt) {
-  rainL.visible = G.rain > 0.03;
+  rainL.visible = rain > 0.03;
   if (!rainL.visible) return;
-  rainM.opacity = 0.55 * G.rain;
+  rainM.opacity = 0.55 * rain;
   rainL.position.set(camera.position.x, 0, camera.position.z);
   const f = 520 * dt;
   for (let i = 0; i < RN; i++) {
@@ -43,12 +61,12 @@ export function updateRain(dt) {
 
 export function init() {
   // ---------------- meteo: pioggia ----------------
-  G.rain = 0;
-  G.rainTarget = 0;
+  rain = 0;
+  rainTarget = 0;
   weatherT = 75;
-  G.rainA = null;
-  G.fogW = 0;
-  G.fogTarget = 0;
+  rainA = null;
+  fogW = 0;
+  fogTarget = 0;
   cRain = new THREE.Color('#7f8a96');
   cFogW = new THREE.Color('#c3c7cb');
   asphBase = new THREE.Color('#3b3e44');

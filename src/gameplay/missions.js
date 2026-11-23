@@ -1,7 +1,6 @@
 // Missioni: consegna, corsa clandestina, taxi, colpo.
 import { sfx } from '../audio/sfx.js';
-import { G } from '../core/game.js';
-import { offerQueue, offers, peds, player, save, saveMoney } from '../core/state.js';
+import { gtime, mission, money, offerQueue, offers, peds, player, save, saveMoney, setMission, setMoney } from '../core/state.js';
 import { pick } from '../core/util.js';
 import { makePed } from '../entities/peds.js';
 import { addHeat, nearestNode } from '../entities/police.js';
@@ -47,7 +46,7 @@ export function startMission(o) {
     const a = randomSpot(o.x, o.y, 1200, 2600),
       b = randomSpot(a[0], a[1], 2000, 4000);
     const d = Math.hypot(a[0] - o.x, a[1] - o.y) + Math.hypot(b[0] - a[0], b[1] - a[1]);
-    G.mission = {
+    setMission({
       type: 'consegna',
       steps: [
         { x: a[0], y: a[1], label: 'Ritira il pacco' },
@@ -56,7 +55,7 @@ export function startMission(o) {
       idx: 0,
       time: d / 180 + 18,
       reward: Math.round((150 + d * 0.12) / 10) * 10,
-    };
+    });
     bigMsg('CONSEGNA', 'Zio Tonino ha un pacco "delicato". Niente domande, niente ritardi.', MT.consegna.col, 3.6);
   } else if (o.type === 'corsa') {
     let n = nearestNode(player.x, player.y),
@@ -75,7 +74,7 @@ export function startMission(o) {
       }
       steps.push({ x: n.x, y: n.y, label: 'Checkpoint ' + (i + 1) + '/7' });
     }
-    G.mission = { type: 'corsa', steps, idx: 0, time: d / 230 + 8, reward: 700 };
+    setMission({ type: 'corsa', steps, idx: 0, time: d / 230 + 8, reward: 700 });
     bigMsg('CORSA CLANDESTINA', 'Sette checkpoint per le strade della città. Il cronometro corre.', MT.corsa.col, 3.6);
   } else if (o.type === 'taxi') {
     const a = randomSpot(o.x, o.y, 600, 1800),
@@ -85,7 +84,7 @@ export function startMission(o) {
     pax.wait = true;
     pax.keep = true;
     peds.push(pax);
-    G.mission = {
+    setMission({
       type: 'taxi',
       steps: [
         { x: a[0], y: a[1], label: 'Raggiungi il cliente e fermati accanto' },
@@ -97,32 +96,32 @@ export function startMission(o) {
       pax,
       car: null,
       hp0: 0,
-    };
+    });
     bigMsg('TAXI', 'Un cliente ha fretta. Guida pulito: la mancia dipende dai danni.', MT.taxi.col, 3.6);
   } else {
-    G.mission = { type: 'colpo', steps: [], idx: 0, time: 0, reward: 900 };
+    setMission({ type: 'colpo', steps: [], idx: 0, time: 0, reward: 900 });
     addHeat(3);
     bigMsg('IL COLPO', 'Hai "preso in prestito" i gioielli della Contessa. Semina la polizia!', MT.colpo.col, 3.6);
   }
 }
 export function completeMission() {
-  const r = G.mission.reward,
-    ty = G.mission.type;
+  const r = mission.reward,
+    ty = mission.type;
   clearPax();
-  G.money += r;
+  setMoney(money + r);
   save.done++;
   saveMoney();
   sfx.win();
-  bigMsg('MISSIONE COMPIUTA', '+€' + r + (G.mission.tipNote || ''), '#ffd32a', 3.2);
-  G.mission = null;
+  bigMsg('MISSIONE COMPIUTA', '+€' + r + (mission.tipNote || ''), '#ffd32a', 3.2);
+  setMission(null);
   offerQueue.push({ type: ty, t: 4 });
 }
 export function failMission(reason) {
-  const ty = G.mission.type;
+  const ty = mission.type;
   clearPax();
   sfx.fail();
   bigMsg('MISSIONE FALLITA', reason, '#ff4d4d', 3);
-  G.mission = null;
+  setMission(null);
   offerQueue.push({ type: ty, t: 4 });
 }
 export function updateMission(dt) {
@@ -135,13 +134,13 @@ export function updateMission(dt) {
   }
   for (const o of offers) {
     if (o.warn > 0) o.warn -= dt;
-    if (!G.mission && Math.hypot(o.x - player.x, o.y - player.y) < 30) {
+    if (!mission && Math.hypot(o.x - player.x, o.y - player.y) < 30) {
       startMission(o);
       break;
     }
   }
-  if (!G.mission || G.mission.type === 'colpo') return;
-  const m = G.mission;
+  if (!mission || mission.type === 'colpo') return;
+  const m = mission;
   m.time -= dt;
   if (m.time <= 0) {
     failMission('Tempo scaduto!');
@@ -157,9 +156,9 @@ export function updateMission(dt) {
     if (m.type === 'taxi') {
       if (!player.car) return;
       if (Math.hypot(player.car.vx, player.car.vy) > 70) {
-        if (!(m.warnT > G.gtime)) {
+        if (!(m.warnT > gtime)) {
           toast('Rallenta e fermati!', 1.2);
-          m.warnT = G.gtime + 1.5;
+          m.warnT = gtime + 1.5;
         }
         return;
       }

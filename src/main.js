@@ -1,10 +1,9 @@
 // Avvio: inizializza i moduli nell'ordine giusto, popola la città e fa girare il ciclo di gioco.
 import { scheduleRadio } from './audio/radio.js';
 import { updateAudio } from './audio/sfx.js';
-import { G } from './core/game.js';
 import { startGame } from './core/input.js';
 import { camera, renderer, scene } from './core/render.js';
-import { offers, peds, player, wanted } from './core/state.js';
+import { cars, mission, money, offers, peds, player, setClockT, setMoney, state, wanted } from './core/state.js';
 import { update } from './core/update.js';
 import { heli } from './entities/heli.js';
 import { populate } from './entities/spawn.js';
@@ -12,7 +11,7 @@ import { tramRoutes, trams } from './entities/trams.js';
 import { GARAGE } from './gameplay/garage.js';
 import { ramps } from './gameplay/ramps.js';
 import { tokens } from './gameplay/tokens.js';
-import { updateCamera, updateEnv } from './render/camera.js';
+import { camOverride, setCamOverride, updateCamera, updateEnv } from './render/camera.js';
 import { perfCheck } from './render/quality.js';
 import { syncScene } from './render/sync.js';
 import { drawHUD } from './ui/hud.js';
@@ -27,7 +26,7 @@ import { init as init_world_ground } from './world/ground.js';
 import { init as init_world_lights } from './world/lights.js';
 import { init as init_world_city } from './world/city.js';
 import { init as init_world_skyline } from './world/skyline.js';
-import { init as init_world_weather } from './world/weather.js';
+import { init as init_world_weather, rain, setFogTarget, setFogW, setRain, setRainTarget } from './world/weather.js';
 import { init as init_entities_trams } from './entities/trams.js';
 import { init as init_core_state } from './core/state.js';
 import { init as init_entities_vehicles } from './entities/vehicles.js';
@@ -121,8 +120,8 @@ window.__nr = {
   spawnCar(type, dist = 10) {
     const a = SPAWN.a,
       c = makeCar(type, player.x + Math.cos(a) * dist, player.y + Math.sin(a) * dist, a);
-    G.cars.push(c);
-    return G.cars.length - 1;
+    cars.push(c);
+    return cars.length - 1;
   },
   teleport(x, y) {
     player.x = x;
@@ -133,26 +132,26 @@ window.__nr = {
   L: DATA.L,
   toW,
   set cam(v) {
-    G.camOverride = v;
+    setCamOverride(v);
   },
   get cam() {
-    return G.camOverride;
+    return camOverride;
   },
   setHour(h) {
-    G.clockT = ((h - 17 + 24) % 24) * 15;
+    setClockT(((h - 17 + 24) % 24) * 15);
   },
   get rain() {
-    return G.rain;
+    return rain;
   },
   set fogT(v) {
-    G.fogTarget = v;
-    G.fogW = v;
+    setFogTarget(v);
+    setFogW(v);
   },
   trams,
   tramRoutes,
   set rainT(v) {
-    G.rainTarget = v;
-    G.rain = v;
+    setRainTarget(v);
+    setRain(v);
   },
   signals,
   get heli() {
@@ -161,25 +160,28 @@ window.__nr = {
   tokens,
   ramps,
   GARAGE,
+  get money() {
+    return money;
+  },
   set money(v) {
-    G.money = v;
+    setMoney(v);
   },
   set clock(v) {
-    G.clockT = v;
+    setClockT(v);
   },
   get state() {
-    return G.state;
+    return state;
   },
   player,
   get cars() {
-    return G.cars;
+    return cars;
   },
   get peds() {
     return peds;
   },
   wanted,
   get mission() {
-    return G.mission;
+    return mission;
   },
   get offers() {
     return offers;

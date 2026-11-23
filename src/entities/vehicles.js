@@ -1,8 +1,8 @@
 // Veicoli: modelli di guida, fisica, danni ed esplosioni.
+import { rain } from '../world/weather.js';
 import { sfx } from '../audio/sfx.js';
-import { G } from '../core/game.js';
 import { camera } from '../core/render.js';
-import { peds, player } from '../core/state.js';
+import { gtime, peds, player, setShake, shake } from '../core/state.js';
 import { TAU, clamp, pick, rand } from '../core/util.js';
 import { makePed, pedSolidAt } from './peds.js';
 import { exitCar } from '../gameplay/player.js';
@@ -119,7 +119,7 @@ export function carPhysics(c, thr, steer, hand, dt, boost) {
     vf *= 1 - 1.4 * dt;
     c.brake = true;
   }
-  const grip = (hand ? 1.3 : d.grip * (rough < 1 ? 0.7 : 1)) * (1 - 0.3 * G.rain);
+  const grip = (hand ? 1.3 : d.grip * (rough < 1 ? 0.7 : 1)) * (1 - 0.3 * rain);
   vr *= Math.max(0, 1 - grip * dt);
   const spf = clamp(Math.abs(vf) / 110, 0, 1) * (1 - clamp((Math.abs(vf) - 350) / 400, 0, 0.35));
   const na = c.a + steer * d.turn * spf * (vf >= 0 ? 1 : -1) * dt * (hand ? 1.4 : 1);
@@ -188,11 +188,11 @@ export function moveCar(c, dt) {
     c.vx *= -0.3;
     c.vy *= -0.3;
   }
-  if (imp > 130 && !(c.hitCd > G.gtime)) {
-    c.hitCd = G.gtime + 0.3;
+  if (imp > 130 && !(c.hitCd > gtime)) {
+    c.hitCd = gtime + 0.3;
     sparks(c.x + (Math.cos(c.a) * c.d.len) / 2, c.y + (Math.sin(c.a) * c.d.len) / 2, imp);
     if (c === player.car) {
-      G.shake = Math.max(G.shake, Math.min(10, imp / 45));
+      setShake(Math.max(shake, Math.min(10, imp / 45)));
       sfx.crash(imp);
     }
     damage(c, (imp - 130) * 0.07);
@@ -231,7 +231,7 @@ export function wreckCar(c) {
   if (c === player.car) {
     exitCar(true);
     bigMsg('AUTO DISTRUTTA', "Trovane un'altra…", '#ff8c1a', 2.5);
-    G.shake = 12;
+    setShake(12);
   } else if (c.driver === 'npc' || c.driver === 'cop') {
     ejectDriver(c);
   }

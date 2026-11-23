@@ -1,15 +1,14 @@
 // Tastiera e mouse, avvio della partita.
-import { RADIO } from '../audio/radio.js';
-import { AC, initAudio, master } from '../audio/sfx.js';
-import { G } from './game.js';
+import { RADIO, radioStation, setNextNoteT, setRadioStation } from '../audio/radio.js';
+import { AC, audioOn, initAudio, master, setAudioOn } from '../audio/sfx.js';
 import { glc } from './render.js';
-import { player } from './state.js';
+import { bustT, camMode, cars, player, setCamMode, setIntroT, setStarted, setState, started, state } from './state.js';
 import { blockedN, makeCar } from '../entities/vehicles.js';
 import { garageKey } from '../gameplay/garage.js';
 import { newOffer } from '../gameplay/missions.js';
 import { exitCar, honk, tryEnterCar } from '../gameplay/player.js';
 import { updateCamera } from '../render/camera.js';
-import { quality, setQuality } from '../render/quality.js';
+import { quality, setPerfDone, setQuality } from '../render/quality.js';
 import { toast } from '../world/effects.js';
 import { SPAWN } from '../world/map.js';
 
@@ -17,61 +16,61 @@ export let keys;
 
 export function onPress(k) {
   initAudio();
-  if (G.state === 'title') {
+  if (state === 'title') {
     if (k === 'Enter' || k === 'Space') startGame();
     return;
   }
-  if (G.state === 'garage') {
+  if (state === 'garage') {
     garageKey(k);
     return;
   }
-  if (G.state === 'map') {
-    if (k === 'KeyM' || k === 'Escape') G.state = 'play';
+  if (state === 'map') {
+    if (k === 'KeyM' || k === 'Escape') setState('play');
     return;
   }
   if (k === 'KeyP' || k === 'Escape') {
-    G.state = G.state === 'pause' ? 'play' : 'pause';
+    setState(state === 'pause' ? 'play' : 'pause');
     return;
   }
   if (k === 'KeyV') {
-    G.audioOn = !G.audioOn;
-    if (master) master.gain.setTargetAtTime(G.audioOn ? 0.8 : 0, AC.currentTime, 0.05);
-    toast(G.audioOn ? 'Audio attivo' : 'Audio disattivato', 1.2);
+    setAudioOn(!audioOn);
+    if (master) master.gain.setTargetAtTime(audioOn ? 0.8 : 0, AC.currentTime, 0.05);
+    toast(audioOn ? 'Audio attivo' : 'Audio disattivato', 1.2);
     return;
   }
   if (k === 'KeyQ') {
     setQuality(1 - quality);
-    G.perfDone = true;
+    setPerfDone(true);
     toast('Grafica ' + (quality ? 'alta (ombre attive)' : 'bassa (più fluida)'), 1.6);
     return;
   }
-  if (G.state !== 'play') return;
+  if (state !== 'play') return;
   if (k === 'KeyM') {
-    G.state = 'map';
+    setState('map');
     return;
   }
-  if (G.bustT > 0) return;
+  if (bustT > 0) return;
   if (k === 'KeyE' || k === 'KeyF') {
     if (player.car) exitCar(false);
     else if (player.stun <= 0) tryEnterCar();
   }
   if (k === 'KeyH' && player.car) honk();
   if (k === 'KeyC') {
-    G.camMode = 1 - G.camMode;
+    setCamMode(1 - camMode);
     updateCamera(0, true);
   }
   if (k === 'KeyR') {
-    G.radioStation = (G.radioStation + 1) % RADIO.length;
-    G.nextNoteT = 0;
-    toast(G.radioStation ? 'Radio: ' + RADIO[G.radioStation].name : 'Radio spenta', 1.5);
+    setRadioStation((radioStation + 1) % RADIO.length);
+    setNextNoteT(0);
+    toast(radioStation ? 'Radio: ' + RADIO[radioStation].name : 'Radio spenta', 1.5);
   }
 }
 export function startGame() {
   initAudio();
-  G.state = 'play';
-  G.introT = 0;
-  if (!G.started) {
-    G.started = true;
+  setState('play');
+  setIntroT(0);
+  if (!started) {
+    setStarted(true);
     player.x = SPAWN.x;
     player.y = SPAWN.y;
     player.a = SPAWN.a;
@@ -88,10 +87,10 @@ export function startGame() {
     if (!s) s = makeCar('sportiva', SPAWN.x, SPAWN.y, SPAWN.a);
     s.col = '#ff2e88';
     s.keep = true;
-    G.cars.push(s);
-    for (let i = G.cars.length - 2; i >= 0; i--) {
-      const c = G.cars[i];
-      if (Math.hypot(c.x - s.x, c.y - s.y) < 70) G.cars.splice(i, 1);
+    cars.push(s);
+    for (let i = cars.length - 2; i >= 0; i--) {
+      const c = cars[i];
+      if (Math.hypot(c.x - s.x, c.y - s.y) < 70) cars.splice(i, 1);
     }
     newOffer('consegna');
     newOffer('corsa');
@@ -115,15 +114,15 @@ export function init() {
   });
   window.addEventListener('blur', () => {
     for (const k in keys) keys[k] = false;
-    if (G.state === 'play') G.state = 'pause';
+    if (state === 'play') setState('pause');
   });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && G.state === 'play') G.state = 'pause';
+    if (document.hidden && state === 'play') setState('pause');
   });
   glc.addEventListener('pointerdown', () => {
     glc.focus();
     initAudio();
-    if (G.state === 'title') startGame();
-    else if (G.state === 'pause' || G.state === 'map') G.state = 'play';
+    if (state === 'title') startGame();
+    else if (state === 'pause' || state === 'map') setState('play');
   });
 }

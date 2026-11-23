@@ -1,5 +1,5 @@
 // Dati OSM: griglia di collisione, strade, edifici, grafo stradale, semafori, punto di partenza.
-import { G } from '../core/game.js';
+import { lightT } from '../core/state.js';
 import { angDiff, clamp } from '../core/util.js';
 
 export let DATA,
@@ -206,7 +206,7 @@ export function sidewalkNear(x, y) {
   return [ne.px - (dy / L) * o, ne.py + (dx / L) * o, Math.atan2(dy, dx)];
 }
 export function sigGreen(n, inAng) {
-  const t = (G.lightT + n.phase) % 16,
+  const t = (lightT + n.phase) % 16,
     d = Math.abs(angDiff(inAng, n.axis)),
     cross = d > Math.PI / 4 && d < (Math.PI * 3) / 4;
   if (!cross) return t < 6.5 ? 0 : t < 8 ? 1 : 2;

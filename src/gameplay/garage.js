@@ -1,9 +1,8 @@
 // Garage: riparazioni e auto da comprare.
 import * as THREE from 'three';
 import { sfx } from '../audio/sfx.js';
-import { G } from '../core/game.js';
 import { H, W, ctx, scene } from '../core/render.js';
-import { player, save, saveMoney, wanted } from '../core/state.js';
+import { cars, money, player, save, saveMoney, setMoney, setState, wanted } from '../core/state.js';
 import { labelTex, rr } from '../core/util.js';
 import { CARS, makeCar } from '../entities/vehicles.js';
 import { exitCar } from './player.js';
@@ -24,13 +23,13 @@ export function updateGarage() {
       toast('Il garage non apre con la polizia alle calcagna!');
       return;
     }
-    G.state = 'garage';
+    setState('garage');
     sfx.ui();
   }
 }
 export function garageKey(k) {
   if (k === 'Escape' || k === 'KeyE' || k === 'KeyF') {
-    G.state = 'play';
+    setState('play');
     return;
   }
   if (k === 'ArrowUp' || k === 'KeyW') {
@@ -59,12 +58,12 @@ export function garageKey(k) {
       toast("L'auto è già a posto");
       return;
     }
-    if (G.money < it.price) {
+    if (money < it.price) {
       toast('Non hai abbastanza soldi');
       sfx.fail();
       return;
     }
-    G.money -= it.price;
+    setMoney(money - it.price);
     c.hp = c.d.hp;
     saveMoney();
     sfx.coin();
@@ -73,31 +72,31 @@ export function garageKey(k) {
   }
   const owned = it.price === 0 || save.owned[it.id];
   if (!owned) {
-    if (G.money < it.price) {
+    if (money < it.price) {
       toast('Ti servono €' + it.price.toLocaleString('it-IT'));
       sfx.fail();
       return;
     }
-    G.money -= it.price;
+    setMoney(money - it.price);
     save.owned[it.id] = true;
     saveMoney();
     sfx.win();
     toast(CARS[it.id].name + ' acquistata!');
   }
   deliverCar(it.id);
-  G.state = 'play';
+  setState('play');
 }
 export function deliverCar(type) {
   const x = GARAGE.x - Math.cos(GARAGE.a) * 70,
     y = GARAGE.y - Math.sin(GARAGE.a) * 70;
-  for (let i = G.cars.length - 1; i >= 0; i--) {
-    const c = G.cars[i];
-    if (c !== player.car && !c.driver && Math.hypot(c.x - x, c.y - y) < 50) G.cars.splice(i, 1);
+  for (let i = cars.length - 1; i >= 0; i--) {
+    const c = cars[i];
+    if (c !== player.car && !c.driver && Math.hypot(c.x - x, c.y - y) < 50) cars.splice(i, 1);
   }
   if (player.car) exitCar(true);
   const c = makeCar(type, x, y, GARAGE.a);
   if (type === 'sportiva') c.col = '#ff2e88';
-  G.cars.push(c);
+  cars.push(c);
   player.x = x;
   player.y = y;
   c.driver = 'player';
@@ -131,7 +130,7 @@ export function drawGarage() {
   ctx.shadowBlur = 0;
   ctx.font = 'bold 15px system-ui,sans-serif';
   ctx.fillStyle = '#ffe3f1';
-  ctx.fillText('Hai € ' + G.money.toLocaleString('it-IT'), W / 2, py + 78);
+  ctx.fillText('Hai € ' + money.toLocaleString('it-IT'), W / 2, py + 78);
   SHOP.forEach((it, i) => {
     const y = py + 104 + i * 58,
       sel = i === garageSel;
@@ -158,7 +157,7 @@ export function drawGarage() {
     else right = it.price === 0 || save.owned[it.id] ? 'RITIRA' : '€ ' + it.price.toLocaleString('it-IT');
     ctx.textAlign = 'right';
     ctx.font = 'bold 16px system-ui,sans-serif';
-    ctx.fillStyle = right === 'RITIRA' ? '#3ae374' : right.startsWith('€') && it.price > G.money ? '#ff6b81' : '#ffd23f';
+    ctx.fillStyle = right === 'RITIRA' ? '#3ae374' : right.startsWith('€') && it.price > money ? '#ff6b81' : '#ffd23f';
     ctx.fillText(right, px + pw - 38, y + 25);
   });
   ctx.textAlign = 'center';

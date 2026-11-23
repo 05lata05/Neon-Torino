@@ -1,9 +1,26 @@
 // HUD: soldi, ricercato, minimappa, tachimetro, messaggi, schermata iniziale.
+import { audioOn } from '../audio/sfx.js';
 import * as THREE from 'three';
-import { RADIO } from '../audio/radio.js';
-import { G } from '../core/game.js';
+import { RADIO, radioStation } from '../audio/radio.js';
 import { DPR, H, W, camera, ctx } from '../core/render.js';
-import { offers, player, save, toasts, wanted } from '../core/state.js';
+import {
+  big,
+  bubbles,
+  bustT,
+  camMode,
+  camYaw,
+  cars,
+  gtime,
+  introT,
+  mission,
+  money,
+  offers,
+  player,
+  save,
+  state,
+  toasts,
+  wanted,
+} from '../core/state.js';
 import { TAU, clamp, rr } from '../core/util.js';
 import { heli } from '../entities/heli.js';
 import { roadPath } from '../entities/police.js';
@@ -38,14 +55,14 @@ export function outlineText(s, x, y, col, lw) {
 export function drawHUD() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.clearRect(0, 0, W, H);
-  if (G.state === 'title') {
+  if (state === 'title') {
     drawOverlay('NEON TORINO', ['Santa Rita e dintorni: strade e palazzi veri da OpenStreetMap.'], true);
     return;
   }
   ctx.font = 'bold 13px system-ui,sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  for (const b of G.bubbles) {
+  for (const b of bubbles) {
     const e = b.ent;
     if (Math.hypot(e.x - camera.position.x, e.y - camera.position.z) > 900) continue;
     const pr = project(e.x, e.y, e.d ? 22 : 20);
@@ -67,7 +84,7 @@ export function drawHUD() {
   }
   ctx.globalAlpha = 1;
   let tg = null;
-  if (G.mission && G.mission.type !== 'colpo') tg = G.mission.steps[G.mission.idx];
+  if (mission && mission.type !== 'colpo') tg = mission.steps[mission.idx];
   if (tg) {
     const pr = project(tg.x, tg.y, 30);
     if (!pr.in) {
@@ -86,7 +103,7 @@ export function drawHUD() {
       ctx.save();
       ctx.translate(ax, ay);
       ctx.rotate(a);
-      ctx.fillStyle = MT[G.mission.type].col;
+      ctx.fillStyle = MT[mission.type].col;
       ctx.strokeStyle = 'rgba(0,0,0,0.7)';
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -111,15 +128,15 @@ export function drawHUD() {
   ctx.font = 'bold 30px ' + HUDF;
   ctx.shadowColor = '#ff2e88';
   ctx.shadowBlur = 12;
-  outlineText('€ ' + G.money.toLocaleString('it-IT'), rx, 72, '#ffe3f1');
+  outlineText('€ ' + money.toLocaleString('it-IT'), rx, 72, '#ffe3f1');
   ctx.shadowBlur = 0;
   {
     const segW = 22,
       gap = 5,
       x0 = rx - 5 * segW - 4 * gap,
       y0 = 86,
-      blink = wanted.level > 0 && !wanted.seen && Math.floor(G.gtime * 3) % 2 === 0,
-      fl = wanted.flash > 0 && Math.floor(G.gtime * 10) % 2 === 0;
+      blink = wanted.level > 0 && !wanted.seen && Math.floor(gtime * 3) % 2 === 0,
+      fl = wanted.flash > 0 && Math.floor(gtime * 10) % 2 === 0;
     ctx.font = 'bold 11px system-ui,sans-serif';
     ctx.textAlign = 'right';
     outlineText('CALORE', x0 - 8, y0 + 11, '#cbd5e1', 3);
@@ -129,7 +146,7 @@ export function drawHUD() {
       ctx.fillStyle = 'rgba(0,0,0,0.5)';
       rr(ctx, x - 2, y0 - 2, segW + 4, 16, 4);
       ctx.fill();
-      if (on && !blink) ctx.fillStyle = fl ? '#ffffff' : Math.floor(G.gtime * 6 + i) % 2 ? '#ff2d3c' : '#2d7bff';
+      if (on && !blink) ctx.fillStyle = fl ? '#ffffff' : Math.floor(gtime * 6 + i) % 2 ? '#ff2d3c' : '#2d7bff';
       else ctx.fillStyle = on ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)';
       rr(ctx, x, y0, segW, 12, 3);
       ctx.fill();
@@ -139,30 +156,30 @@ export function drawHUD() {
   ctx.textBaseline = 'alphabetic';
   ctx.font = 'bold 13px system-ui,sans-serif';
   outlineText('GETTONI ' + tokens.filter(t => t.got).length + '/' + tokens.length, rx, 124, '#ffd23f', 3);
-  if (G.mission && G.mission.type !== 'colpo') {
-    const t = Math.max(0, G.mission.time),
+  if (mission && mission.type !== 'colpo') {
+    const t = Math.max(0, mission.time),
       s = Math.floor(t) % 60,
       m = Math.floor(t / 60);
     ctx.textAlign = 'center';
     ctx.font = 'bold 34px ' + HUDF;
-    outlineText(m + ':' + String(s).padStart(2, '0'), W / 2, 48, t < 10 && Math.floor(G.gtime * 4) % 2 ? '#ff4d4d' : '#ffffff');
+    outlineText(m + ':' + String(s).padStart(2, '0'), W / 2, 48, t < 10 && Math.floor(gtime * 4) % 2 ? '#ff4d4d' : '#ffffff');
   }
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   let label = null,
     col = '#fff';
-  if (G.mission) {
+  if (mission) {
     label =
-      G.mission.type === 'colpo'
+      mission.type === 'colpo'
         ? wanted.level > 0
           ? 'Semina la polizia! (resta fuori dalla loro vista)'
           : 'Fatto!'
-        : G.mission.steps[G.mission.idx].label;
-    col = MT[G.mission.type].col;
-  } else if (G.introT < 30) label = 'Raggiungi un fascio di luce missione (C · R · T · €) — li vedi sulla minimappa';
-  if (G.state === 'play') {
-    if (!(streetT > G.gtime)) {
-      streetT = G.gtime + 0.3;
+        : mission.steps[mission.idx].label;
+    col = MT[mission.type].col;
+  } else if (introT < 30) label = 'Raggiungi un fascio di luce missione (C · R · T · €) — li vedi sulla minimappa';
+  if (state === 'play') {
+    if (!(streetT > gtime)) {
+      streetT = gtime + 0.3;
       const ne = nearestEdge(player.x, player.y, 90);
       curStreet = ne && ne.e.name ? ne.e.name : '';
     }
@@ -180,10 +197,10 @@ export function drawHUD() {
     ctx.fillStyle = col;
     ctx.fillText(label, W / 2, H - 41);
   }
-  if (!player.car && G.bustT <= 0) {
+  if (!player.car && bustT <= 0) {
     let best = null,
       bd = 50;
-    for (const c of G.cars) {
+    for (const c of cars) {
       if (c.wreck) continue;
       const d = Math.hypot(c.x - player.x, c.y - player.y);
       if (d < bd) {
@@ -230,7 +247,7 @@ export function drawHUD() {
     ctx.fill();
     ctx.font = 'bold 12px system-ui,sans-serif';
     ctx.textAlign = 'right';
-    outlineText(G.radioStation ? '♪ ' + RADIO[G.radioStation].name : 'radio spenta', W - 22, H - 104, '#c4b5fd', 3);
+    outlineText(radioStation ? '♪ ' + RADIO[radioStation].name : 'radio spenta', W - 22, H - 104, '#c4b5fd', 3);
   }
   {
     const R = Math.round(clamp(Math.min(W, H) * 0.13, 58, 92)),
@@ -240,7 +257,7 @@ export function drawHUD() {
       k = sc / MS,
       cx = player.x,
       cy = player.y,
-      rot = G.camMode === 0 ? -G.camYaw - Math.PI / 2 : 0;
+      rot = camMode === 0 ? -camYaw - Math.PI / 2 : 0;
     ctx.save();
     ctx.beginPath();
     ctx.arc(mx, my, R, 0, TAU);
@@ -297,13 +314,13 @@ export function drawHUD() {
     }
     for (const t of tokens) if (!t.got && Math.hypot(t.x - cx, t.y - cy) < 260) blip(t.x, t.y, '#ffd23f', 2.6);
     blip(GARAGE.x, GARAGE.y, '#38bdf8', 6, 'G');
-    if (!G.mission) for (const o of offers) blip(o.x, o.y, MT[o.type].col, 6, MT[o.type].ic);
-    if (G.mission && G.mission.type !== 'colpo') {
-      const s = G.mission.steps[G.mission.idx];
-      blip(s.x, s.y, MT[G.mission.type].col, 5 + Math.sin(G.gtime * 6) * 1.5);
+    if (!mission) for (const o of offers) blip(o.x, o.y, MT[o.type].col, 6, MT[o.type].ic);
+    if (mission && mission.type !== 'colpo') {
+      const s = mission.steps[mission.idx];
+      blip(s.x, s.y, MT[mission.type].col, 5 + Math.sin(gtime * 6) * 1.5);
     }
-    const on = Math.floor(G.gtime * 6) % 2 === 0;
-    for (const c of G.cars) if (c.driver === 'cop') blip(c.x, c.y, on ? '#ff2d3c' : '#2d7bff', 3.2);
+    const on = Math.floor(gtime * 6) % 2 === 0;
+    for (const c of cars) if (c.driver === 'cop') blip(c.x, c.y, on ? '#ff2d3c' : '#2d7bff', 3.2);
     if (heli) blip(heli.x, heli.y, '#e2e8f0', 5, 'H');
     ctx.save();
     ctx.rotate(player.a);
@@ -335,7 +352,7 @@ export function drawHUD() {
   ctx.textBaseline = 'middle';
   ctx.font = 'bold 15px system-ui,sans-serif';
   toasts.forEach((t, i) => {
-    const y = (G.mission && G.mission.type !== 'colpo' ? 88 : 40) + i * 32,
+    const y = (mission && mission.type !== 'colpo' ? 88 : 40) + i * 32,
       w = ctx.measureText(t.s).width + 30;
     ctx.globalAlpha = Math.min(1, t.t * 2.5);
     ctx.fillStyle = 'rgba(8,10,20,0.78)';
@@ -345,23 +362,23 @@ export function drawHUD() {
     ctx.fillText(t.s, W / 2, y);
   });
   ctx.globalAlpha = 1;
-  if (G.big) {
-    const a = Math.min(1, G.big.t / 0.5, (G.big.max - G.big.t) / 0.25 + 0.2);
+  if (big) {
+    const a = Math.min(1, big.t / 0.5, (big.max - big.t) / 0.25 + 0.2);
     ctx.globalAlpha = clamp(a, 0, 1);
     const fs = Math.round(clamp(W / 14, 30, 64));
     ctx.font = 'bold ' + fs + 'px ' + HUDF;
-    ctx.shadowColor = G.big.col;
+    ctx.shadowColor = big.col;
     ctx.shadowBlur = 18;
-    outlineText(G.big.title, W / 2, H * 0.3, G.big.col, 7);
+    outlineText(big.title, W / 2, H * 0.3, big.col, 7);
     ctx.shadowBlur = 0;
-    if (G.big.sub) {
+    if (big.sub) {
       ctx.font = 'bold ' + Math.round(fs * 0.32) + 'px system-ui,sans-serif';
-      outlineText(G.big.sub, W / 2, H * 0.3 + fs * 0.75, '#ffffff', 4);
+      outlineText(big.sub, W / 2, H * 0.3 + fs * 0.75, '#ffffff', 4);
     }
     ctx.globalAlpha = 1;
   }
-  if (G.bustT > 0) {
-    ctx.fillStyle = `rgba(20,40,110,${0.25 * Math.min(1, (3.2 - G.bustT) * 2)})`;
+  if (bustT > 0) {
+    ctx.fillStyle = `rgba(20,40,110,${0.25 * Math.min(1, (3.2 - bustT) * 2)})`;
     ctx.fillRect(0, 0, W, H);
   }
   ctx.textAlign = 'left';
@@ -370,9 +387,9 @@ export function drawHUD() {
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.fillText(
     '[C] telecamera: ' +
-      (G.camMode === 0 ? 'inseguimento' : "dall'alto") +
+      (camMode === 0 ? 'inseguimento' : "dall'alto") +
       '    [M] mappa    [R] radio    [V] audio ' +
-      (G.audioOn ? 'sì' : 'no') +
+      (audioOn ? 'sì' : 'no') +
       '    [Q] grafica ' +
       (quality ? 'alta' : 'bassa'),
     14,
@@ -381,14 +398,14 @@ export function drawHUD() {
   ctx.fillStyle = 'rgba(255,255,255,0.4)';
   ctx.font = '11px system-ui,sans-serif';
   ctx.fillText('Mappa © OpenStreetMap contributors · altezze Arpa Piemonte', 14, 36);
-  if (G.state === 'pause')
+  if (state === 'pause')
     drawOverlay(
       'PAUSA',
       ['Missioni completate: ' + save.done + '   ·   Gettoni: ' + tokens.filter(t => t.got).length + '/' + tokens.length],
       true,
     );
-  if (G.state === 'map') drawBigMap();
-  if (G.state === 'garage') drawGarage();
+  if (state === 'map') drawBigMap();
+  if (state === 'garage') drawGarage();
 }
 export function drawOverlay(title, lines, showControls) {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -440,9 +457,9 @@ export function drawOverlay(title, lines, showControls) {
   }
   ctx.textAlign = 'center';
   ctx.font = 'bold 18px system-ui,sans-serif';
-  ctx.globalAlpha = 0.6 + 0.4 * Math.sin(G.gtime * 4);
+  ctx.globalAlpha = 0.6 + 0.4 * Math.sin(gtime * 4);
   ctx.fillStyle = '#ffffff';
-  ctx.fillText(G.state === 'title' ? 'Clicca o premi INVIO per giocare' : 'Clicca o premi P per riprendere', W / 2, Math.min(H - 30, y));
+  ctx.fillText(state === 'title' ? 'Clicca o premi INVIO per giocare' : 'Clicca o premi P per riprendere', W / 2, Math.min(H - 30, y));
   ctx.globalAlpha = 1;
   ctx.font = '12px system-ui,sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.6)';

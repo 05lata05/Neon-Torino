@@ -1,7 +1,6 @@
 // Allinea a ogni frame le mesh 3D allo stato della simulazione.
-import { G } from '../core/game.js';
 import { scene } from '../core/render.js';
-import { offers, parts, peds, player } from '../core/state.js';
+import { cars, frameN, gtime, mission, offers, parts, peds, player, setFrameN, state } from '../core/state.js';
 import { clamp, tmpC } from '../core/util.js';
 import { syncExtras } from '../entities/heli.js';
 import { MT } from '../gameplay/missions.js';
@@ -29,10 +28,10 @@ import { updateRain } from '../world/weather.js';
 export let meshCars, meshPeds, meshOffers, lastLights;
 
 export function syncScene(dt) {
-  G.frameN++;
-  const on = Math.floor(G.gtime * 8) % 2 === 0;
-  for (const c of G.cars) {
-    c._f = G.frameN;
+  setFrameN(frameN + 1);
+  const on = Math.floor(gtime * 8) % 2 === 0;
+  for (const c of cars) {
+    c._f = frameN;
     if (!c.mesh) {
       buildCarMesh(c);
       meshCars.push(c);
@@ -58,28 +57,28 @@ export function syncScene(dt) {
     c.m.hd.visible = !c.wreck && !!c.driver && c.driver !== 'idle';
   }
   meshCars = meshCars.filter(c => {
-    if (c._f !== G.frameN) {
+    if (c._f !== frameN) {
       scene.remove(c.mesh);
       return false;
     }
     return true;
   });
-  const all = G.state !== 'title' ? peds.concat([player]) : peds;
+  const all = state !== 'title' ? peds.concat([player]) : peds;
   for (const p of peds) {
-    p._f = G.frameN;
+    p._f = frameN;
     if (!p.m) {
       buildPedMesh(p);
       meshPeds.push(p);
     }
   }
   meshPeds = meshPeds.filter(p => {
-    if (p._f !== G.frameN) {
+    if (p._f !== frameN) {
       scene.remove(p.m.g);
       return false;
     }
     return true;
   });
-  player.m.g.visible = G.state !== 'title' && !player.car;
+  player.m.g.visible = state !== 'title' && !player.car;
   for (const p of all) {
     const m = p.m;
     if (!m) continue;
@@ -98,36 +97,36 @@ export function syncScene(dt) {
     m.legs[1].rotation.z = -s;
     m.arms[0].rotation.z = -s * 0.8;
     m.arms[1].rotation.z = s * 0.8;
-    m.arms[1].rotation.x = p.wait ? -2.6 + Math.sin(G.gtime * 9) * 0.4 : 0;
+    m.arms[1].rotation.x = p.wait ? -2.6 + Math.sin(gtime * 9) * 0.4 : 0;
   }
   for (const o of offers) {
-    o._f = G.frameN;
+    o._f = frameN;
     if (!o.mesh) {
       buildOfferMesh(o);
       meshOffers.push(o);
     }
-    o.mesh.visible = !G.mission && G.state !== 'title';
-    o.icon.position.y = 34 + Math.sin(G.gtime * 3) * 3;
+    o.mesh.visible = !mission && state !== 'title';
+    o.icon.position.y = 34 + Math.sin(gtime * 3) * 3;
   }
   meshOffers = meshOffers.filter(o => {
-    if (o._f !== G.frameN) {
+    if (o._f !== frameN) {
       scene.remove(o.mesh);
       return false;
     }
     return true;
   });
-  if (G.mission && G.mission.type !== 'colpo' && G.state !== 'title') {
-    const s = G.mission.steps[G.mission.idx],
-      col = MT[G.mission.type].col;
+  if (mission && mission.type !== 'colpo' && state !== 'title') {
+    const s = mission.steps[mission.idx],
+      col = MT[mission.type].col;
     tgt.visible = true;
     tgt.position.set(s.x, 0, s.y);
     tgtBeam.material.color.set(col);
     tgtRing.material.color.set(col);
     tgtArrow.material.color.set(col);
-    tgtArrow.position.y = 42 + Math.abs(Math.sin(G.gtime * 3)) * 10;
-    tgtArrow.rotation.y = G.gtime * 2;
-    const n = G.mission.steps[G.mission.idx + 1];
-    nextRing.visible = G.mission.type === 'corsa' && !!n;
+    tgtArrow.position.y = 42 + Math.abs(Math.sin(gtime * 3)) * 10;
+    tgtArrow.rotation.y = gtime * 2;
+    const n = mission.steps[mission.idx + 1];
+    nextRing.visible = mission.type === 'corsa' && !!n;
     if (n) nextRing.position.set(n.x, 1, n.y);
   } else {
     tgt.visible = false;
@@ -139,8 +138,8 @@ export function syncScene(dt) {
     p.s.scale.set(sc, sc, 1);
     p.s.material.opacity = clamp(p.life / p.max, 0, 1) * p.alpha;
   }
-  if (tlLamps && !(lastLights > G.gtime)) {
-    lastLights = G.gtime + 0.2;
+  if (tlLamps && !(lastLights > gtime)) {
+    lastLights = gtime + 0.2;
     const cols = ['#2ecc71', '#f1c40f', '#ff4136'];
     for (let i = 0; i < tlAxis.length; i++) {
       const q = tlAxis[i];
@@ -148,10 +147,10 @@ export function syncScene(dt) {
     }
     tlLamps.instanceColor.needsUpdate = true;
   }
-  antM.color.set(Math.floor(G.gtime * 1.2) % 2 ? '#ff2030' : '#3a0005');
+  antM.color.set(Math.floor(gtime * 1.2) % 2 ? '#ff2030' : '#3a0005');
   syncExtras(dt);
   updateRain(dt);
-  LMX.tick(dt, G.gtime);
+  LMX.tick(dt, gtime);
 }
 
 export function init() {

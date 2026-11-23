@@ -16,7 +16,7 @@ OpenStreetMap ──fetch_osm.py──▶ .osm-cache/*.osm ──build_map.py─
 ```
 src/
   main.js            avvio: chiama gli init() in ordine, popola la città, ciclo di gioco, strumenti di debug
-  core/              game.js (stato condiviso G) · render.js · util.js · state.js · update.js · input.js
+  core/              render.js · util.js · state.js (stato della partita) · update.js · input.js
   world/             map.js (dati, griglia, grafo stradale) · ground.js · lights.js · city.js · skyline.js · weather.js · effects.js
   entities/          vehicles.js · traffic.js · peds.js · police.js · heli.js · trams.js · collisions.js · spawn.js
   gameplay/          player.js · missions.js · garage.js · tokens.js · ramps.js
@@ -34,9 +34,10 @@ Ogni file comincia con una riga che dice a cosa serve.
 - **`export let`**: valori creati all'avvio (texture, materiali, liste). Gli altri moduli li **leggono** soltanto.
 - **`init()`**: il codice che costruisce il mondo. `main.js` chiama gli `init()` in un ordine preciso (lo stesso
   del vecchio file unico): un modulo può usare nel suo `init()` solo cose create dagli `init()` precedenti.
-- **`G`** (`core/game.js`): le variabili che più moduli **modificano** (`G.state`, `G.money`, `G.cars`, `G.mission`,
-  `G.gtime`, `G.rain`…). Se un modulo deve scrivere una variabile di un altro, va messa in `G`, oppure, meglio,
-  il modulo proprietario espone una funzione (è uno degli obiettivi di M1 in `ROADMAP.md`).
+- **Stato condiviso**: ogni variabile che cambia durante la partita appartiene a **un solo modulo**, che la dichiara
+  con `export let` e offre una funzione `set…()` per cambiarla (es. `money` e `setMoney()` in `core/state.js`,
+  `rain` e `setRain()` in `world/weather.js`). Gli altri moduli la leggono importandola e la cambiano **solo** con il
+  setter: `setMoney(money + 50)`. Così si vede subito chi possiede cosa e chi lo modifica.
 
 Gli import circolari sono permessi e innocui: a livello di modulo ci sono solo dichiarazioni, il lavoro vero
 avviene negli `init()` e nel ciclo di gioco.

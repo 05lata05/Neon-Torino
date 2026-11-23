@@ -1,8 +1,7 @@
 // Giocatore: salire e scendere dalle auto, clacson, movimento a piedi, confini della mappa.
 import { sfx } from '../audio/sfx.js';
-import { G } from '../core/game.js';
 import { keys } from '../core/input.js';
-import { peds, player } from '../core/state.js';
+import { cars, gtime, peds, player, setShake, shake } from '../core/state.js';
 import { pick, rand } from '../core/util.js';
 import { pedSolidAt, tryMovePed } from '../entities/peds.js';
 import { addHeat, copNear } from '../entities/police.js';
@@ -16,7 +15,7 @@ export let edgeWarnT;
 export function tryEnterCar() {
   let best = null,
     bd = 50;
-  for (const c of G.cars) {
+  for (const c of cars) {
     if (c.wreck) continue;
     const d = Math.hypot(c.x - player.x, c.y - player.y);
     if (d < bd) {
@@ -79,7 +78,7 @@ export function honk() {
       p.flee = 1;
       p.fleeFrom = [c.x, c.y];
     }
-  for (const o of G.cars)
+  for (const o of cars)
     if (o !== c && o.driver === 'npc' && Math.hypot(o.x - c.x, o.y - c.y) < 130 && Math.random() < 0.5)
       say(o, pick(['Ehi!', 'Calma!', "Ma va' là!", 'Che fretta!']), 1.5);
 }
@@ -143,7 +142,7 @@ export function updatePlayer(dt) {
   }
 }
 export function playerCarCollide() {
-  for (const c of G.cars) {
+  for (const c of cars) {
     const dx = player.x - c.x,
       dy = player.y - c.y;
     if (dx * dx + dy * dy > 2500 || c.z > 8) continue;
@@ -173,7 +172,7 @@ export function playerCarCollide() {
           player.stun = 0.9;
           tryMovePed(player, c.vx * 0.05, c.vy * 0.05);
           say(player, 'Ahi!', 1.2);
-          G.shake = Math.max(G.shake, 5);
+          setShake(Math.max(shake, 5));
         }
       }
     }
@@ -184,8 +183,8 @@ export function boundaryCheck() {
     a = player.a;
   const x = c.x + Math.cos(a) * 40,
     y = c.y + Math.sin(a) * 40;
-  if (tileAtPx(x, y) === OUT && !(edgeWarnT > G.gtime)) {
-    edgeWarnT = G.gtime + 6;
+  if (tileAtPx(x, y) === OUT && !(edgeWarnT > gtime)) {
+    edgeWarnT = gtime + 6;
     toast('Confine della mappa: per ora Torino finisce qui!', 2.5);
   }
 }

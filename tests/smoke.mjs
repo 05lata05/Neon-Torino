@@ -158,6 +158,17 @@ await page.evaluate(() => window.__nr.spawnCar('polizia'));
 await page.keyboard.press('KeyE');
 await page.evaluate(() => window.__nr.step(0.5));
 check((await st()).wanted > 0, "rubare un'auto della polizia fa salire il livello di ricercato");
+const gettone = await page.evaluate(() => {
+  const n = window.__nr,
+    t = n.tokens.find(t => !t.got);
+  if (!t) return null;
+  const prima = n.money;
+  if (n.player.car) n.player.car = null;
+  n.teleport(t.x, t.y);
+  n.step(0.2);
+  return n.money - prima;
+});
+check(gettone === null || gettone >= 50, 'raccogliere un gettone dà 50 €');
 await page.keyboard.press('KeyC');
 await page.keyboard.press('KeyR');
 await page.keyboard.press('KeyH');

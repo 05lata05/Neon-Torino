@@ -1,7 +1,28 @@
 // Aggiornamento logico a ogni frame: mondo, giocatore, missioni, spawn.
-import { G } from './game.js';
 import { camera } from './render.js';
-import { parts, player, toasts, wanted } from './state.js';
+import {
+  big,
+  bubbles,
+  bustT,
+  cars,
+  clockT,
+  gtime,
+  introT,
+  lightT,
+  parts,
+  player,
+  setBig,
+  setBustT,
+  setClockT,
+  setGtime,
+  setIntroT,
+  setLightT,
+  setShake,
+  shake,
+  state,
+  toasts,
+  wanted,
+} from './state.js';
 import { rand } from './util.js';
 import { collideCars } from '../entities/collisions.js';
 import { updateHeli } from '../entities/heli.js';
@@ -22,18 +43,18 @@ import { updateWeather } from '../world/weather.js';
 // ---------------- aggiornamento logico ----------------
 export function updateWorld(dt) {
   updateTrams(dt);
-  for (const c of G.cars) {
+  for (const c of cars) {
     if (c === player.car) continue;
     if (c.wreck || !c.driver || c.driver === 'idle') carPhysics(c, 0, 0, true, dt);
     else if (c.driver === 'npc') {
-      if (wanted.level > 0 && c.type === 'polizia' && G.state === 'play' && Math.hypot(c.x - player.x, c.y - player.y) < 650) {
+      if (wanted.level > 0 && c.type === 'polizia' && state === 'play' && Math.hypot(c.x - player.x, c.y - player.y) < 650) {
         makeCop(c);
         copAI(c, dt);
       } else trafficAI(c, dt);
     } else if (c.driver === 'cop') copAI(c, dt);
   }
   collideCars();
-  for (const c of G.cars) {
+  for (const c of cars) {
     if (c.heatCd > 0) c.heatCd -= dt;
     if (Math.abs(c.x - camera.position.x) > 1300 || Math.abs(c.y - camera.position.z) > 1300) continue;
     if (c.wreck) {
@@ -72,7 +93,7 @@ export function updateWorld(dt) {
       );
   }
   updatePeds(dt);
-  if (G.state === 'play' && !player.car && G.bustT <= 0) playerCarCollide();
+  if (state === 'play' && !player.car && bustT <= 0) playerCarCollide();
   for (let i = parts.length - 1; i >= 0; i--) {
     const p = parts[i];
     p.life -= dt;
@@ -90,38 +111,38 @@ export function updateWorld(dt) {
     p.vy *= 0.97;
     if (p.grow === 0) p.vh -= 200 * dt;
   }
-  for (let i = G.bubbles.length - 1; i >= 0; i--) {
-    G.bubbles[i].t -= dt;
-    if (G.bubbles[i].t <= 0) G.bubbles.splice(i, 1);
+  for (let i = bubbles.length - 1; i >= 0; i--) {
+    bubbles[i].t -= dt;
+    if (bubbles[i].t <= 0) bubbles.splice(i, 1);
   }
 }
 export function update(dt) {
-  if (G.state === 'pause' || G.state === 'map' || G.state === 'garage') return;
-  G.gtime += dt;
-  G.lightT += dt;
-  G.clockT += dt;
-  G.shake *= Math.exp(-dt * 6);
+  if (state === 'pause' || state === 'map' || state === 'garage') return;
+  setGtime(gtime + dt);
+  setLightT(lightT + dt);
+  setClockT(clockT + dt);
+  setShake(shake * Math.exp(-dt * 6));
   updateWeather(dt);
   for (let i = toasts.length - 1; i >= 0; i--) {
     toasts[i].t -= dt;
     if (toasts[i].t <= 0) toasts.splice(i, 1);
   }
-  if (G.big) {
-    G.big.t -= dt;
-    if (G.big.t <= 0) G.big = null;
+  if (big) {
+    big.t -= dt;
+    if (big.t <= 0) setBig(null);
   }
-  if (G.state === 'title') {
+  if (state === 'title') {
     updateWorld(dt);
     manageSpawns(dt, SPAWN.x, SPAWN.y);
     return;
   }
-  G.introT += dt;
-  if (G.bustT > 0) {
-    G.bustT -= dt;
-    if (G.bustT <= 0) respawnAfterBust();
+  setIntroT(introT + dt);
+  if (bustT > 0) {
+    setBustT(bustT - dt);
+    if (bustT <= 0) respawnAfterBust();
   } else updatePlayer(dt);
   updateWorld(dt);
-  if (G.bustT <= 0) {
+  if (bustT <= 0) {
     updateWanted(dt);
     updateMission(dt);
     updateTokens();
