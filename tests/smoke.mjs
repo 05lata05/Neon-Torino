@@ -19,6 +19,7 @@ const port = 8000 + Math.floor(Math.random() * 900);
 const srv = await serve(port);
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
+page.setDefaultTimeout(90000); // GitHub runners can take more than 30 s for a screenshot
 const errors = [];
 page.on('pageerror', e => errors.push('pageerror: ' + e.message));
 page.on('console', m => {
@@ -233,6 +234,7 @@ console.log('performance:');
 async function newGame(options, name) {
   const ctxB = await browser.newContext(options),
     pg = await ctxB.newPage();
+  pg.setDefaultTimeout(90000);
   pg.on('pageerror', e => errors.push(`${name} pageerror: ${e.message}`));
   if (LOCAL_THREE)
     await pg.route('https://cdn.jsdelivr.net/npm/three@0.160.0/**', r => r.fulfill({ path: LOCAL_THREE, contentType: 'text/javascript' }));
