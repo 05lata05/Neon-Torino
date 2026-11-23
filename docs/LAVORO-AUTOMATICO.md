@@ -1,7 +1,12 @@
 # Lavoro automatico
 
 Ogni notte parte da sola una sessione cloud di Claude che segue queste istruzioni.
-Le regole servono a due cose: **tenere basso il consumo di token** e **farti vedere tutto prima che entri in `main`**.
+Le regole servono a tre cose: **avanzare ogni notte**, **tenere sotto controllo il consumo di token** e
+**lasciare al proprietario le scelte visive**.
+
+In breve: una casella per notte; se il test su GitHub è verde la sessione fa merge da sola, tranne per le caselle
+marcate `(da rivedere)` (grafica e nuove zone), che restano aperte finché il proprietario non le approva.
+La domenica la sessione manda anche un riepilogo della settimana.
 
 Per mettere in pausa: in `ROADMAP.md` scrivi `Lavoro automatico: IN PAUSA`.
 Per cambiare cosa fa: riordina o modifica le caselle di `ROADMAP.md`.
@@ -22,7 +27,8 @@ Segui i passi in ordine. Se un passo dice di fermarti, chiudi la sessione con un
 1. Leggi la riga `Lavoro automatico:` in cima a `ROADMAP.md`. Se non dice `ATTIVO`, **fermati**: "Lavoro automatico in pausa".
 2. Controlla le pull request aperte del repository:
    `gh api repos/05lata05/Neon-Torino/pulls?state=open --jq '.[].html_url'`.
-   Se ce n'è almeno una, **fermati**: "C'è una pull request da approvare: <link>". Non si lavora finché il proprietario non ha fatto merge.
+   Se ce n'è almeno una, **non lavorare**: "C'è una pull request da approvare: <link>" (di solito una casella
+   `(da rivedere)` o una bozza `[DA SISTEMARE]`). Vai direttamente al punto 6 (riepilogo della domenica) e chiudi.
 3. Trova la tappa in corso (la prima con caselle `[ ]`) e la **prima casella libera** che non sia marcata `(manuale)`.
    Se non ce ne sono, **fermati**: "Roadmap completata: aggiungi nuovi obiettivi".
 
@@ -45,14 +51,33 @@ Segui i passi in ordine. Se un passo dice di fermarti, chiudi la sessione con un
 - Se fallisce ancora: apri comunque la pull request come **bozza** (draft), con titolo che inizia per `[DA SISTEMARE]`,
   e scrivi nella descrizione cosa non va e cosa hai provato. Poi fermati.
 
-### 5. Chiusura
+### 5. Chiusura e merge
 1. Spunta la casella in `ROADMAP.md` (nello stesso ramo).
 2. Commit e push del ramo, poi apri la pull request verso `main`: titolo = la casella; descrizione in italiano con
-   cosa cambia, come provarlo e il risultato di `npm test`.
-3. **Non fare mai merge** e non scrivere direttamente su `main`.
-4. Messaggio finale della sessione: una riga con il link della pull request.
+   cosa cambia, come provarlo e il risultato di `npm test`. Se la casella cambia l'aspetto del gioco, allega nella
+   descrizione cosa guardare nelle foto del test (l'artefatto `foto-test` del controllo su GitHub).
+3. Aspetta il controllo automatico di GitHub sulla pull request (al massimo 20 minuti), controllando ogni minuto:
+   `gh api "repos/05lata05/Neon-Torino/actions/runs?branch=<ramo>&event=pull_request&per_page=1" --jq '.workflow_runs[0] | "\(.status) \(.conclusion)"'`
+4. Decidi:
+   - controllo **verde** e casella **senza** `(da rivedere)` → **fai merge**:
+     `gh api -X PUT repos/05lata05/Neon-Torino/pulls/<numero>/merge -f merge_method=squash`, poi cancella il ramo
+     (`gh api -X DELETE repos/05lata05/Neon-Torino/git/refs/heads/<ramo>`);
+   - controllo verde ma casella `(da rivedere)` → **non fare merge**: lascia la pull request aperta per il proprietario;
+   - controllo **rosso** o non concluso entro 20 minuti → come al punto 4 (al massimo due correzioni), poi trasforma
+     la pull request in bozza con titolo `[DA SISTEMARE] …` e non fare merge.
+5. Non scrivere mai direttamente su `main`: le modifiche entrano solo con il merge di una pull request verde.
+
+### 6. Riepilogo della domenica
+Se oggi è domenica (ora di Shanghai), aggiungi al messaggio finale un riepilogo della settimana:
+le pull request unite negli ultimi 7 giorni (`gh api "repos/05lata05/Neon-Torino/pulls?state=closed&per_page=30"`,
+filtrando `merged_at`), quelle aperte che aspettano il proprietario, la casella successiva della roadmap.
+
+### 7. Messaggio finale
+Una o due righe: cosa è entrato in `main` (con il link), oppure la pull request che aspetta il proprietario,
+oppure il motivo per cui non hai lavorato. La domenica, poi, il riepilogo.
 
 ### Divieti
-- Non cambiare queste istruzioni, l'interruttore in `ROADMAP.md` o le attività programmate.
+- Non cambiare queste istruzioni, l'interruttore in `ROADMAP.md`, i marcatori `(da rivedere)` e `(manuale)` o le attività programmate.
+- Non fare merge di pull request che non hai aperto tu in questa sessione.
 - Non toccare segreti, impostazioni del repository o dell'ambiente cloud.
 - Non scaricare dati da servizi nuovi oltre a OpenStreetMap e ai registri dei pacchetti.

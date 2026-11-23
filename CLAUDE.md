@@ -6,6 +6,7 @@
 - Unità: 1 m = 5 unità di gioco (`M` nel kit dei landmark); mondo x = est, z = sud.
 - Nuovi landmark: modulo in `src/landmarks/`, forme OSM in `LANDMARKS` di `tools/build_map.py` (vedi README).
 - Prima di consegnare: `npm test` (Playwright) e guardare le foto in `tests/out/`.
+- Realismo: ogni zona nuova o modificata deve rispettare `docs/REALISMO.md` (fonti, lista di controllo, regole sui negozi reali).
 - Dettagli inventati (non presenti in OSM) vanno dichiarati nel commento in testa al modulo.
 - Cosa fare: la prima casella libera di `ROADMAP.md`; a fine lavoro spuntala.
 - Un ramo per funzionalità (`feature/<nome>`), poi pull request su `main`.
