@@ -1,0 +1,49 @@
+# Test automatico: a ogni push e a ogni pull request esegue `npm test` (tests/smoke.mjs)
+# in Chromium headless con Playwright. Le foto di tests/out/ restano scaricabili come artefatto.
+name: Test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Dipendenze (three in locale, Prettier)
+        run: npm ci
+
+      # Playwright non è tra le devDependencies (in locale si usa quello già installato):
+      # qui lo si aggiunge senza toccare package.json, con il suo Chromium.
+      - name: Playwright e Chromium
+        run: |
+          npm install --no-save playwright@1.63.0
+          npx playwright install --with-deps chromium
+
+      - name: Formattazione (Prettier)
+        run: npx prettier --check "src/**/*.js" "tests/**/*.mjs" "tools/**/*.mjs"
+
+      - name: Partita simulata e foto dei landmark
+        run: npm test
+
+      - name: Foto di tests/out/
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: foto-test
+          path: tests/out/
+          if-no-files-found: ignore
+          retention-days: 14
