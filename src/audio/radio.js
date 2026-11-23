@@ -1,7 +1,7 @@
-// Radio con musica generata al momento.
+// Radio with music generated on the fly.
 import { AC, noiseBuf, radioBus } from './sfx.js';
 
-// stato di proprietà di questo modulo: gli altri moduli lo leggono e lo cambiano con le funzioni set…()
+// state owned by this module: other modules read it and change it with the set…() functions
 export let nextNoteT, radioStation;
 export function setNextNoteT(v) {
   nextNoteT = v;
@@ -100,7 +100,7 @@ export function scheduleRadio() {
 }
 
 export function init() {
-  // ---------------- radio (musica generata) ----------------
+  // ---------------- radio (generated music) ----------------
   RADIO = [null, { name: 'Radio Mole FM', bpm: 104, kind: 'synth' }, { name: 'Po Lounge', bpm: 86, kind: 'lounge' }];
   radioStation = 1;
   nextNoteT = 0;

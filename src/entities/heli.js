@@ -1,4 +1,5 @@
-// Elicottero della polizia con il faro.
+// Police helicopter with its searchlight.
+import { t } from '../i18n/index.js';
 import * as THREE from 'three';
 import { scene } from '../core/render.js';
 import { bustT, gtime, player, state, wanted } from '../core/state.js';
@@ -60,7 +61,7 @@ export function spawnHeli() {
   heli.tailR = tail;
   heli.spot = spot;
   heli.cone = cone;
-  toast('Elicottero della polizia in arrivo!');
+  toast(t('police.heli'));
 }
 export function removeHeli() {
   scene.remove(heli.g);
@@ -148,7 +149,7 @@ export function syncExtras(dt) {
 }
 
 export function init() {
-  // ---------------- elicottero della polizia ----------------
+  // ---------------- police helicopter ----------------
   heli = null;
   UP = new THREE.Vector3(0, 1, 0);
   hv1 = new THREE.Vector3();

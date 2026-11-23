@@ -1,4 +1,4 @@
-// Allinea a ogni frame le mesh 3D allo stato della simulazione.
+// Every frame, syncs the 3D meshes with the simulation state.
 import { scene } from '../core/render.js';
 import { cars, frameN, gtime, mission, offers, parts, peds, player, setFrameN, state } from '../core/state.js';
 import { clamp, tmpC } from '../core/util.js';
@@ -115,7 +115,7 @@ export function syncScene(dt) {
     }
     return true;
   });
-  if (mission && mission.type !== 'colpo' && state !== 'title') {
+  if (mission && mission.type !== 'heist' && state !== 'title') {
     const s = mission.steps[mission.idx],
       col = MT[mission.type].col;
     tgt.visible = true;
@@ -126,7 +126,7 @@ export function syncScene(dt) {
     tgtArrow.position.y = 42 + Math.abs(Math.sin(gtime * 3)) * 10;
     tgtArrow.rotation.y = gtime * 2;
     const n = mission.steps[mission.idx + 1];
-    nextRing.visible = mission.type === 'corsa' && !!n;
+    nextRing.visible = mission.type === 'race' && !!n;
     if (n) nextRing.position.set(n.x, 1, n.y);
   } else {
     tgt.visible = false;
@@ -154,7 +154,7 @@ export function syncScene(dt) {
 }
 
 export function init() {
-  // ---------------- sincronizzazione scena ----------------
+  // ---------------- scene sync ----------------
   meshCars = [];
   meshPeds = [];
   meshOffers = [];

@@ -1,5 +1,5 @@
-// Test di fumo: carica il gioco in Chromium headless, controlla che non ci siano errori
-// e salva una foto di ogni landmark in tests/out/. Uso: npm test  (richiede Playwright)
+// Smoke test: loads the game in headless Chromium, checks for errors,
+// saves a picture of each landmark in tests/out/. Usage: npm test  (requires Playwright)
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,6 +19,7 @@ const port = 8000 + Math.floor(Math.random() * 900);
 const srv = await serve(port);
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1280, height: 760 } });
+page.setDefaultTimeout(90000); // GitHub runners can take more than 30 s for a screenshot
 const errors = [];
 page.on('pageerror', e => errors.push('pageerror: ' + e.message));
 page.on('console', m => {
@@ -30,8 +31,8 @@ if (LOCAL_THREE)
 await page.goto(`http://localhost:${port}/`);
 await page.waitForFunction(() => window.__nr && window.__nr.landmarks, null, { timeout: 120000 });
 const info = await page.evaluate(() => ({ errors: window.__nr.landmarks.errors, list: window.__nr.landmarks.list }));
-console.log('landmark caricati:', info.list.join(', '));
-if (info.errors.length) errors.push('landmark con errori: ' + info.errors.join(', '));
+console.log('landmarks loaded:', info.list.join(', '));
+if (info.errors.length) errors.push('landmarks with errors: ' + info.errors.join(', '));
 
 const only = process.argv.slice(2);
 const views = await page.evaluate(() => {
@@ -52,14 +53,14 @@ const views = await page.evaluate(() => {
     }
     return { cx: (x0 + x1) / 2, cz: (z0 + z1) / 2, s: Math.max(x1 - x0, z1 - z0) };
   };
-  const st = L.stadio ? box(L.stadio.outer) : null;
+  const st = L.stadium ? box(L.stadium.outer) : null;
   for (const id in L) {
     const o = L[id];
     const b = o.outer ? box(o.outer) : { ...(([x, z]) => ({ cx: x, cz: z }))(toW(o.pos)), s: 60 };
-    // vicino allo stadio la telecamera si mette dalla parte opposta, per non finire sotto la copertura
+    // near the stadium the camera goes to the far side, so it does not end up under the roof
     let dx = -0.66,
       dz = 0.75;
-    if (st && id !== 'stadio') {
+    if (st && id !== 'stadium') {
       const ex = b.cx - st.cx,
         ez = b.cz - st.cz,
         l = Math.hypot(ex, ez);
@@ -77,10 +78,10 @@ for (const v of views) {
   if (only.length && !only.includes(v.id)) continue;
   const d = Math.max(260, Math.min(v.s * 1.1, 950));
   for (const [tag, hour] of [
-    ['giorno', 12],
-    ['notte', 22],
+    ['day', 12],
+    ['night', 22],
   ]) {
-    if (tag === 'notte' && !['stadio', 'rignon', 'arena'].includes(v.id)) continue;
+    if (tag === 'night' && !['stadium', 'rignon', 'arena'].includes(v.id)) continue;
     await page.evaluate(
       ({ v, d, hour }) => {
         window.__nr.setHour(hour);
@@ -97,9 +98,9 @@ await page.evaluate(() => {
   window.__nr.setHour(12);
 });
 await page.waitForTimeout(500);
-await page.screenshot({ path: path.join(OUT, 'gioco.png') });
+await page.screenshot({ path: path.join(OUT, 'game.png') });
 
-// partita simulata: tasti veri, controlli sullo stato del gioco
+// simulated play: real key presses, checks on the game state
 const st = () =>
   page.evaluate(() => {
     const n = window.__nr,
@@ -112,16 +113,16 @@ const hold = async (key, ms) => {
   await page.keyboard.up(key);
 };
 const check = (ok, msg) => {
-  if (!ok) errors.push('partita: ' + msg);
+  if (!ok) errors.push('play: ' + msg);
   else console.log('  ✓ ' + msg);
 };
-console.log('partita simulata:');
+console.log('simulated play:');
 await page.locator('#gl').focus();
 const s0 = await st();
 await hold('KeyW', 1200);
 const s1 = await st();
-check(Math.hypot(s1.x - s0.x, s1.y - s0.y) > 20, 'a piedi il giocatore cammina');
-// auto di prova accanto al giocatore, sul marciapiede di partenza (posizione nota e libera)
+check(Math.hypot(s1.x - s0.x, s1.y - s0.y) > 20, 'the player walks on foot');
+// test car next to the player, on the starting sidewalk (known, free position)
 const toSpawn = () =>
   page.evaluate(() => {
     const n = window.__nr;
@@ -129,91 +130,112 @@ const toSpawn = () =>
     n.cars.splice(0, n.cars.length);
   });
 await toSpawn();
-await page.evaluate(() => window.__nr.spawnCar('sportiva'));
+await page.evaluate(() => window.__nr.spawnCar('sports'));
 await page.keyboard.press('KeyE');
 await page.waitForTimeout(200);
-check((await st()).car, 'sale in auto con E');
+check((await st()).car, 'E gets into a car');
 const s2 = await st();
 await hold('KeyW', 2000);
 const s3 = await st();
-check(Math.hypot(s3.x - s2.x, s3.y - s2.y) > 40, "l'auto accelera con W");
+check(Math.hypot(s3.x - s2.x, s3.y - s2.y) > 40, 'W accelerates the car');
 await hold('Space', 400);
 await hold('KeyS', 800);
 await page.evaluate(() => {
   for (let i = 0; i < 20 && Math.hypot(window.__nr.player.car.vx, window.__nr.player.car.vy) > 40; i++) window.__nr.step(0.5);
-}); // si ferma prima di scendere
+}); // stop before getting out
 await page.keyboard.press('KeyE');
 await page.waitForTimeout(200);
-check(!(await st()).car, "scende dall'auto con E");
+check(!(await st()).car, 'E gets out of the car');
 await page.keyboard.press('KeyM');
 await page.waitForTimeout(300);
-check((await st()).state === 'map', 'apre la mappa con M');
+check((await st()).state === 'map', 'M opens the map');
 await page.keyboard.press('KeyM');
 await page.keyboard.press('KeyP');
 await page.waitForTimeout(200);
-check((await st()).state === 'pause', 'mette in pausa con P');
+check((await st()).state === 'pause', 'P pauses the game');
 await page.keyboard.press('KeyP');
 await toSpawn();
-await page.evaluate(() => window.__nr.spawnCar('polizia'));
+await page.evaluate(() => window.__nr.spawnCar('police'));
 await page.keyboard.press('KeyE');
 await page.evaluate(() => window.__nr.step(0.5));
-check((await st()).wanted > 0, "rubare un'auto della polizia fa salire il livello di ricercato");
-const gettone = await page.evaluate(() => {
+check((await st()).wanted > 0, 'stealing a police car raises the wanted level');
+const token = await page.evaluate(() => {
   const n = window.__nr,
     t = n.tokens.find(t => !t.got);
   if (!t) return null;
-  const prima = n.money;
+  const before = n.money;
   if (n.player.car) n.player.car = null;
   n.teleport(t.x, t.y);
   n.step(0.2);
-  return n.money - prima;
+  return n.money - before;
 });
-check(gettone === null || gettone >= 50, 'raccogliere un gettone dà 50 €');
+check(token === null || token >= 50, 'picking up a token gives €50');
+const langBefore = await page.evaluate(() => window.__nr.lang);
+await page.keyboard.press('KeyL');
+const langAfter = await page.evaluate(() => window.__nr.lang);
+await page.keyboard.press('KeyL');
+check(langBefore !== langAfter && ['it', 'en'].includes(langAfter), `L switches the language (${langBefore} → ${langAfter})`);
 await page.keyboard.press('KeyC');
 await page.keyboard.press('KeyR');
 await page.keyboard.press('KeyH');
 await page.waitForTimeout(500);
-await page.screenshot({ path: path.join(OUT, 'partita.png') });
-// ---------------- prestazioni ----------------
-// Senza scheda video (qui e su GitHub) gli fps non hanno senso: misuriamo il lavoro chiesto alla scheda video
-// (chiamate di disegno, triangoli) e il tempo di calcolo della simulazione. Gli fps veri si vedono nel gioco col tasto I.
-// Valori di partenza (fine M1): pc 350–400 chiamate e ~640k triangoli, telefono ~200 e ~630k, simulazione ~1–1,5 ms.
-// Le soglie lasciano circa il 50% di margine per Santa Rita verosimile (M2); alzarle solo con un motivo scritto qui.
-const SOGLIE = {
-  pc: { calls: 600, triangles: 1_500_000 }, // grafica alta, 1280×760
-  telefono: { calls: 350, triangles: 1_000_000 }, // grafica bassa, iPhone 13 emulato
-  msPerFrame: 6, // simulazione (traffico, pedoni, polizia…) per frame, sul processore
+await page.screenshot({ path: path.join(OUT, 'play.png') });
+// ---------------- performance ----------------
+// Without a GPU (here and on GitHub) fps are meaningless: we measure the work asked of the GPU
+// (draw calls, triangles) and the simulation CPU time. Real fps are shown in the game with the I key.
+// Baseline (end of M1): pc 350–400 draw calls and ~640k triangles, phone ~200 and ~630k, simulation ~1–1.5 ms.
+// The limits leave about 50% headroom for Santa Rita realism (M2); raise them only with a reason written here.
+const LIMITS = {
+  pc: { calls: 600, triangles: 1_500_000 }, // high graphics, 1280×760
+  phone: { calls: 350, triangles: 1_000_000 }, // low graphics, emulated iPhone 13
+  msPerFrame: 6, // simulation (traffic, pedestrians, police…) per frame, on the CPU
 };
-const VISTE = [
-  ['strada', v => ({ x: v.x - 60, y: 26, z: v.y - 10, lx: v.x + 60, ly: 12, lz: v.y + 10, fov: 62 })],
-  ['dall_alto', v => ({ x: v.x - 500, y: 420, z: v.y + 500, lx: v.x, ly: 0, lz: v.y, fov: 55 })],
+const VIEWS = [
+  ['street', v => ({ x: v.x - 60, y: 26, z: v.y - 10, lx: v.x + 60, ly: 12, lz: v.y + 10, fov: 62 })],
+  ['aerial', v => ({ x: v.x - 500, y: 420, z: v.y + 500, lx: v.x, ly: 0, lz: v.y, fov: 55 })],
 ];
-async function misura(pg, quality, nome) {
+async function measure(pg, quality, name) {
   await pg.evaluate(q => window.__nr.setQuality(q), quality);
   const out = { calls: 0, triangles: 0 };
-  for (const [vista, cam] of VISTE) {
+  for (const [view, cam] of VIEWS) {
     await pg.evaluate(src => {
       const n = window.__nr,
         f = eval(src);
       n.cam = f(n.SPAWN);
     }, cam.toString());
     await pg.waitForTimeout(600);
-    const p = await pg.evaluate(() => window.__nr.perf());
+    // median of 8 consecutive frames: on slow machines (GitHub) the first frames after moving the camera
+    // can give values up to twice the steady ones (seen on 23 Nov 2026: 590–638 instead of ~345)
+    const frames = await pg.evaluate(
+      () =>
+        new Promise(res => {
+          const o = [];
+          const f = () => {
+            o.push(window.__nr.perf());
+            if (o.length < 8) requestAnimationFrame(f);
+            else res(o);
+          };
+          requestAnimationFrame(f);
+        }),
+    );
+    const median = k => frames.map(fr => fr[k]).sort((a, b) => a - b)[frames.length >> 1];
+    const p = { calls: median('calls'), triangles: median('triangles') };
     out.calls = Math.max(out.calls, p.calls);
     out.triangles = Math.max(out.triangles, p.triangles);
-    await pg.screenshot({ path: path.join(OUT, `prestazioni-${nome}-${vista}.png`) });
+    await pg.screenshot({ path: path.join(OUT, `perf-${name}-${view}.png`) });
   }
   await pg.evaluate(() => {
     window.__nr.cam = null;
   });
   return out;
 }
-console.log('prestazioni:');
-// ogni misura parte da una partita nuova, con traffico e pedoni come all'avvio
-async function nuovaPartita(opzioni, nome) {
-  const ctxB = await browser.newContext(opzioni),
+console.log('performance:');
+// each measurement starts from a fresh game, with traffic and pedestrians as at startup
+async function newGame(options, name) {
+  const ctxB = await browser.newContext(options),
     pg = await ctxB.newPage();
-  pg.on('pageerror', e => errors.push(`${nome} pageerror: ${e.message}`));
+  pg.setDefaultTimeout(90000);
+  pg.on('pageerror', e => errors.push(`${name} pageerror: ${e.message}`));
   if (LOCAL_THREE)
     await pg.route('https://cdn.jsdelivr.net/npm/three@0.160.0/**', r => r.fulfill({ path: LOCAL_THREE, contentType: 'text/javascript' }));
   await pg.goto(`http://localhost:${port}/`);
@@ -221,11 +243,11 @@ async function nuovaPartita(opzioni, nome) {
   await pg.evaluate(() => window.__nr.startGame());
   return [ctxB, pg];
 }
-const risultati = {};
+const results = {};
 {
-  const [c, pg] = await nuovaPartita({ viewport: { width: 1280, height: 760 } }, 'pc');
-  risultati.pc = await misura(pg, 1, 'pc');
-  risultati.msPerFrame = await pg.evaluate(() => {
+  const [c, pg] = await newGame({ viewport: { width: 1280, height: 760 } }, 'pc');
+  results.pc = await measure(pg, 1, 'pc');
+  results.msPerFrame = await pg.evaluate(() => {
     const n = window.__nr,
       t0 = performance.now();
     n.step(3);
@@ -234,28 +256,28 @@ const risultati = {};
   await c.close();
 }
 {
-  const [c, pg] = await nuovaPartita({ ...devices['iPhone 13'] }, 'telefono');
-  risultati.telefono = await misura(pg, 0, 'telefono');
+  const [c, pg] = await newGame({ ...devices['iPhone 13'] }, 'phone');
+  results.phone = await measure(pg, 0, 'phone');
   await c.close();
 }
-fs.writeFileSync(path.join(OUT, 'prestazioni.json'), JSON.stringify(risultati, null, 2));
-const riga = (nome, r, s) => {
+fs.writeFileSync(path.join(OUT, 'perf.json'), JSON.stringify(results, null, 2));
+const row = (name, r, s) => {
   console.log(
-    `  ${nome.padEnd(9)} ${String(r.calls).padStart(4)} chiamate (max ${s.calls})   ${(r.triangles / 1000).toFixed(0).padStart(5)}k triangoli (max ${s.triangles / 1000}k)`,
+    `  ${name.padEnd(9)} ${String(r.calls).padStart(4)} draw calls (max ${s.calls})   ${(r.triangles / 1000).toFixed(0).padStart(5)}k triangles (max ${s.triangles / 1000}k)`,
   );
-  if (r.calls > s.calls) errors.push(`prestazioni ${nome}: ${r.calls} chiamate di disegno, soglia ${s.calls}`);
-  if (r.triangles > s.triangles) errors.push(`prestazioni ${nome}: ${r.triangles} triangoli, soglia ${s.triangles}`);
+  if (r.calls > s.calls) errors.push(`performance ${name}: ${r.calls} draw calls, limit ${s.calls}`);
+  if (r.triangles > s.triangles) errors.push(`performance ${name}: ${r.triangles} triangles, limit ${s.triangles}`);
 };
-riga('pc', risultati.pc, SOGLIE.pc);
-riga('telefono', risultati.telefono, SOGLIE.telefono);
-console.log(`  simulazione ${risultati.msPerFrame.toFixed(2)} ms per frame (max ${SOGLIE.msPerFrame})`);
-if (risultati.msPerFrame > SOGLIE.msPerFrame)
-  errors.push(`prestazioni: simulazione ${risultati.msPerFrame.toFixed(2)} ms per frame, soglia ${SOGLIE.msPerFrame}`);
+row('pc', results.pc, LIMITS.pc);
+row('phone', results.phone, LIMITS.phone);
+console.log(`  simulation ${results.msPerFrame.toFixed(2)} ms per frame (max ${LIMITS.msPerFrame})`);
+if (results.msPerFrame > LIMITS.msPerFrame)
+  errors.push(`performance: simulation ${results.msPerFrame.toFixed(2)} ms per frame, limit ${LIMITS.msPerFrame}`);
 
 await browser.close();
 srv.close();
 if (errors.length) {
-  console.error('ERRORI:\n' + [...new Set(errors)].join('\n'));
+  console.error('ERRORS:\n' + [...new Set(errors)].join('\n'));
   process.exit(1);
 }
-console.log('ok — foto in tests/out/');
+console.log('ok — pictures in tests/out/');

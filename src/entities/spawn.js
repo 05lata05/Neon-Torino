@@ -1,5 +1,5 @@
-// Comparsa e rimozione di auto, pedoni e volanti attorno al giocatore.
-import { TRAFFICO } from '../config.js';
+// Spawning and despawning of cars, pedestrians and patrol cars around the player.
+import { TRAFFIC } from '../config.js';
 import * as THREE from 'three';
 import { camera } from '../core/render.js';
 import { cars, peds, player, state, wanted } from '../core/state.js';
@@ -53,7 +53,7 @@ export function manageSpawns(dt, fx, fy) {
     let best = null,
       bd = 800;
     for (const c of cars)
-      if (c.type === 'polizia' && c.driver === 'npc' && !c.wreck) {
+      if (c.type === 'police' && c.driver === 'npc' && !c.wreck) {
         const d = Math.hypot(c.x - fx, c.y - fy);
         if (d < bd) {
           bd = d;
@@ -62,7 +62,7 @@ export function manageSpawns(dt, fx, fy) {
       }
     if (best) makeCop(best);
     else {
-      const c = spawnTrafficCar(fx, fy, 600, 1250, false, 'polizia');
+      const c = spawnTrafficCar(fx, fy, 600, 1250, false, 'police');
       if (c) makeCop(c);
     }
   }
@@ -70,8 +70,8 @@ export function manageSpawns(dt, fx, fy) {
 
 export function init() {
   // ---------------- spawn ----------------
-  TRAFFIC_N = TRAFFICO.auto;
-  PED_N = TRAFFICO.pedoni;
+  TRAFFIC_N = TRAFFIC.auto;
+  PED_N = TRAFFIC.pedestrians;
   spawnT = 0;
   _v = new THREE.Vector3();
 }

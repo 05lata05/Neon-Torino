@@ -1,10 +1,11 @@
-// Qualità grafica automatica e manuale.
+// Automatic and manual graphics quality.
+import { t } from '../i18n/index.js';
 import { state } from '../core/state.js';
 import { H, W, renderer, scene } from '../core/render.js';
 import { toast } from '../world/effects.js';
 import { sun } from '../world/lights.js';
 
-// stato di proprietà di questo modulo: gli altri moduli lo leggono e lo cambiano con le funzioni set…()
+// state owned by this module: other modules read it and change it with the set…() functions
 export let perfDone;
 export function setPerfDone(v) {
   perfDone = v;
@@ -32,13 +33,13 @@ export function perfCheck(raw) {
     const fps = perfN / perfAcc;
     if (fps < 40 && quality === 1) {
       setQuality(0);
-      toast('Grafica ridotta per andare più fluido (Q per cambiarla)', 4);
+      toast(t('msg.gfxAuto'), 4);
     }
   }
 }
 
 export function init() {
-  // ---------------- qualità grafica ----------------
+  // ---------------- graphics quality ----------------
   quality = 1;
   perfAcc = 0;
   perfN = 0;

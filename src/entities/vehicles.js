@@ -1,5 +1,6 @@
-// Veicoli: modelli di guida, fisica, danni ed esplosioni.
-import { VEICOLI } from '../config.js';
+// Vehicles: driving models, physics, damage and explosions.
+import { t } from '../i18n/index.js';
+import { VEHICLES } from '../config.js';
 import { rain } from '../world/weather.js';
 import { sfx } from '../audio/sfx.js';
 import { camera } from '../core/render.js';
@@ -231,7 +232,7 @@ export function wreckCar(c) {
   }
   if (c === player.car) {
     exitCar(true);
-    bigMsg('AUTO DISTRUTTA', "Trovane un'altra…", '#ff8c1a', 2.5);
+    bigMsg(t('car.destroyed'), t('car.findAnother'), '#ff8c1a', 2.5);
     setShake(12);
   } else if (c.driver === 'npc' || c.driver === 'cop') {
     ejectDriver(c);
@@ -250,14 +251,14 @@ export function ejectDriver(c) {
   const p = makePed(x, y);
   p.flee = 4;
   p.fleeFrom = [c.x, c.y];
-  if (c.type === 'polizia') p.shirt = '#1e3a8a';
+  if (c.type === 'police') p.shirt = '#1e3a8a';
   peds.push(p);
   return p;
 }
 
 export function init() {
-  // ---------------- veicoli ----------------
-  CARS = VEICOLI;
+  // ---------------- vehicles ----------------
+  CARS = VEHICLES;
   CP = [
     [1, 1],
     [1, -1],

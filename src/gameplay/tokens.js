@@ -1,5 +1,6 @@
-// Gettoni neon da collezionare.
-import { PREMI } from '../config.js';
+// Collectible neon tokens.
+import { num, t as tr } from '../i18n/index.js';
+import { REWARDS } from '../config.js';
 import * as THREE from 'three';
 import { sfx } from '../audio/sfx.js';
 import { scene } from '../core/render.js';
@@ -16,21 +17,21 @@ export function updateTokens() {
       t.got = true;
       if (t.mesh) scene.remove(t.mesh);
       save.tokens.push(t.id);
-      setMoney(money + PREMI.gettone);
+      setMoney(money + REWARDS.token);
       const n = tokens.filter(o => o.got).length;
       sfx.coin();
       if (n === tokens.length) {
-        setMoney(money + PREMI.tuttiIGettoni);
-        bigMsg('TUTTI I GETTONI!', 'Hai esplorato tutta la città: +€' + PREMI.tuttiIGettoni.toLocaleString('it-IT'), '#ffd23f', 4);
+        setMoney(money + REWARDS.allTokens);
+        bigMsg(tr('reward.allTokens'), tr('reward.allTokensSub', { n: num(REWARDS.allTokens) }), '#ffd23f', 4);
         sfx.win();
-      } else toast('Gettone neon ' + n + '/' + tokens.length + '  (+€' + PREMI.gettone + ')', 2);
+      } else toast(tr('reward.token', { got: n, tot: tokens.length, n: REWARDS.token }), 2);
       saveMoney();
     }
   }
 }
 
 export function init() {
-  // ---------------- gettoni neon ----------------
+  // ---------------- neon tokens ----------------
   gseed = 4242;
   grnd = () => {
     gseed = (Math.imul(gseed, 1664525) + 1013904223) >>> 0;

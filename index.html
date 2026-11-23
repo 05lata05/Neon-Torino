@@ -15,8 +15,22 @@
 <body>
 <canvas id="gl" tabindex="0"></canvas>
 <canvas id="hud"></canvas>
-<div id="load">Costruisco Santa Rita…</div>
-<script>setTimeout(()=>{const l=document.getElementById('load');if(l)l.textContent='Il motore 3D non si è caricato. Ricarica la pagina.';},20000);</script>
+<div id="load"></div>
+<script>
+  // loading text in the player's language (same rule as src/i18n: saved choice, otherwise the browser language)
+  (() => {
+    let l = null;
+    try { l = localStorage.getItem('neontorino_lang'); } catch (e) {}
+    const it = (l || navigator.language || 'it').slice(0, 2) === 'it';
+    document.documentElement.lang = it ? 'it' : 'en';
+    const el = document.getElementById('load');
+    el.textContent = it ? 'Costruisco Santa Rita…' : 'Building Santa Rita…';
+    setTimeout(() => {
+      const e = document.getElementById('load');
+      if (e) e.textContent = it ? 'Il motore 3D non si è caricato. Ricarica la pagina.' : 'The 3D engine did not load. Reload the page.';
+    }, 20000);
+  })();
+</script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script type="module" src="src/main.js"></script>
 </body>

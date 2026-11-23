@@ -1,4 +1,5 @@
-// Pedoni: camminata sui marciapiedi, fuga, schivate.
+// Pedestrians: walking on sidewalks, fleeing, dodging.
+import { t } from '../i18n/index.js';
 import { SKINS, cars, peds, player, setShake, shake } from '../core/state.js';
 import { TAU, pick, rand } from '../core/util.js';
 import { addHeat, copNear } from './police.js';
@@ -58,7 +59,7 @@ export function movePed(p, dt) {
   if (p.wait) {
     p.moving = false;
     p.a = Math.atan2(player.y - p.y, player.x - p.x);
-    if (Math.random() < dt * 0.3) say(p, pick(['Taxi!', 'Ehi, taxi!', 'Di qua!']), 1.4);
+    if (Math.random() < dt * 0.3) say(p, pick(t('say.taxi')), 1.4);
     return;
   }
   if (p.flee > 0) {
@@ -157,7 +158,7 @@ export function updatePeds(dt) {
           p.down = 2.2;
           p.hitFrom = [c.x, c.y];
           tryMovePed(p, c.vx * 0.06, c.vy * 0.06);
-          if (Math.random() < 0.7) say(p, pick(['Ahi!', 'Ouch!', 'Mamma mia!', 'Ma che fai?!']));
+          if (Math.random() < 0.7) say(p, pick(t('say.hit')));
           if (c === player.car) {
             setShake(Math.max(shake, 3));
             if (copNear(p.x, p.y, 450)) addHeat(1);
@@ -172,7 +173,7 @@ export function updatePeds(dt) {
           p.dodge = 0.5;
           p.dvx = (-c.vy / sp) * side * 170;
           p.dvy = (c.vx / sp) * side * 170;
-          if (Math.random() < 0.35) say(p, pick(['Ehi!', 'Attento!', 'Guarda dove vai!', 'Ma sei matto?!']));
+          if (Math.random() < 0.35) say(p, pick(t('say.dodge')));
         }
       }
     }
@@ -182,7 +183,7 @@ export function updatePeds(dt) {
 }
 
 export function init() {
-  // ---------------- pedoni ----------------
+  // ---------------- pedestrians ----------------
   SHIRTS = ['#e74c3c', '#3498db', '#f1c40f', '#9b59b6', '#1abc9c', '#e67e22', '#ecf0f1', '#34495e', '#ff6b81', '#2ecc71', '#fd79a8'];
   HAIRS = ['#2d1b0e', '#5a3825', '#111111', '#c49a6c', '#e0c080', '#7f8c8d', '#a0522d'];
   pedSolid = t => t === BUILD || t === WATER || t === OUT;

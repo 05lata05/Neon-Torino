@@ -1,5 +1,5 @@
-// Piscine di Santa Rita: Stadio Monumentale (1933), Nuova Piscina Olimpica (2006), Aquatica e vasca esterna
-// accanto allo stadio; Piscina Sebastopoli e Torino Nuoto vicino a Parco Rignon. Impronte da OSM.
+// Swimming pools of Santa Rita: Stadio Monumentale (1933), Nuova Piscina Olimpica (2006), Aquatica and the outdoor pool
+// next to the stadium; Piscina Sebastopoli and Torino Nuoto near Parco Rignon. Footprints from OSM.
 
 const POOLS = {
   piscinaMonumentale: {
@@ -19,7 +19,7 @@ const POOLS = {
 
 export default function build(kit, L) {
   for (const id in POOLS) if (L[id]) hall(kit, L[id], POOLS[id]);
-  if (L.vascaEsterna) vasca(kit, L.vascaEsterna);
+  if (L.outdoorPool) outdoorPool(kit, L.outdoorPool);
 }
 
 function hall(kit, P, o) {
@@ -30,7 +30,7 @@ function hall(kit, P, o) {
   );
   const ob = r.ob,
     side = kit.streetSide(ob, o.street);
-  // pensilina d'ingresso e insegna sul lato verso la strada
+  // entrance canopy and sign on the street side
   const s = side[0] === '+' ? 1 : -1,
     ax = side[1],
     off = (ax === 'u' ? ob.len : ob.wid) / 2;
@@ -48,7 +48,7 @@ function hall(kit, P, o) {
   );
   kit.mesh(can, kit.std({ color: '#e8ecef', metalness: 0.3, roughness: 0.4 }));
   kit.obbSign(ob, side, o.sign, o.h - 2, 1.7, { bg: '#ffffff', fg: o.fg, family: o.font || 'system-ui,sans-serif', glow: o.fg });
-  // lucernari sul tetto della vasca coperta
+  // skylights on the indoor pool roof
   const sky = new GB();
   for (const v of [-0.2, 0.2])
     kit.ribbon(sky, [kit.local(ob, -ob.len * 0.38, v * ob.wid), kit.local(ob, ob.len * 0.38, v * ob.wid)], 2.2 * M, r.wallH + 0.5 * M);
@@ -57,14 +57,14 @@ function hall(kit, P, o) {
     kit.lit(null, null, { glow: '#bfe6ff', day: 0.05, night: 0.8, mat: { color: '#6f93ab', roughness: 0.15, metalness: 0.3 } }),
     { cast: false },
   );
-  kit.label(P.nome, ob.cx, ob.cz, o.h + 10, '#38bdf8');
+  kit.label(P.name, ob.cx, ob.cz, o.h + 10, '#38bdf8');
 }
 
-function vasca(kit, V) {
+function outdoorPool(kit, V) {
   const { THREE, M, GB } = kit;
   const ring = kit.W(V.outer),
     ob = kit.obb(ring);
-  // bordo vasca e solarium
+  // pool edge and sun deck
   const deck = new THREE.Mesh(
     new THREE.PlaneGeometry(ob.len + 6 * M, ob.wid + 6 * M).rotateX(-Math.PI / 2),
     kit.std({ color: '#d9d4c8', roughness: 0.9 }),
@@ -73,7 +73,7 @@ function vasca(kit, V) {
   deck.rotation.y = -ob.ang;
   deck.receiveShadow = true;
   kit.scene.add(deck);
-  // acqua: corsie disegnate sul fondo, riflessi che si muovono
+  // water: lanes painted on the bottom, moving reflections
   const lanes = Math.max(4, Math.min(10, Math.round(ob.wid / M / 2.5)));
   const [c, g] = kit.cv(512, 256);
   const grd = g.createLinearGradient(0, 0, 512, 256);
@@ -120,7 +120,7 @@ function vasca(kit, V) {
   kit.onTick((dt, t) => {
     caus.offset.set(t * 0.02, Math.sin(t * 0.5) * 0.03);
   });
-  // galleggianti delle corsie e blocchi di partenza
+  // lane ropes and starting blocks
   const rope = new GB(),
     blk = new GB();
   for (let k = 1; k < lanes; k++) {

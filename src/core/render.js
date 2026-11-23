@@ -1,4 +1,4 @@
-// Renderer Three.js, scena, telecamera e ridimensionamento della finestra.
+// Three.js renderer, scene, camera and window resizing.
 import * as THREE from 'three';
 
 export let glc, hud, ctx, W, H, DPR, renderer, scene, SKY, camera;

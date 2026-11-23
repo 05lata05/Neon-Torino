@@ -1,4 +1,4 @@
-// Audio: motore, sirene, elicottero, pioggia ed effetti.
+// Audio: engine, sirens, helicopter, rain and sound effects.
 import { rain, rainA, setRainA } from '../world/weather.js';
 import { radioStation } from './radio.js';
 import { keys } from '../core/input.js';
@@ -6,7 +6,7 @@ import { bustT, camYaw, cars, gtime, player, state } from '../core/state.js';
 import { clamp } from '../core/util.js';
 import { heli } from '../entities/heli.js';
 
-// stato di proprietà di questo modulo: gli altri moduli lo leggono e lo cambiano con le funzioni set…()
+// state owned by this module: other modules read it and change it with the set…() functions
 export let audioOn;
 export function setAudioOn(v) {
   audioOn = v;
@@ -170,13 +170,7 @@ export function updateAudio(dt) {
       gear = Math.min(4, Math.floor(ratio)),
       rpm = gear < 4 ? ratio - gear : 1 + (ratio - 4) * 0.5;
     const base =
-        c.type === 'furgone' || c.type === 'corazzato' || c.type === 'autobus'
-          ? 36
-          : c.type === 'utilitaria'
-            ? 58
-            : c.type === 'fulmine'
-              ? 62
-              : 50,
+        c.type === 'van' || c.type === 'armored' || c.type === 'bus' ? 36 : c.type === 'compact' ? 58 : c.type === 'lightning' ? 62 : 50,
       f = base + (0.25 + rpm * 0.75) * 120 + (player.boosting ? 40 : 0),
       thr = keys.KeyW || keys.ArrowUp;
     eng.o1.frequency.setTargetAtTime(f, t, 0.06);

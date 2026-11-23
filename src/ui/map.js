@@ -1,4 +1,5 @@
-// GPS e mappa grande.
+// GPS and the big map.
+import { t } from '../i18n/index.js';
 import { H, W, ctx } from '../core/render.js';
 import { cars, gtime, mission, offers, peds, player } from '../core/state.js';
 import { TAU } from '../core/util.js';
@@ -10,9 +11,9 @@ import { HUDF } from './hud.js';
 import { miniCv } from '../world/ground.js';
 import { WORLD, WX, WY } from '../world/map.js';
 
-// ---------------- GPS e mappa grande ----------------
+// ---------------- GPS and big map ----------------
 export function gpsTarget() {
-  if (mission && mission.type !== 'colpo') {
+  if (mission && mission.type !== 'heist') {
     const s = mission.steps[mission.idx];
     return { x: s.x, y: s.y, col: MT[mission.type].col };
   }
@@ -95,12 +96,8 @@ export function drawBigMap() {
   ctx.textBaseline = 'middle';
   ctx.font = 'italic bold 26px ' + HUDF;
   ctx.fillStyle = '#ffd1f0';
-  ctx.fillText('MAPPA: SANTA RITA, TORINO', W / 2, Math.max(22, oy - 22));
+  ctx.fillText(t('map.title'), W / 2, Math.max(22, oy - 22));
   ctx.font = '13px system-ui,sans-serif';
   ctx.fillStyle = '#cbd5e1';
-  ctx.fillText(
-    'C consegna · R corsa · T taxi · € colpo · G garage · arancione = rampe    —    M per chiudere',
-    W / 2,
-    Math.min(H - 14, oy + S + 20),
-  );
+  ctx.fillText(t('map.legend'), W / 2, Math.min(H - 14, oy + S + 20));
 }

@@ -2,7 +2,7 @@
   "name": "neon-torino",
   "private": true,
   "type": "module",
-  "description": "Open-world 3D a Santa Rita (Torino) costruito sui dati OpenStreetMap",
+  "description": "3D open-world game set in Santa Rita (Turin), built on OpenStreetMap data",
   "scripts": {
     "dev": "node tools/serve.mjs",
     "map": "python3 tools/build_map.py",

@@ -1,13 +1,13 @@
-// Centrale del Latte di Torino (via Filadelfia 220): area industriale e capannoni da OSM,
-// compreso il capannone a volta (18 m, volta di 12 m) e la torre dell'acqua da 22 m.
-// Dettagli aggiunti (non in OSM): recinzione con cancello, insegne, autocisterne nel piazzale.
+// Centrale del Latte di Torino (via Filadelfia 220): industrial site and sheds from OSM,
+// including the barrel-vaulted shed (18 m, 12 m vault) and the 22 m water tower.
+// Added details (not in OSM): fence with gate, signs, tanker trucks in the yard.
 
 export default function build(kit, L) {
   const C = L.centraleLatte;
   if (!C) return;
   const { THREE, M, GB } = kit;
   const area = kit.W(C.outer);
-  // piazzale asfaltato
+  // asphalt yard
   const yard = new GB();
   kit.flat(yard, area, [], 0.2);
   kit.mesh(yard, kit.std({ color: '#86888c', roughness: 0.95 }), { cast: false });
@@ -36,7 +36,7 @@ export default function build(kit, L) {
       mainA = a;
       main = r;
     }
-    // fascia blu, portoni a scorrimento e banchine di carico
+    // blue band, sliding doors and loading docks
     const band = new GB();
     kit.walls(band, r.ring, r.wallH - 1.2 * M, r.wallH - 0.5 * M, { texW: 4, texH: 4 });
     kit.mesh(band, kit.std({ color: '#1f5fae', roughness: 0.6 }), { cast: false });
@@ -49,7 +49,7 @@ export default function build(kit, L) {
       glow: '#1f5fae',
       family: '"Arial Black",Impact,sans-serif',
     });
-    // portoni sul lato strada
+    // doors on the street side
     const s = side[0] === '+' ? 1 : -1,
       ax = side[1],
       ob = main.ob,
@@ -64,7 +64,7 @@ export default function build(kit, L) {
     kit.mesh(doors, kit.std({ color: '#a7adb4', metalness: 0.5, roughness: 0.5 }), { cast: false });
   }
 
-  // recinzione sul perimetro, con il cancello verso via Filadelfia
+  // perimeter fence, with the gate towards via Filadelfia
   const [gx, gz] = kit.nearestRoad(...kit.centroid(area), 'Via Filadelfia') || kit.centroid(area);
   let gi = 0,
     gd = 1e18;
@@ -84,7 +84,7 @@ export default function build(kit, L) {
     glow: '#ffffff',
   });
 
-  // autocisterne del latte parcheggiate nel piazzale (aggiunta di colore)
+  // milk tankers parked in the yard (added for flavour)
   const ob = kit.obb(area);
   let n = 0;
   for (let k = 0; k < 40 && n < 3; k++) {

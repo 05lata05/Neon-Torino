@@ -1,4 +1,5 @@
-// Urti tra auto.
+// Car-to-car collisions.
+import { t } from '../i18n/index.js';
 import { sfx } from '../audio/sfx.js';
 import { cars, player, setShake, shake } from '../core/state.js';
 import { pick } from '../core/util.js';
@@ -6,7 +7,7 @@ import { addHeat, copNear, makeCop } from './police.js';
 import { blockedN, circles, damage } from './vehicles.js';
 import { say, sparks } from '../world/effects.js';
 
-// ---------------- collisioni auto ----------------
+// ---------------- car collisions ----------------
 export function pushCar(c, dx, dy) {
   const cur = blockedN(c, c.x, c.y, c.a);
   if (blockedN(c, c.x + dx, c.y + dy, c.a) <= cur) {
@@ -77,12 +78,12 @@ export function onCrash(a, b, imp) {
   sfx.crash(imp);
   if (o.heatCd > 0) return;
   o.heatCd = 2.5;
-  if (o.type === 'polizia' && (o.driver === 'npc' || o.driver === 'cop' || o.driver === 'idle')) {
+  if (o.type === 'police' && (o.driver === 'npc' || o.driver === 'cop' || o.driver === 'idle')) {
     addHeat(1);
     if (o.driver !== 'cop') makeCop(o);
-    say(o, 'Accosti subito!', 1.6);
+    say(o, t('say.pullOver'), 1.6);
   } else if (o.driver === 'npc') {
-    if (Math.random() < 0.6) say(o, pick(['Ehi!!', 'La mia fiancata!', 'Assicurazione!', 'Ma dove guardi?!']), 1.6);
+    if (Math.random() < 0.6) say(o, pick(t('say.crashed')), 1.6);
     if (imp > 140 && copNear(o.x, o.y, 400)) addHeat(1);
   }
 }

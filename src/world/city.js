@@ -1,4 +1,4 @@
-// Città 3D: facciate generate, palazzi, alberi, lampioni, semafori; aggancio dei landmark.
+// 3D city: generated facades, buildings, trees, street lamps, traffic lights; landmark hook.
 import * as THREE from 'three';
 import { initLandmarks } from '../landmarks/index.js';
 import { scene } from '../core/render.js';
@@ -6,7 +6,7 @@ import { STD, canvasTex, glowCanvas, labelTex, mkCv, noiseFill, rpick, tmpC, tmp
 import { MS, miniCv } from './ground.js';
 import {
   BUILD,
-  CHIESA,
+  CHURCH,
   DATA,
   GH,
   GW,
@@ -38,7 +38,7 @@ import {
 
 export let FLOOR, GF, SHOPS, FT, FAC_M, stuccoM, glassBM, roofM, neonM, bulbM, antM, lampDecalM, tlLamps, tlAxis, envHooks, LMX;
 
-// facciate residenziali: 4 moduli x 4 piani (512x512 px = 80 x 60 unità)
+// residential facades: 4 bays x 4 floors (512x512 px = 80 x 60 units)
 export function makeRes(kind) {
   const [c, g] = mkCv(512, 512),
     [e, ge] = mkCv(512, 512);
@@ -46,9 +46,9 @@ export function makeRes(kind) {
   ge.fillRect(0, 0, 512, 512);
   noiseFill(g, 512, 512, '#f3efe8', 2600);
   const SH = {
-    balc: ['#6b4a32', '#7a5a40', '#8a8a86', '#6b4a32'],
-    tapp: ['#6b4a32', '#9a9890', '#e6e2da', '#7a5a40'],
-    pers: ['#3e5b3a', '#4a6640', '#35503a', '#5f4630'],
+    balcony: ['#6b4a32', '#7a5a40', '#8a8a86', '#6b4a32'],
+    shutters: ['#6b4a32', '#9a9890', '#e6e2da', '#7a5a40'],
+    louvers: ['#3e5b3a', '#4a6640', '#35503a', '#5f4630'],
   }[kind];
   const AW = ['#2f7d4f', '#c2562c', '#2f5f9a', '#b8892f', '#8a2f3a'];
   const lit = (x, y, w, h) => {
@@ -59,8 +59,8 @@ export function makeRes(kind) {
   };
   for (let r = 0; r < 4; r++) {
     const y0 = r * 128,
-      balcRow = kind === 'balc' || (kind === 'tapp' && Math.random() < 0.3);
-    if (kind === 'pers') {
+      balcRow = kind === 'balcony' || (kind === 'shutters' && Math.random() < 0.3);
+    if (kind === 'louvers') {
       g.fillStyle = 'rgba(0,0,0,0.10)';
       g.fillRect(0, y0 + 120, 512, 6);
       g.fillStyle = 'rgba(255,255,255,0.4)';
@@ -71,12 +71,12 @@ export function makeRes(kind) {
     }
     for (let k = 0; k < 4; k++) {
       const x0 = k * 128,
-        door = balcRow && (kind === 'balc' ? k % 2 === 0 : k === 1 || k === 2);
+        door = balcRow && (kind === 'balcony' ? k % 2 === 0 : k === 1 || k === 2);
       const ww = 46,
         wh = door ? 100 : 64,
         wx = x0 + 41,
         wy = door ? y0 + 18 : y0 + 30;
-      g.fillStyle = kind === 'pers' ? '#ebe5d8' : '#ddd7cc';
+      g.fillStyle = kind === 'louvers' ? '#ebe5d8' : '#ddd7cc';
       g.fillRect(wx - 5, wy - 5, ww + 10, wh + (door ? 5 : 10));
       g.fillStyle = '#2b3746';
       g.fillRect(wx, wy, ww, wh);
@@ -84,7 +84,7 @@ export function makeRes(kind) {
       g.fillRect(wx + 3, wy + 3, 14, wh - 6);
       g.fillStyle = '#d8d2c6';
       g.fillRect(wx + ww / 2 - 1, wy, 2, wh);
-      if (kind === 'pers') {
+      if (kind === 'louvers') {
         const sc = rpick(SH);
         if (Math.random() < 0.35) {
           g.fillStyle = sc;
@@ -128,7 +128,7 @@ export function makeRes(kind) {
       }
     }
     if (balcRow) {
-      const segs = kind === 'balc' ? [[0, 512]] : [[128, 384]];
+      const segs = kind === 'balcony' ? [[0, 512]] : [[128, 384]];
       for (const [a, b] of segs) {
         g.fillStyle = '#ebe7de';
         g.fillRect(a, y0 + 118, b - a, 8);
@@ -148,7 +148,7 @@ export function makeRes(kind) {
           g.fillRect(a, y0 + 84, b - a, 3);
           for (let x = a + 3; x < b; x += 8) g.fillRect(x, y0 + 84, 2, 34);
         }
-        // vasi di fiori sul balcone
+        // flower pots on the balcony
         for (let x = a + 10; x < b - 10; x += 24)
           if (Math.random() < 0.25) {
             g.fillStyle = '#a0522d';
@@ -252,7 +252,7 @@ export function makeShops() {
   }
   return [canvasTex(c, true), canvasTex(e, true)];
 }
-// piano terra senza negozi: zoccolo in pietra, portone, finestre con inferriate, box auto
+// ground floor without shops: stone base, main door, barred windows, garage doors
 export function makePlain() {
   const [c, g] = mkCv(512, 128),
     [e, ge] = mkCv(512, 128);
@@ -377,7 +377,7 @@ export function buildCity() {
     torr = [],
     tvp = [],
     tvx = [];
-  // vicinanza alle strade (2 = corso/via principale, 1 = via residenziale): decide dove ci sono i negozi
+  // closeness to roads (2 = main road, 1 = residential street): decides where shops go
   const nearMain = new Uint8Array(GW * GH);
   for (const r of roads) {
     const lv = r.cls === 'P' || r.cls === 'S' || r.cls === 'T' ? 2 : r.cls === 'R' ? 1 : 0;
@@ -421,7 +421,7 @@ export function buildCity() {
     return a / 2;
   };
   const WHITE = new THREE.Color('#ffffff');
-  // pareti di un anello (esterno o cortile): piano terra (negozi/portoni) + piani superiori
+  // walls of a ring (outer or courtyard): ground floor (shops/doors) + upper floors
   function addWalls(ring, isHole, h, style, col, base, off, streetFn) {
     const A = ringArea(ring),
       n = ring.length;
@@ -440,7 +440,7 @@ export function buildCity() {
         ua = left ? u : -u,
         ub = left ? u1 : -u1;
       if (!base) {
-        const V = style === 'chiesa' ? h : 60;
+        const V = style === 'church' ? h : 60;
         wall(WA[style], p[0], p[1], q[0], q[1], 0, h, ua / 80, ub / 80, 0, h / V, nx, ny, col, left);
       } else {
         const lv = isHole ? 0 : streetFn((p[0] + q[0]) / 2, (p[1] + q[1]) / 2, nx, ny),
@@ -500,7 +500,7 @@ export function buildCity() {
       holes = b.holes.map(clean).filter(h => h.length >= 3);
     if (outer.length < 3) continue;
     const col = new THREE.Color(b.col),
-      hasBase = b.style !== 'chiesa' && b.style !== 'stadio' && b.floors >= 3;
+      hasBase = b.style !== 'church' && b.style !== 'stadium' && b.floors >= 3;
     const base = hasBase ? { col: col.clone().multiplyScalar(0.84), s2: brnd() < 0.88, s1: brnd() < 0.38 } : null,
       off = brnd() * 640;
     addWalls(outer, false, b.h3, b.style, col, base, off, gridStreet);
@@ -573,7 +573,7 @@ export function buildCity() {
       }
     }
   }
-  // la città continua oltre il bordo: isolati a corte orientati come la griglia di Santa Rita
+  // the city goes on past the edge: courtyard blocks aligned with the Santa Rita street grid
   {
     const hist = new Float64Array(90);
     for (const e of edges)
@@ -639,7 +639,7 @@ export function buildCity() {
             const fl = 5 + Math.floor(brnd() * 5),
               h = GF + (fl - 1) * FLOOR,
               col = new THREE.Color(PAL[Math.floor(brnd() * PAL.length)]),
-              st = brnd() < 0.55 ? 'balc' : brnd() < 0.5 ? 'tapp' : 'pers';
+              st = brnd() < 0.55 ? 'balcony' : brnd() < 0.5 ? 'shutters' : 'louvers';
             const base = { col: col.clone().multiplyScalar(0.84), s2: brnd() < 0.55, s1: false };
             addWalls(ring, false, h, st, col, base, brnd() * 640, (mx, my, nx, ny) => ((mx - bx) * nx + (my - by) * ny > 100 ? 2 : 0));
             addRoof(ring, [], h, new THREE.Color(ROOFC[Math.floor(brnd() * ROOFC.length)]));
@@ -671,7 +671,7 @@ export function buildCity() {
   inst(new THREE.CylinderGeometry(0.8, 1.2, 44, 6), STD('#9aa3ad', { metalness: 0.5 }), ant, false);
   inst(new THREE.SphereGeometry(2, 8, 6), antM, antL, false);
   inst(box, neonM, neon, false, true);
-  // alberi: viali alberati lungo i corsi e alberi nei parchi
+  // trees: tree-lined avenues along the main roads and trees in parks
   const trunks = [],
     crowns = [],
     TC = ['#2e7d32', '#388e3c', '#43a047', '#2f6f3a'];
@@ -737,7 +737,7 @@ export function buildCity() {
   }
   inst(new THREE.CylinderGeometry(2, 2.6, 16, 7), STD('#6d4c41'), trunks, true);
   inst(new THREE.IcosahedronGeometry(1, 1), STD('#ffffff'), crowns, true, true);
-  // lampioni
+  // street lamps
   const posts = [],
     heads = [],
     decals = [];
@@ -792,7 +792,7 @@ export function buildCity() {
     ld.receiveShadow = false;
     ld.renderOrder = 1;
   }
-  // semafori
+  // traffic lights
   const tp = [],
     th = [],
     tl = [];
@@ -826,7 +826,7 @@ export function buildCity() {
     false,
     true,
   );
-  // etichette dei luoghi
+  // place labels
   const label = (text, x, y, h, col) => {
     const tx = labelTex(text, col),
       sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthWrite: false, fog: false }));
@@ -834,14 +834,14 @@ export function buildCity() {
     sp.position.set(x, h, y);
     scene.add(sp);
   };
-  label('Santa Rita', CHIESA[0], CHIESA[1], 150, '#ffd166'); // le etichette dei landmark le mettono i moduli in src/landmarks/
+  label('Santa Rita', CHURCH[0], CHURCH[1], 150, '#ffd166'); // landmark labels are added by the modules in src/landmarks/
 }
 
 export function init() {
-  // ---------------- città 3D ----------------
+  // ---------------- 3D city ----------------
   FLOOR = 15;
   GF = 20;
-  // piano terra con negozi: 16 vetrine (2048x128 px = 640 x 20 unità)
+  // ground floor with shops: 16 shopfronts (2048x128 px = 640 x 20 units)
   SHOPS = [
     ['BAR', '#7a1f24', '#ffffff'],
     ['TABACCHI', '#1d2a4f', '#ffffff', 'T'],
@@ -861,13 +861,13 @@ export function init() {
     ['TRATTORIA', '#5c3a21', '#f5e6c8'],
   ];
   FT = {
-    balc: makeRes('balc'),
-    tapp: makeRes('tapp'),
-    pers: makeRes('pers'),
+    balcony: makeRes('balcony'),
+    shutters: makeRes('shutters'),
+    louvers: makeRes('louvers'),
     shop: makeShops(),
     plain: makePlain(),
-    chiesa: makeChurch(),
-    stadio: makeStadium(),
+    church: makeChurch(),
+    stadium: makeStadium(),
   };
   FAC_M = {};
   for (const k in FT)
@@ -879,15 +879,15 @@ export function init() {
       vertexColors: true,
       roughness: 0.85,
     });
-  stuccoM = FAC_M.balc;
-  glassBM = FAC_M.tapp;
+  stuccoM = FAC_M.balcony;
+  glassBM = FAC_M.shutters;
   roofM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
   neonM = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
   bulbM = new THREE.MeshBasicMaterial({ color: 0x888888, toneMapped: false });
   antM = new THREE.MeshBasicMaterial({ color: 0x550000, toneMapped: false });
   tlLamps = null;
   tlAxis = [];
-  // ---------------- landmark modellati a mano (src/landmarks/) ----------------
+  // ---------------- hand-modelled landmarks (src/landmarks/) ----------------
   envHooks = [];
   LMX = initLandmarks({
     THREE,

@@ -1,11 +1,11 @@
-// Luce del cielo e del sole con le ombre.
+// Sky light and sunlight with shadows.
 import * as THREE from 'three';
 import { scene } from '../core/render.js';
 
 export let hemi, sun, sc, SUN_OFF;
 
 export function init() {
-  // ---------------- luci ----------------
+  // ---------------- lights ----------------
   hemi = new THREE.HemisphereLight(0xdbeeff, 0x6a6a5a, 1.0);
   scene.add(hemi);
   sun = new THREE.DirectionalLight(0xfff6e8, 2.4);

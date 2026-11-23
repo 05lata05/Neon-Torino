@@ -1,6 +1,7 @@
-// Avvio: inizializza i moduli nell'ordine giusto, popola la città e fa girare il ciclo di gioco.
+// Startup: initialises the modules in the right order, populates the city and runs the game loop.
+import { lang } from './i18n/index.js';
 import { drawPerf, recordFrame, stats as perfStats } from './ui/perf.js';
-import { TEMPO } from './config.js';
+import { TIME } from './config.js';
 import { scheduleRadio } from './audio/radio.js';
 import { updateAudio } from './audio/sfx.js';
 import { startGame } from './core/input.js';
@@ -107,27 +108,27 @@ init_audio_sfx();
 init_audio_radio();
 init_gameplay_player();
 init_core_input();
-// ---------------- avvio ----------------
+// ---------------- startup ----------------
 populate(SPAWN.x, SPAWN.y);
 ld = document.getElementById('load');
 if (ld) ld.remove();
 last = performance.now();
 requestAnimationFrame(frame);
-// strumenti per test e debug (vedi tests/smoke.mjs)
+// test and debug tools (see tests/smoke.mjs)
 window.__nr = {
-  // fa avanzare la simulazione a passi fissi, indipendentemente dagli fps (i tasti premuti restano validi)
+  // advances the simulation in fixed steps, independent of fps (held keys still count)
   step(sec) {
     for (let t = 0; t < sec; t += 1 / 30) update(1 / 30);
     syncScene(0);
   },
-  // fa comparire un'auto ferma accanto al giocatore, orientata come la strada di partenza
-  // prestazioni del frame appena disegnato e qualità grafica (0 bassa, 1 alta)
+  // performance of the last drawn frame and graphics quality (0 low, 1 high)
   perf() {
     return perfStats();
   },
   setQuality(q) {
     setQuality(q);
   },
+  // spawns a parked car next to the player, aligned with the starting street
   spawnCar(type, dist = 10) {
     const a = SPAWN.a,
       c = makeCar(type, player.x + Math.cos(a) * dist, player.y + Math.sin(a) * dist, a);
@@ -139,6 +140,9 @@ window.__nr = {
     player.y = y;
   },
   SPAWN,
+  get lang() {
+    return lang;
+  },
   landmarks: LMX,
   L: DATA.L,
   toW,
@@ -149,7 +153,7 @@ window.__nr = {
     return camOverride;
   },
   setHour(h) {
-    setClockT(((h - TEMPO.oraInizio + 24) % 24) * TEMPO.secondiPerOra);
+    setClockT(((h - TIME.startHour + 24) % 24) * TIME.secondsPerHour);
   },
   get rain() {
     return rain;

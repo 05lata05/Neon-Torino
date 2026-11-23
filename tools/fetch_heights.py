@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""Scarica le altezze reali degli edifici da ARPA Piemonte ("Edifici 3D 2017") per la zona di gioco.
+"""Downloads real building heights from ARPA Piemonte ("Edifici 3D 2017") for the game area.
 
-Per il Comune di Torino l'altezza (campo ELEV, in metri) è la quota di gronda reale del Database topografico
-della Città; fuori Torino è stimata da modelli del terreno. Licenza CC BY 2.5 Italia, attribuzione
-"Arpa Piemonte - Geoportale" (vedi docs/CREDITI.md).
+Within the City of Turin the height (field ELEV, in metres) is the real eaves height from the City's
+topographic database; outside Turin it is estimated from terrain models. Licence CC BY 2.5 Italy, attribution
+"Arpa Piemonte - Geoportale" (see docs/CREDITS.md).
 
-    python3 tools/fetch_heights.py      # scrive .osm-cache/arpa_edifici.json
+    python3 tools/fetch_heights.py      # writes .osm-cache/arpa_buildings.json
 """
 import json, os, sys, time, urllib.parse, urllib.request
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_map import CLIP, ROOT, to_ll
 
 URL = 'https://webgis.arpa.piemonte.it/ags/rest/services/topografia_dati_di_base/Edifici_3D_2017/FeatureServer/0/query'
-MARGIN = 120  # metri oltre la zona giocabile
-PAGE = 2000   # massimo consentito dal servizio
+MARGIN = 120  # metres beyond the playable area
+PAGE = 2000   # maximum allowed by the service
 
 def main():
     lat1, lon0 = to_ll(CLIP[0] - MARGIN, CLIP[1] - MARGIN)
@@ -29,27 +29,27 @@ def main():
                 with urllib.request.urlopen(req, timeout=120) as r:
                     d = json.load(r)
                 break
-            except Exception as e:  # rete instabile: riprova
-                print('  errore', e, '— riprovo'); time.sleep(2 ** attempt)
+            except Exception as e:  # flaky network: retry
+                print('  error', e, '— retrying'); time.sleep(2 ** attempt)
         else:
-            sys.exit('download fallito')
+            sys.exit('download failed')
         if 'error' in d:
-            sys.exit('errore del servizio: ' + json.dumps(d['error']))
+            sys.exit('service error: ' + json.dumps(d['error']))
         got = d.get('features', [])
         for f in got:
             a, g = f['attributes'], f.get('geometry') or {}
             if g.get('rings'):
-                feats.append({'h': a.get('ELEV'), 'uso': a.get('USO'), 'des': a.get('DES'),
+                feats.append({'h': a.get('ELEV'), 'use': a.get('USO'), 'method': a.get('DES'),
                               'rings': [[[round(x, 7), round(y, 7)] for x, y in r] for r in g['rings']]})
-        print(f'  {offset + len(got)} edifici')
+        print(f'  {offset + len(got)} buildings')
         if len(got) < PAGE and not d.get('exceededTransferLimit'):
             break
         offset += len(got)
         time.sleep(0.5)
-    out = os.path.join(ROOT, '.osm-cache', 'arpa_edifici.json')
+    out = os.path.join(ROOT, '.osm-cache', 'arpa_buildings.json')
     os.makedirs(os.path.dirname(out), exist_ok=True)
-    json.dump({'fonte': 'Arpa Piemonte - Geoportale, Edifici 3D 2017 (CC BY 2.5 IT)', 'edifici': feats}, open(out, 'w'))
-    print('scritto', out, len(feats), 'edifici')
+    json.dump({'source': 'Arpa Piemonte - Geoportale, Edifici 3D 2017 (CC BY 2.5 IT)', 'buildings': feats}, open(out, 'w'))
+    print('wrote', out, len(feats), 'buildings')
 
 if __name__ == '__main__':
     main()

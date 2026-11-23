@@ -1,5 +1,6 @@
-// Polizia: inseguimento, livello di ricercato, arresto.
-import { POLIZIA } from '../config.js';
+// Police: chases, wanted level, arrests.
+import { t } from '../i18n/index.js';
+import { POLICE } from '../config.js';
 import { sfx } from '../audio/sfx.js';
 import {
   cars,
@@ -127,7 +128,7 @@ export function makeCop(c) {
 }
 export function copNear(x, y, r) {
   for (const c of cars)
-    if (!c.wreck && (c.driver === 'cop' || (c.type === 'polizia' && c.driver === 'npc')) && Math.hypot(c.x - x, c.y - y) < r) return true;
+    if (!c.wreck && (c.driver === 'cop' || (c.type === 'police' && c.driver === 'npc')) && Math.hypot(c.x - x, c.y - y) < r) return true;
   return false;
 }
 export function addHeat(n) {
@@ -140,7 +141,7 @@ export function addHeat(n) {
   if (wanted.level > before) {
     wanted.flash = 1.2;
     sfx.heat();
-    if (before === 0) toast('La polizia ti sta cercando!');
+    if (before === 0) toast(t('police.searching'));
   }
 }
 export function calmCops() {
@@ -229,14 +230,14 @@ export function updateWanted(dt) {
     wanted.lastY = player.y;
   } else {
     wanted.lost += dt;
-    if (wanted.lost > POLIZIA.seminareBase + wanted.level * POLIZIA.seminarePerLivello) {
+    if (wanted.lost > POLICE.loseBase + wanted.level * POLICE.losePerLevel) {
       wanted.level--;
       wanted.lost = 0;
       if (wanted.level === 0) {
         calmCops();
-        if (mission && mission.type === 'colpo') completeMission();
-        else bigMsg('SEMINATI!', 'La polizia ha perso le tue tracce', '#4da3ff', 2.5);
-      } else toast('Calore in calo…');
+        if (mission && mission.type === 'heist') completeMission();
+        else bigMsg(t('police.lost'), t('police.lostSub'), '#4da3ff', 2.5);
+      } else toast(t('police.cooling'));
     }
   }
   const mySp = player.car ? Math.hypot(player.car.vx, player.car.vy) : player.moving ? 140 : 0;
@@ -249,20 +250,20 @@ export function updateWanted(dt) {
     }
   if (near && mySp < 38) {
     wanted.bust += dt;
-    if (wanted.bust > POLIZIA.secondiArresto) busted();
+    if (wanted.bust > POLICE.bustSeconds) busted();
   } else wanted.bust = Math.max(0, wanted.bust - dt * 0.7);
 }
 export function busted() {
-  const fine = Math.min(money, POLIZIA.multaBase + wanted.level * POLIZIA.multaPerLivello);
+  const fine = Math.min(money, POLICE.fineBase + wanted.level * POLICE.finePerLevel);
   setMoney(money - fine);
   saveMoney();
   setBustT(3.2);
-  bigMsg('ARRESTATO', fine > 0 ? 'Multa: -€' + fine : 'Niente multa: sei al verde', '#4da3ff', 3.2);
+  bigMsg(t('police.busted'), fine > 0 ? t('police.fine', { n: fine }) : t('police.noFine'), '#4da3ff', 3.2);
   if (mission) {
     clearPax();
     offerQueue.push({ type: mission.type, t: 5 });
     setMission(null);
-    toast('Missione fallita');
+    toast(t('police.missionFailed'));
   }
   sfx.fail();
   wanted.level = 0;
@@ -282,6 +283,6 @@ export function respawnAfterBust() {
 }
 
 export function init() {
-  // ---------------- polizia ----------------
-  COPS_BY = POLIZIA.volantiPerLivello;
+  // ---------------- police ----------------
+  COPS_BY = POLICE.carsPerLevel;
 }

@@ -1,12 +1,13 @@
-// Meteo: pioggia e nebbia.
-import { METEO } from '../config.js';
+// Weather: rain and fog.
+import { t } from '../i18n/index.js';
+import { WEATHER } from '../config.js';
 import { state } from '../core/state.js';
 import * as THREE from 'three';
 import { camera, scene } from '../core/render.js';
 import { rand } from '../core/util.js';
 import { toast } from './effects.js';
 
-// stato di proprietà di questo modulo: gli altri moduli lo leggono e lo cambiano con le funzioni set…()
+// state owned by this module: other modules read it and change it with the set…() functions
 export let fogTarget, fogW, rain, rainA, rainTarget;
 export function setFogTarget(v) {
   fogTarget = v;
@@ -29,16 +30,16 @@ export let weatherT, cRain, cFogW, asphBase, RN, rainPos, rainGeo, rainM, rainL;
 export function updateWeather(dt) {
   weatherT -= dt;
   if (weatherT <= 0) {
-    weatherT = rand(METEO.intervalloMin, METEO.intervalloMax);
+    weatherT = rand(WEATHER.intervalMin, WEATHER.intervalMax);
     const wr = rainTarget,
       wf = fogTarget,
       r = Math.random();
     rainTarget = r < 0.3 ? 1 : 0;
     fogTarget = r >= 0.3 && r < 0.5 ? 1 : 0;
     if (state === 'play') {
-      if (rainTarget && !wr) toast('Inizia a piovere: strade scivolose!', 2.5);
-      else if (fogTarget && !wf) toast('Scende la nebbia: visibilità ridotta', 2.5);
-      else if (!rainTarget && !fogTarget && (wr || wf)) toast(wr ? 'Smette di piovere.' : 'La nebbia si dirada.', 2.5);
+      if (rainTarget && !wr) toast(t('msg.rainStart'), 2.5);
+      else if (fogTarget && !wf) toast(t('msg.fogStart'), 2.5);
+      else if (!rainTarget && !fogTarget && (wr || wf)) toast(wr ? t('msg.rainStop') : t('msg.fogStop'), 2.5);
     }
   }
   rain += (rainTarget - rain) * Math.min(1, dt * 0.12);
@@ -61,10 +62,10 @@ export function updateRain(dt) {
 }
 
 export function init() {
-  // ---------------- meteo: pioggia ----------------
+  // ---------------- weather: rain ----------------
   rain = 0;
   rainTarget = 0;
-  weatherT = METEO.primoCambio;
+  weatherT = WEATHER.firstChange;
   rainA = null;
   fogW = 0;
   fogTarget = 0;

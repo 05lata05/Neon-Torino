@@ -1,4 +1,4 @@
-// Utilità condivise: numeri casuali, angoli, texture su canvas, geometrie di base.
+// Shared utilities: random numbers, angles, canvas textures, basic geometry.
 import * as THREE from 'three';
 import { renderer } from './render.js';
 
@@ -24,7 +24,7 @@ export function rr(g, x, y, w, h, r) {
   g.quadraticCurveTo(x, y, x + r, y);
   g.closePath();
 }
-// ---------------- suolo, strade e aree ----------------
+// ---------------- ground, roads and areas ----------------
 export function canvasTex(c, repeat) {
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
@@ -102,7 +102,7 @@ export function labelTex(text, col) {
 }
 
 export function init() {
-  // ---------------- utilità ----------------
+  // ---------------- utilities ----------------
   TAU = Math.PI * 2;
   clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
   rand = (a, b) => a + Math.random() * (b - a);
@@ -122,6 +122,6 @@ export function init() {
   tmpO = new THREE.Object3D();
   rpick = a => a[Math.floor(Math.random() * a.length)];
   STD = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.85 }, o || {}));
-  // ---------------- modelli 3D ----------------
+  // ---------------- 3D models ----------------
   boxAt = (w, h, d, x, y, z) => new THREE.BoxGeometry(w, h, d).translate(x, y, z);
 }

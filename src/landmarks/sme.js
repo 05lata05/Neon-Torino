@@ -1,6 +1,6 @@
-// Scuola di Management ed Economia dell'Università di Torino (corso Unione Sovietica 218 bis).
-// Impronte, piani e tetti da OSM (edificio storico a 4 piani con tetto a capanna, blocco a 5 piani,
-// Nuovo Polo Didattico a 3 piani). Piazza, rastrelliere e pennoni sono aggiunte di contorno.
+// University of Turin's Scuola di Management ed Economia (corso Unione Sovietica 218 bis).
+// Footprints, floors and roofs from OSM (historic 4-storey building with a gabled roof, 5-storey block,
+// 3-storey Nuovo Polo Didattico). Plaza, bike racks and flagpoles are added for flavour.
 
 export default function build(kit, L) {
   const S = L.sme;
@@ -59,7 +59,7 @@ export default function build(kit, L) {
       fg: '#333333',
       family: 'Georgia,serif',
     });
-    // pennoni con bandiere (Italia, Europa) e rastrelliere davanti all'ingresso
+    // flagpoles (Italy, Europe) and bike racks in front of the entrance
     const ob = main.ob,
       s = side[0] === '+' ? 1 : -1,
       ax = side[1],

@@ -1,4 +1,5 @@
-// Tram GTT sui binari veri: linee, fermate, pensiline, guida e collisioni.
+// GTT trams on the real tracks: lines, stops, shelters, driving and collisions.
+import { t as tr } from '../i18n/index.js';
 import * as THREE from 'three';
 import { AC, sfx, tone } from '../audio/sfx.js';
 import { camera, scene } from '../core/render.js';
@@ -105,7 +106,7 @@ export function updateTrams(dt) {
       t.lastStop = -1e9;
     }
     placeTram(t);
-    // collisioni: il tram non si sposta, sposta tutto il resto
+    // collisions: the tram does not move, it pushes everything else
     for (const S of t.secs) {
       const cs = Math.cos(S.a),
         sn = Math.sin(S.a),
@@ -156,7 +157,7 @@ export function updateTrams(dt) {
           tryMovePed(player, h[0] * h[2], h[1] * h[2]);
           if (t.v > 40 && player.stun <= 0) {
             player.stun = 1;
-            say(player, 'Ahi!', 1.2);
+            say(player, tr('say.ouch'), 1.2);
             setShake(Math.max(shake, 5));
           }
         }
@@ -177,7 +178,7 @@ export function updateTrams(dt) {
 }
 
 export function init() {
-  // ---------------- tram GTT sui binari veri (OSM): linee 4 e 10 ----------------
+  // ---------------- GTT trams on the real tracks (OSM): lines 4 and 10 ----------------
   trams = [];
   tramRoutes = [];
   TRAM_L = 52;
@@ -260,7 +261,7 @@ export function init() {
         g.stroke();
       }
     }
-    // percorsi delle linee (tratto dentro la zona estesa)
+    // line routes (the part inside the extended area)
     const clipR = pts => {
       const M = 1000,
         inE = p => p[0] > PB.x0 - M && p[0] < PB.x1 + M && p[1] > PB.y0 - M && p[1] < PB.y1 + M;
@@ -313,7 +314,7 @@ export function init() {
       R.sigs.sort((a, b) => a.s - b.s);
       tramRoutes.push(R);
     }
-    // fermate: banchine del tram tra i binari, pali e pensiline dei bus sul marciapiede
+    // stops: tram platforms between the tracks, bus poles and shelters on the sidewalk
     const plat = [],
       shRoof = [],
       shPanel = [],
@@ -415,7 +416,7 @@ export function init() {
     inst(new THREE.CylinderGeometry(0.6, 0.6, 20, 5), STD('#6b737d', { metalness: 0.5 }), sPole, false);
     inst(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ map: signTex('BUS'), roughness: 0.6 }), sBoard, false);
     inst(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ map: signTex('TRAM'), roughness: 0.6 }), sBoardT, false);
-    // i tram: due casse arancioni articolate, pantografo, numero di linea
+    // the trams: two articulated orange cars, pantograph, line number
     const bodyM = STD('#ff8a24', { roughness: 0.45, metalness: 0.05, emissive: new THREE.Color('#ff7a10'), emissiveIntensity: 0.12 }),
       creamM = STD('#efe7d4', { roughness: 0.6 }),
       darkM = STD('#2a2d33'),

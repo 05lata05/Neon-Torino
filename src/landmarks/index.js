@@ -1,13 +1,13 @@
-// Registro dei landmark. Per aggiungerne uno: crea un modulo che esporta `default function build(kit, L)`,
-// aggiungi le sue forme OSM in tools/build_map.py (LANDMARKS) e importalo qui.
+// Landmark registry. To add one: create a module exporting `default function build(kit, L)`,
+// add its OSM shapes to tools/build_map.py (LANDMARKS) and import it here.
 import { makeKit } from './kit.js';
-import stadio from './stadio.js';
-import piscine from './piscine.js';
+import stadium from './stadium.js';
+import pools from './pools.js';
 import centraleLatte from './centrale-latte.js';
 import sme from './sme.js';
 import rignon from './rignon.js';
 
-const MODULES = { stadio, piscine, centraleLatte, sme, rignon };
+const MODULES = { stadium, pools, centraleLatte, sme, rignon };
 
 export function initLandmarks(ctx) {
   const kit = makeKit(ctx),
@@ -28,7 +28,7 @@ export function initLandmarks(ctx) {
     tick: (dt, t) => {
       for (const f of kit.ticks) f(dt, t);
     },
-    // il gioco non pianta alberi casuali dentro le aree già curate da un landmark
+    // the game does not plant random trees inside areas already handled by a landmark
     ownsTrees: (x, z) => kit.noRandomTrees.some(r => kit.pointIn([x, z], r)),
     list: Object.keys(L),
   };

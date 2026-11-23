@@ -1,4 +1,4 @@
-// Aggiornamento logico a ogni frame: mondo, giocatore, missioni, spawn.
+// Per-frame logic update: world, player, missions, spawning.
 import { camera } from './render.js';
 import {
   big,
@@ -40,14 +40,14 @@ import { freeSprites, puff } from '../world/effects.js';
 import { SPAWN } from '../world/map.js';
 import { updateWeather } from '../world/weather.js';
 
-// ---------------- aggiornamento logico ----------------
+// ---------------- logic update ----------------
 export function updateWorld(dt) {
   updateTrams(dt);
   for (const c of cars) {
     if (c === player.car) continue;
     if (c.wreck || !c.driver || c.driver === 'idle') carPhysics(c, 0, 0, true, dt);
     else if (c.driver === 'npc') {
-      if (wanted.level > 0 && c.type === 'polizia' && state === 'play' && Math.hypot(c.x - player.x, c.y - player.y) < 650) {
+      if (wanted.level > 0 && c.type === 'police' && state === 'play' && Math.hypot(c.x - player.x, c.y - player.y) < 650) {
         makeCop(c);
         copAI(c, dt);
       } else trafficAI(c, dt);
