@@ -1,4 +1,5 @@
 // Tram GTT sui binari veri: linee, fermate, pensiline, guida e collisioni.
+import { t as tr } from '../i18n/index.js';
 import * as THREE from 'three';
 import { AC, sfx, tone } from '../audio/sfx.js';
 import { camera, scene } from '../core/render.js';
@@ -156,7 +157,7 @@ export function updateTrams(dt) {
           tryMovePed(player, h[0] * h[2], h[1] * h[2]);
           if (t.v > 40 && player.stun <= 0) {
             player.stun = 1;
-            say(player, 'Ahi!', 1.2);
+            say(player, tr('say.ouch'), 1.2);
             setShake(Math.max(shake, 5));
           }
         }

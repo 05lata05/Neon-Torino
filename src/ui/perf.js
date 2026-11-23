@@ -1,4 +1,5 @@
 // Indicatore delle prestazioni (tasto I): fps reali, chiamate di disegno, triangoli, qualità grafica.
+import { t } from '../i18n/index.js';
 // Serve a controllare il gioco su un dispositivo vero, per esempio un telefono.
 import { renderer } from '../core/render.js';
 import { quality } from '../render/quality.js';
@@ -29,9 +30,9 @@ export function drawPerf(ctx, W) {
   const s = stats(),
     lines = [
       `${s.fps.toFixed(0)} fps`,
-      `${s.calls} chiamate di disegno`,
-      `${(s.triangles / 1000).toFixed(0)}k triangoli`,
-      `grafica ${s.quality ? 'alta' : 'bassa'}`,
+      t('perf.calls', { n: s.calls }),
+      t('perf.tris', { n: (s.triangles / 1000).toFixed(0) }),
+      t('perf.gfx', { q: t(s.quality ? 'hud.gfx.high' : 'hud.gfx.low') }),
     ];
   ctx.save();
   ctx.font = 'bold 12px monospace';

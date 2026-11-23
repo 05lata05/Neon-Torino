@@ -170,13 +170,7 @@ export function updateAudio(dt) {
       gear = Math.min(4, Math.floor(ratio)),
       rpm = gear < 4 ? ratio - gear : 1 + (ratio - 4) * 0.5;
     const base =
-        c.type === 'van' || c.type === 'armored' || c.type === 'bus'
-          ? 36
-          : c.type === 'compact'
-            ? 58
-            : c.type === 'lightning'
-              ? 62
-              : 50,
+        c.type === 'van' || c.type === 'armored' || c.type === 'bus' ? 36 : c.type === 'compact' ? 58 : c.type === 'lightning' ? 62 : 50,
       f = base + (0.25 + rpm * 0.75) * 120 + (player.boosting ? 40 : 0),
       thr = keys.KeyW || keys.ArrowUp;
     eng.o1.frequency.setTargetAtTime(f, t, 0.06);

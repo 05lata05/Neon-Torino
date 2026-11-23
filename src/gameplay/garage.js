@@ -1,4 +1,5 @@
 // Garage: riparazioni e auto da comprare.
+import { num, t } from '../i18n/index.js';
 import { GARAGE_PRICES } from '../config.js';
 import * as THREE from 'three';
 import { sfx } from '../audio/sfx.js';
@@ -21,7 +22,7 @@ export function updateGarage() {
   if (d < 30 && !garageLatch) {
     garageLatch = true;
     if (wanted.level > 0) {
-      toast('Il garage non apre con la polizia alle calcagna!');
+      toast(t('garage.closed'));
       return;
     }
     setState('garage');
@@ -52,15 +53,15 @@ export function garageKey(k) {
   if (it.id === 'repair') {
     const c = player.car;
     if (!c) {
-      toast("Entra nel garage con l'auto da riparare");
+      toast(t('garage.needCar'));
       return;
     }
     if (c.hp >= c.d.hp) {
-      toast("L'auto è già a posto");
+      toast(t('garage.alreadyFine'));
       return;
     }
     if (money < it.price) {
-      toast('Non hai abbastanza soldi');
+      toast(t('garage.noMoney'));
       sfx.fail();
       return;
     }
@@ -68,13 +69,13 @@ export function garageKey(k) {
     c.hp = c.d.hp;
     saveMoney();
     sfx.coin();
-    toast('Auto riparata come nuova!');
+    toast(t('garage.repaired'));
     return;
   }
   const owned = it.price === 0 || save.owned[it.id];
   if (!owned) {
     if (money < it.price) {
-      toast('Ti servono €' + it.price.toLocaleString('it-IT'));
+      toast(t('garage.needMoney', { n: num(it.price) }));
       sfx.fail();
       return;
     }
@@ -82,7 +83,7 @@ export function garageKey(k) {
     save.owned[it.id] = true;
     saveMoney();
     sfx.win();
-    toast(CARS[it.id].name + ' acquistata!');
+    toast(t('garage.bought', { name: t('car.' + it.id) }));
   }
   deliverCar(it.id);
   setState('play');
@@ -106,7 +107,7 @@ export function deliverCar(type) {
   if (player.lastCar && player.lastCar !== c) player.lastCar.keep = false;
   player.lastCar = c;
   updateCamera(0, true);
-  toast('Ecco la tua ' + c.d.name + '!', 2);
+  toast(t('garage.delivered', { name: t('car.' + c.type) }), 2);
 }
 export function drawGarage() {
   ctx.fillStyle = 'rgba(5,8,20,0.7)';
@@ -127,11 +128,11 @@ export function drawGarage() {
   ctx.shadowColor = '#38bdf8';
   ctx.shadowBlur = 16;
   ctx.fillStyle = '#e0f2fe';
-  ctx.fillText('GARAGE NEON', W / 2, py + 42);
+  ctx.fillText(t('garage.title'), W / 2, py + 42);
   ctx.shadowBlur = 0;
   ctx.font = 'bold 15px system-ui,sans-serif';
   ctx.fillStyle = '#ffe3f1';
-  ctx.fillText('Hai € ' + money.toLocaleString('it-IT'), W / 2, py + 78);
+  ctx.fillText(t('garage.money', { n: num(money) }), W / 2, py + 78);
   SHOP.forEach((it, i) => {
     const y = py + 104 + i * 58,
       sel = i === garageSel;
@@ -149,22 +150,23 @@ export function drawGarage() {
     ctx.fillText(String(i + 1), px + 38, y + 25);
     ctx.fillStyle = '#f8fafc';
     ctx.font = 'bold 16px system-ui,sans-serif';
-    ctx.fillText(it.label, px + 64, y + 18);
+    ctx.fillText(t(it.label), px + 64, y + 18);
     ctx.font = '13px system-ui,sans-serif';
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText(it.desc, px + 64, y + 36);
+    ctx.fillText(t(it.desc), px + 64, y + 36);
     let right;
-    if (it.id === 'repair') right = player.car ? (player.car.hp >= player.car.d.hp ? 'già a posto' : '€ ' + it.price) : "serve un'auto";
-    else right = it.price === 0 || save.owned[it.id] ? 'RITIRA' : '€ ' + it.price.toLocaleString('it-IT');
+    if (it.id === 'repair')
+      right = player.car ? (player.car.hp >= player.car.d.hp ? t('garage.fine') : '€ ' + it.price) : t('garage.carNeeded');
+    else right = it.price === 0 || save.owned[it.id] ? t('garage.collect') : '€ ' + num(it.price);
     ctx.textAlign = 'right';
     ctx.font = 'bold 16px system-ui,sans-serif';
-    ctx.fillStyle = right === 'RITIRA' ? '#3ae374' : right.startsWith('€') && it.price > money ? '#ff6b81' : '#ffd23f';
+    ctx.fillStyle = right === t('garage.collect') ? '#3ae374' : right.startsWith('€') && it.price > money ? '#ff6b81' : '#ffd23f';
     ctx.fillText(right, px + pw - 38, y + 25);
   });
   ctx.textAlign = 'center';
   ctx.font = '13px system-ui,sans-serif';
   ctx.fillStyle = '#cbd5e1';
-  ctx.fillText('Tasti 1–4 oppure ↑ ↓ e Invio   ·   Esc per uscire', W / 2, py + ph - 20);
+  ctx.fillText(t('garage.help'), W / 2, py + ph - 20);
 }
 
 export function init() {
@@ -173,10 +175,10 @@ export function init() {
   garageLatch = true;
   garageSel = 0;
   SHOP = [
-    { id: 'repair', label: "Ripara l'auto", desc: 'Torna come nuova', price: GARAGE_PRICES.repair },
-    { id: 'lightning', label: 'Fulmine', desc: 'Supercar: la più veloce della città', price: GARAGE_PRICES.lightning },
-    { id: 'armored', label: 'Corazzato', desc: 'Blindato pesante: sfonda le volanti', price: GARAGE_PRICES.armored },
-    { id: 'sports', label: 'Sportiva Neon', desc: 'La tua prima auto, sempre gratis', price: GARAGE_PRICES.sports },
+    { id: 'repair', label: 'garage.repair', desc: 'garage.repair.desc', price: GARAGE_PRICES.repair },
+    { id: 'lightning', label: 'car.lightning', desc: 'garage.lightning.desc', price: GARAGE_PRICES.lightning },
+    { id: 'armored', label: 'car.armored', desc: 'garage.armored.desc', price: GARAGE_PRICES.armored },
+    { id: 'sports', label: 'garage.sports', desc: 'garage.sports.desc', price: GARAGE_PRICES.sports },
   ];
 
   {

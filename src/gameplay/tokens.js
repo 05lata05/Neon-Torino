@@ -1,4 +1,5 @@
 // Gettoni neon da collezionare.
+import { num, t as tr } from '../i18n/index.js';
 import { REWARDS } from '../config.js';
 import * as THREE from 'three';
 import { sfx } from '../audio/sfx.js';
@@ -21,9 +22,9 @@ export function updateTokens() {
       sfx.coin();
       if (n === tokens.length) {
         setMoney(money + REWARDS.allTokens);
-        bigMsg('TUTTI I GETTONI!', 'Hai esplorato tutta la città: +€' + REWARDS.allTokens.toLocaleString('it-IT'), '#ffd23f', 4);
+        bigMsg(tr('reward.allTokens'), tr('reward.allTokensSub', { n: num(REWARDS.allTokens) }), '#ffd23f', 4);
         sfx.win();
-      } else toast('Gettone neon ' + n + '/' + tokens.length + '  (+€' + REWARDS.token + ')', 2);
+      } else toast(tr('reward.token', { got: n, tot: tokens.length, n: REWARDS.token }), 2);
       saveMoney();
     }
   }

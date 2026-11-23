@@ -1,4 +1,5 @@
 // HUD: soldi, ricercato, minimappa, tachimetro, messaggi, schermata iniziale.
+import { num, t, t as tr } from '../i18n/index.js';
 import { audioOn } from '../audio/sfx.js';
 import * as THREE from 'three';
 import { RADIO, radioStation } from '../audio/radio.js';
@@ -56,7 +57,7 @@ export function drawHUD() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.clearRect(0, 0, W, H);
   if (state === 'title') {
-    drawOverlay('NEON TORINO', ['Santa Rita e dintorni: strade e palazzi veri da OpenStreetMap.'], true);
+    drawOverlay('NEON TORINO', [t('title.subtitle')], true);
     return;
   }
   ctx.font = 'bold 13px system-ui,sans-serif';
@@ -128,7 +129,7 @@ export function drawHUD() {
   ctx.font = 'bold 30px ' + HUDF;
   ctx.shadowColor = '#ff2e88';
   ctx.shadowBlur = 12;
-  outlineText('€ ' + money.toLocaleString('it-IT'), rx, 72, '#ffe3f1');
+  outlineText('€ ' + num(money), rx, 72, '#ffe3f1');
   ctx.shadowBlur = 0;
   {
     const segW = 22,
@@ -139,7 +140,7 @@ export function drawHUD() {
       fl = wanted.flash > 0 && Math.floor(gtime * 10) % 2 === 0;
     ctx.font = 'bold 11px system-ui,sans-serif';
     ctx.textAlign = 'right';
-    outlineText('CALORE', x0 - 8, y0 + 11, '#cbd5e1', 3);
+    outlineText(t('hud.heat'), x0 - 8, y0 + 11, '#cbd5e1', 3);
     for (let i = 0; i < 5; i++) {
       const x = x0 + i * (segW + gap),
         on = i < wanted.level;
@@ -155,7 +156,7 @@ export function drawHUD() {
   ctx.textAlign = 'right';
   ctx.textBaseline = 'alphabetic';
   ctx.font = 'bold 13px system-ui,sans-serif';
-  outlineText('GETTONI ' + tokens.filter(t => t.got).length + '/' + tokens.length, rx, 124, '#ffd23f', 3);
+  outlineText(t('hud.tokens', { got: tokens.filter(k => k.got).length, tot: tokens.length }), rx, 124, '#ffd23f', 3);
   if (mission && mission.type !== 'heist') {
     const t = Math.max(0, mission.time),
       s = Math.floor(t) % 60,
@@ -172,11 +173,11 @@ export function drawHUD() {
     label =
       mission.type === 'heist'
         ? wanted.level > 0
-          ? 'Semina la polizia! (resta fuori dalla loro vista)'
-          : 'Fatto!'
-        : mission.steps[mission.idx].label;
+          ? t('hud.heist.lose')
+          : t('hud.heist.done')
+        : t(mission.steps[mission.idx].label, mission.steps[mission.idx].vars);
     col = MT[mission.type].col;
-  } else if (introT < 30) label = 'Raggiungi un fascio di luce missione (C · R · T · €) — li vedi sulla minimappa';
+  } else if (introT < 30) label = t('hud.intro');
   if (state === 'play') {
     if (!(streetT > gtime)) {
       streetT = gtime + 0.3;
@@ -209,7 +210,7 @@ export function drawHUD() {
       }
     }
     if (best) {
-      const t = best.type === 'police' ? "[E] Ruba l'auto della polizia" : best.driver === 'npc' ? "[E] Ruba l'auto" : '[E] Sali';
+      const t = best.type === 'police' ? tr('hud.stealPolice') : best.driver === 'npc' ? tr('hud.steal') : tr('hud.getIn');
       const pr = project(best.x, best.y, 24);
       if (pr.in) {
         ctx.font = 'bold 13px system-ui,sans-serif';
@@ -231,7 +232,7 @@ export function drawHUD() {
     outlineText(String(kmh), W - 70, H - 34, '#ffffff');
     ctx.font = 'bold 14px system-ui,sans-serif';
     outlineText('km/h', W - 22, H - 36, '#cbd5e1', 3);
-    outlineText(c.d.name, W - 22, H - 84, '#e2e8f0', 3);
+    outlineText(tr('car.' + c.type), W - 22, H - 84, '#e2e8f0', 3);
     const hp = c.hp / c.d.hp;
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
     rr(ctx, W - 142, H - 24, 120, 8, 4);
@@ -247,7 +248,7 @@ export function drawHUD() {
     ctx.fill();
     ctx.font = 'bold 12px system-ui,sans-serif';
     ctx.textAlign = 'right';
-    outlineText(radioStation ? '♪ ' + RADIO[radioStation].name : 'radio spenta', W - 22, H - 104, '#c4b5fd', 3);
+    outlineText(radioStation ? '♪ ' + RADIO[radioStation].name : t('hud.radioOff'), W - 22, H - 104, '#c4b5fd', 3);
   }
   {
     const R = Math.round(clamp(Math.min(W, H) * 0.13, 58, 92)),
@@ -386,24 +387,19 @@ export function drawHUD() {
   ctx.font = '12px system-ui,sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.fillText(
-    '[C] telecamera: ' +
-      (camMode === 0 ? 'inseguimento' : "dall'alto") +
-      '    [M] mappa    [R] radio    [V] audio ' +
-      (audioOn ? 'sì' : 'no') +
-      '    [Q] grafica ' +
-      (quality ? 'alta' : 'bassa'),
+    t('hud.hint', {
+      cam: t(camMode === 0 ? 'hud.cam.follow' : 'hud.cam.top'),
+      audio: t(audioOn ? 'hud.yes' : 'hud.no'),
+      gfx: t(quality ? 'hud.gfx.high' : 'hud.gfx.low'),
+    }),
     14,
     20,
   );
   ctx.fillStyle = 'rgba(255,255,255,0.4)';
   ctx.font = '11px system-ui,sans-serif';
-  ctx.fillText('Mappa © OpenStreetMap contributors · altezze Arpa Piemonte', 14, 36);
+  ctx.fillText(t('credits.short'), 14, 36);
   if (state === 'pause')
-    drawOverlay(
-      'PAUSA',
-      ['Missioni completate: ' + save.done + '   ·   Gettoni: ' + tokens.filter(t => t.got).length + '/' + tokens.length],
-      true,
-    );
+    drawOverlay(t('pause.title'), [t('pause.stats', { done: save.done, got: tokens.filter(k => k.got).length, tot: tokens.length })], true);
   if (state === 'map') drawBigMap();
   if (state === 'garage') drawGarage();
 }
@@ -447,11 +443,11 @@ export function drawOverlay(title, lines, showControls) {
       ctx.textAlign = 'right';
       ctx.fillStyle = '#00e5ff';
       ctx.font = 'bold 15px system-ui,sans-serif';
-      ctx.fillText(k, W / 2 - 8, yy);
+      ctx.fillText(k.includes('.') ? t(k) : k, W / 2 - 8, yy);
       ctx.textAlign = 'left';
       ctx.fillStyle = '#f1f5f9';
       ctx.font = '15px system-ui,sans-serif';
-      ctx.fillText(v, W / 2 + 8, yy);
+      ctx.fillText(t(v), W / 2 + 8, yy);
     });
     y += bh + 28;
   }
@@ -459,15 +455,11 @@ export function drawOverlay(title, lines, showControls) {
   ctx.font = 'bold 18px system-ui,sans-serif';
   ctx.globalAlpha = 0.6 + 0.4 * Math.sin(gtime * 4);
   ctx.fillStyle = '#ffffff';
-  ctx.fillText(state === 'title' ? 'Clicca o premi INVIO per giocare' : 'Clicca o premi P per riprendere', W / 2, Math.min(H - 30, y));
+  ctx.fillText(state === 'title' ? t('title.start') : t('pause.resume'), W / 2, Math.min(H - 30, y));
   ctx.globalAlpha = 1;
   ctx.font = '12px system-ui,sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  ctx.fillText(
-    'Dati mappa © OpenStreetMap contributors (ODbL) · Altezze edifici: Arpa Piemonte - Geoportale (CC BY 2.5 IT)',
-    W / 2,
-    H - 12,
-  );
+  ctx.fillText(t('credits.full'), W / 2, H - 12);
 }
 
 export function init() {
@@ -476,17 +468,19 @@ export function init() {
   streetT = 0;
   curStreet = '';
   HUDF = '"Arial Black","Segoe UI Black",Impact,system-ui,sans-serif';
+  // [key or translation key, translation key of the description]
   CONTROLS = [
-    ['W / S', 'avanti · indietro (o frena)'],
-    ['A / D', 'sterza · gira'],
-    ['Spazio', 'freno a mano (derapate!)'],
-    ['Shift', 'nitro in auto · corri a piedi'],
-    ['E oppure F', "sali · scendi · ruba un'auto"],
-    ['M', 'mappa con GPS'],
-    ['R', 'cambia stazione radio'],
-    ['C', 'cambia telecamera'],
-    ['H · V · Q', 'clacson · audio · grafica'],
-    ['I', 'prestazioni (fps)'],
-    ['P / Esc', 'pausa'],
+    ['W / S', 'controls.ws'],
+    ['A / D', 'controls.ad'],
+    ['controls.space.key', 'controls.space'],
+    ['Shift', 'controls.shift'],
+    ['controls.e.key', 'controls.e'],
+    ['M', 'controls.m'],
+    ['R', 'controls.r'],
+    ['C', 'controls.c'],
+    ['H · V · Q', 'controls.hvq'],
+    ['I', 'controls.i'],
+    ['L', 'controls.l'],
+    ['P / Esc', 'controls.p'],
   ];
 }

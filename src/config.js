@@ -8,7 +8,6 @@ export const TIME = { startHour: 17, secondsPerHour: 15 };
 // resistenza ai danni (hp), velocità di crociera nel traffico (cruise), colori possibili, massa relativa.
 export const VEHICLES = {
   sedan: {
-    name: 'Berlina',
     len: 34,
     wid: 17,
     max: 330,
@@ -20,7 +19,6 @@ export const VEHICLES = {
     cols: ['#a9adb3', '#eceef0', '#1c1f24', '#2b4c7e', '#a3262a', '#5b6169', '#2f5d50', '#8c7b6b'],
   },
   compact: {
-    name: 'Utilitaria',
     len: 28,
     wid: 15,
     max: 290,
@@ -32,7 +30,6 @@ export const VEHICLES = {
     cols: ['#e9ecef', '#b3202a', '#9aa3ab', '#2d3436', '#e1b12c', '#5d7f99', '#7a8f4a', '#d9d4c7'],
   },
   sports: {
-    name: 'Sportiva',
     len: 35,
     wid: 16,
     max: 480,
@@ -44,7 +41,6 @@ export const VEHICLES = {
     cols: ['#ff3f6c', '#feca57', '#00d2d3', '#ff9f43', '#1e272e'],
   },
   van: {
-    name: 'Furgone',
     len: 44,
     wid: 20,
     max: 250,
@@ -55,9 +51,8 @@ export const VEHICLES = {
     cruise: 140,
     cols: ['#dfe4ea', '#a4b0be', '#e1b12c', '#6ab04c'],
   },
-  taxi: { name: 'Taxi', len: 34, wid: 17, max: 345, acc: 280, grip: 7, turn: 2.7, hp: 100, cruise: 195, cols: ['#f4f4f2'] },
+  taxi: { len: 34, wid: 17, max: 345, acc: 280, grip: 7, turn: 2.7, hp: 100, cruise: 195, cols: ['#f4f4f2'] },
   police: {
-    name: 'Polizia',
     len: 36,
     wid: 17,
     max: 430,
@@ -69,7 +64,6 @@ export const VEHICLES = {
     cols: ['#1f4e96', '#16213e'],
   },
   lightning: {
-    name: 'Fulmine',
     len: 36,
     wid: 17,
     max: 600,
@@ -81,7 +75,6 @@ export const VEHICLES = {
     cols: ['#7c3aed', '#00e5ff', '#ff2e88', '#f8fafc'],
   },
   armored: {
-    name: 'Corazzato',
     len: 46,
     wid: 22,
     max: 320,
@@ -94,7 +87,6 @@ export const VEHICLES = {
     mass: 2.2,
   },
   bus: {
-    name: 'Autobus',
     len: 66,
     wid: 21,
     max: 230,

@@ -1,4 +1,5 @@
 // Urti tra auto.
+import { t } from '../i18n/index.js';
 import { sfx } from '../audio/sfx.js';
 import { cars, player, setShake, shake } from '../core/state.js';
 import { pick } from '../core/util.js';
@@ -80,9 +81,9 @@ export function onCrash(a, b, imp) {
   if (o.type === 'police' && (o.driver === 'npc' || o.driver === 'cop' || o.driver === 'idle')) {
     addHeat(1);
     if (o.driver !== 'cop') makeCop(o);
-    say(o, 'Accosti subito!', 1.6);
+    say(o, t('say.pullOver'), 1.6);
   } else if (o.driver === 'npc') {
-    if (Math.random() < 0.6) say(o, pick(['Ehi!!', 'La mia fiancata!', 'Assicurazione!', 'Ma dove guardi?!']), 1.6);
+    if (Math.random() < 0.6) say(o, pick(t('say.crashed')), 1.6);
     if (imp > 140 && copNear(o.x, o.y, 400)) addHeat(1);
   }
 }

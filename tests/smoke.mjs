@@ -169,6 +169,11 @@ const token = await page.evaluate(() => {
   return n.money - before;
 });
 check(token === null || token >= 50, 'raccogliere un gettone dà 50 €');
+const langBefore = await page.evaluate(() => window.__nr.lang);
+await page.keyboard.press('KeyL');
+const langAfter = await page.evaluate(() => window.__nr.lang);
+await page.keyboard.press('KeyL');
+check(langBefore !== langAfter && ['it', 'en'].includes(langAfter), `L switches the language (${langBefore} → ${langAfter})`);
 await page.keyboard.press('KeyC');
 await page.keyboard.press('KeyR');
 await page.keyboard.press('KeyH');

@@ -1,4 +1,5 @@
 // Missioni: consegna, corsa clandestina, taxi, colpo.
+import { num, t } from '../i18n/index.js';
 import { MISSIONS } from '../config.js';
 import { sfx } from '../audio/sfx.js';
 import { gtime, mission, money, offerQueue, offers, peds, player, save, saveMoney, setMission, setMoney } from '../core/state.js';
@@ -37,7 +38,7 @@ export function newOffer(type) {
 export function startMission(o) {
   if ((o.type === 'race' || o.type === 'taxi') && !player.car) {
     if (o.warn <= 0) {
-      toast(o.type === 'taxi' ? "Ti serve un'auto per fare il taxi!" : 'Ti serve un veicolo per la corsa!');
+      toast(o.type === 'taxi' ? t('mission.needCarTaxi') : t('mission.needCarRace'));
       o.warn = 3;
     }
     return;
@@ -50,14 +51,14 @@ export function startMission(o) {
     setMission({
       type: 'delivery',
       steps: [
-        { x: a[0], y: a[1], label: 'Ritira il pacco' },
-        { x: b[0], y: b[1], label: 'Consegna il pacco' },
+        { x: a[0], y: a[1], label: 'mission.delivery.pickup' },
+        { x: b[0], y: b[1], label: 'mission.delivery.dropoff' },
       ],
       idx: 0,
       time: d / MISSIONS.delivery.speed + MISSIONS.delivery.margin,
       reward: Math.round((MISSIONS.delivery.rewardBase + d * MISSIONS.delivery.rewardPerUnit) / 10) * 10,
     });
-    bigMsg('CONSEGNA', 'Zio Tonino ha un pacco "delicato". Niente domande, niente ritardi.', MT.delivery.col, 3.6);
+    bigMsg(t('mission.delivery.title'), t('mission.delivery.intro'), MT.delivery.col, 3.6);
   } else if (o.type === 'race') {
     let n = nearestNode(player.x, player.y),
       prevE = null,
@@ -73,10 +74,10 @@ export function startMission(o) {
         prevE = f;
         n = f.a === n ? f.b : f.a;
       }
-      steps.push({ x: n.x, y: n.y, label: 'Checkpoint ' + (i + 1) + '/7' });
+      steps.push({ x: n.x, y: n.y, label: 'mission.race.checkpoint', vars: { i: i + 1, n: 7 } });
     }
     setMission({ type: 'race', steps, idx: 0, time: d / MISSIONS.race.speed + MISSIONS.race.margin, reward: MISSIONS.race.reward });
-    bigMsg('CORSA CLANDESTINA', 'Sette checkpoint per le strade della città. Il cronometro corre.', MT.race.col, 3.6);
+    bigMsg(t('mission.race.title'), t('mission.race.intro'), MT.race.col, 3.6);
   } else if (o.type === 'taxi') {
     const a = randomSpot(o.x, o.y, 600, 1800),
       b = randomSpot(a[0], a[1], 1800, 3600);
@@ -88,8 +89,8 @@ export function startMission(o) {
     setMission({
       type: 'taxi',
       steps: [
-        { x: a[0], y: a[1], label: 'Raggiungi il cliente e fermati accanto' },
-        { x: b[0], y: b[1], label: 'Porta il cliente a destinazione' },
+        { x: a[0], y: a[1], label: 'mission.taxi.reach' },
+        { x: b[0], y: b[1], label: 'mission.taxi.drop' },
       ],
       idx: 0,
       time: d / MISSIONS.taxi.speed + MISSIONS.taxi.margin,
@@ -98,11 +99,11 @@ export function startMission(o) {
       car: null,
       hp0: 0,
     });
-    bigMsg('TAXI', 'Un cliente ha fretta. Guida pulito: la mancia dipende dai danni.', MT.taxi.col, 3.6);
+    bigMsg(t('mission.taxi.title'), t('mission.taxi.intro'), MT.taxi.col, 3.6);
   } else {
     setMission({ type: 'heist', steps: [], idx: 0, time: 0, reward: MISSIONS.heist.reward });
     addHeat(MISSIONS.heist.heat);
-    bigMsg('IL COLPO', 'Hai "preso in prestito" i gioielli della Contessa. Semina la polizia!', MT.heist.col, 3.6);
+    bigMsg(t('mission.heist.title'), t('mission.heist.intro'), MT.heist.col, 3.6);
   }
 }
 export function completeMission() {
@@ -113,7 +114,7 @@ export function completeMission() {
   save.done++;
   saveMoney();
   sfx.win();
-  bigMsg('MISSIONE COMPIUTA', '+€' + r + (mission.tipNote || ''), '#ffd32a', 3.2);
+  bigMsg(t('mission.done'), '+€' + r + (mission.tipNote || ''), '#ffd32a', 3.2);
   setMission(null);
   offerQueue.push({ type: ty, t: 4 });
 }
@@ -121,7 +122,7 @@ export function failMission(reason) {
   const ty = mission.type;
   clearPax();
   sfx.fail();
-  bigMsg('MISSIONE FALLITA', reason, '#ff4d4d', 3);
+  bigMsg(t('mission.failed'), reason, '#ff4d4d', 3);
   setMission(null);
   offerQueue.push({ type: ty, t: 4 });
 }
@@ -144,11 +145,11 @@ export function updateMission(dt) {
   const m = mission;
   m.time -= dt;
   if (m.time <= 0) {
-    failMission('Tempo scaduto!');
+    failMission(t('mission.timeUp'));
     return;
   }
   if (m.type === 'taxi' && m.idx === 1 && player.car !== m.car) {
-    failMission("Il cliente è sceso dall'auto");
+    failMission(t('mission.taxi.left'));
     return;
   }
   const s = m.steps[m.idx],
@@ -158,7 +159,7 @@ export function updateMission(dt) {
       if (!player.car) return;
       if (Math.hypot(player.car.vx, player.car.vy) > 70) {
         if (!(m.warnT > gtime)) {
-          toast('Rallenta e fermati!', 1.2);
+          toast(t('mission.taxi.stop'), 1.2);
           m.warnT = gtime + 1.5;
         }
         return;
@@ -169,16 +170,7 @@ export function updateMission(dt) {
       clearPax();
       m.car = player.car;
       m.hp0 = player.car.hp;
-      say(
-        player.car,
-        pick([
-          'Al lungomare, e di corsa!',
-          'Svelto, sono in ritardo!',
-          'Vada pure, conosco la strada… più o meno.',
-          'Piano con le curve, eh!',
-        ]),
-        2.4,
-      );
+      say(player.car, pick(t('mission.taxi.lines')), 2.4);
       sfx.coin();
       return;
     }
@@ -187,17 +179,17 @@ export function updateMission(dt) {
         const dmg = Math.max(0, m.hp0 - (m.car ? m.car.hp : 0)),
           pen = Math.round((dmg * MISSIONS.taxi.penaltyPerDamage) / 10) * 10;
         m.reward = Math.max(MISSIONS.taxi.rewardMin, m.reward - pen);
-        m.tipNote = pen > 0 ? '   (−€' + pen + ' per i danni)' : '   (mancia piena!)';
+        m.tipNote = pen > 0 ? t('mission.taxi.penalty', { n: pen }) : t('mission.taxi.fullTip');
       }
       completeMission();
       return;
     }
     if (m.type === 'delivery') {
-      toast('Pacco ritirato! Ora consegnalo.');
+      toast(t('mission.delivery.picked'));
       sfx.coin();
     } else {
       m.time += MISSIONS.race.bonusCheckpoint;
-      toast('Checkpoint! +' + String(MISSIONS.race.bonusCheckpoint).replace('.', ',') + 's', 1.2);
+      toast(t('mission.race.bonus', { s: num(MISSIONS.race.bonusCheckpoint) }), 1.2);
       sfx.coin();
     }
   }
@@ -206,10 +198,10 @@ export function updateMission(dt) {
 export function init() {
   // ---------------- missioni ----------------
   MT = {
-    delivery: { name: 'Consegna', col: '#ffd32a', ic: 'C' },
-    race: { name: 'Corsa clandestina', col: '#3ae374', ic: 'R' },
-    heist: { name: 'Il colpo', col: '#ff4d6d', ic: '€' },
-    taxi: { name: 'Taxi', col: '#ff9f43', ic: 'T' },
+    delivery: { name: 'mission.delivery', col: '#ffd32a', ic: 'C' },
+    race: { name: 'mission.race', col: '#3ae374', ic: 'R' },
+    heist: { name: 'mission.heist', col: '#ff4d6d', ic: '€' },
+    taxi: { name: 'mission.taxi', col: '#ff9f43', ic: 'T' },
   };
   spotEdges = edges.filter(e => e.cls === 'R' || e.cls === 'T' || e.cls === 'S');
   spotW = spotEdges.map(e => e.len);

@@ -1,4 +1,5 @@
 // Qualità grafica automatica e manuale.
+import { t } from '../i18n/index.js';
 import { state } from '../core/state.js';
 import { H, W, renderer, scene } from '../core/render.js';
 import { toast } from '../world/effects.js';
@@ -32,7 +33,7 @@ export function perfCheck(raw) {
     const fps = perfN / perfAcc;
     if (fps < 40 && quality === 1) {
       setQuality(0);
-      toast('Grafica ridotta per andare più fluido (Q per cambiarla)', 4);
+      toast(t('msg.gfxAuto'), 4);
     }
   }
 }

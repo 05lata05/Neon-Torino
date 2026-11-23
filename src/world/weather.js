@@ -1,4 +1,5 @@
 // Meteo: pioggia e nebbia.
+import { t } from '../i18n/index.js';
 import { WEATHER } from '../config.js';
 import { state } from '../core/state.js';
 import * as THREE from 'three';
@@ -36,9 +37,9 @@ export function updateWeather(dt) {
     rainTarget = r < 0.3 ? 1 : 0;
     fogTarget = r >= 0.3 && r < 0.5 ? 1 : 0;
     if (state === 'play') {
-      if (rainTarget && !wr) toast('Inizia a piovere: strade scivolose!', 2.5);
-      else if (fogTarget && !wf) toast('Scende la nebbia: visibilità ridotta', 2.5);
-      else if (!rainTarget && !fogTarget && (wr || wf)) toast(wr ? 'Smette di piovere.' : 'La nebbia si dirada.', 2.5);
+      if (rainTarget && !wr) toast(t('msg.rainStart'), 2.5);
+      else if (fogTarget && !wf) toast(t('msg.fogStart'), 2.5);
+      else if (!rainTarget && !fogTarget && (wr || wf)) toast(wr ? t('msg.rainStop') : t('msg.fogStop'), 2.5);
     }
   }
   rain += (rainTarget - rain) * Math.min(1, dt * 0.12);

@@ -1,4 +1,5 @@
 // Polizia: inseguimento, livello di ricercato, arresto.
+import { t } from '../i18n/index.js';
 import { POLICE } from '../config.js';
 import { sfx } from '../audio/sfx.js';
 import {
@@ -140,7 +141,7 @@ export function addHeat(n) {
   if (wanted.level > before) {
     wanted.flash = 1.2;
     sfx.heat();
-    if (before === 0) toast('La polizia ti sta cercando!');
+    if (before === 0) toast(t('police.searching'));
   }
 }
 export function calmCops() {
@@ -235,8 +236,8 @@ export function updateWanted(dt) {
       if (wanted.level === 0) {
         calmCops();
         if (mission && mission.type === 'heist') completeMission();
-        else bigMsg('SEMINATI!', 'La polizia ha perso le tue tracce', '#4da3ff', 2.5);
-      } else toast('Calore in calo…');
+        else bigMsg(t('police.lost'), t('police.lostSub'), '#4da3ff', 2.5);
+      } else toast(t('police.cooling'));
     }
   }
   const mySp = player.car ? Math.hypot(player.car.vx, player.car.vy) : player.moving ? 140 : 0;
@@ -257,12 +258,12 @@ export function busted() {
   setMoney(money - fine);
   saveMoney();
   setBustT(3.2);
-  bigMsg('ARRESTATO', fine > 0 ? 'Multa: -€' + fine : 'Niente multa: sei al verde', '#4da3ff', 3.2);
+  bigMsg(t('police.busted'), fine > 0 ? t('police.fine', { n: fine }) : t('police.noFine'), '#4da3ff', 3.2);
   if (mission) {
     clearPax();
     offerQueue.push({ type: mission.type, t: 5 });
     setMission(null);
-    toast('Missione fallita');
+    toast(t('police.missionFailed'));
   }
   sfx.fail();
   wanted.level = 0;

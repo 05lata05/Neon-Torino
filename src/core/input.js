@@ -1,4 +1,5 @@
 // Tastiera e mouse, avvio della partita.
+import { t, toggleLang } from '../i18n/index.js';
 import { togglePerf } from '../ui/perf.js';
 import { RADIO, radioStation, setNextNoteT, setRadioStation } from '../audio/radio.js';
 import { AC, audioOn, initAudio, master, setAudioOn } from '../audio/sfx.js';
@@ -36,7 +37,12 @@ export function onPress(k) {
   if (k === 'KeyV') {
     setAudioOn(!audioOn);
     if (master) master.gain.setTargetAtTime(audioOn ? 0.8 : 0, AC.currentTime, 0.05);
-    toast(audioOn ? 'Audio attivo' : 'Audio disattivato', 1.2);
+    toast(audioOn ? t('msg.audioOn') : t('msg.audioOff'), 1.2);
+    return;
+  }
+  if (k === 'KeyL') {
+    toggleLang();
+    toast(t('msg.lang'), 1.4);
     return;
   }
   if (k === 'KeyI') {
@@ -46,7 +52,7 @@ export function onPress(k) {
   if (k === 'KeyQ') {
     setQuality(1 - quality);
     setPerfDone(true);
-    toast('Grafica ' + (quality ? 'alta (ombre attive)' : 'bassa (più fluida)'), 1.6);
+    toast(quality ? t('msg.gfxHigh') : t('msg.gfxLow'), 1.6);
     return;
   }
   if (state !== 'play') return;
@@ -67,7 +73,7 @@ export function onPress(k) {
   if (k === 'KeyR') {
     setRadioStation((radioStation + 1) % RADIO.length);
     setNextNoteT(0);
-    toast(radioStation ? 'Radio: ' + RADIO[radioStation].name : 'Radio spenta', 1.5);
+    toast(radioStation ? t('msg.radio', { name: RADIO[radioStation].name }) : t('msg.radioOff'), 1.5);
   }
 }
 export function startGame() {
@@ -101,7 +107,7 @@ export function startGame() {
     newOffer('race');
     newOffer('heist');
     newOffer('taxi');
-    toast("Benvenuto a Santa Rita, Torino! C'è una sportiva rosa qui accanto…", 4);
+    toast(t('msg.welcome'), 4);
     updateCamera(0, true);
   }
 }

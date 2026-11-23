@@ -1,4 +1,5 @@
 // Giocatore: salire e scendere dalle auto, clacson, movimento a piedi, confini della mappa.
+import { t } from '../i18n/index.js';
 import { NITRO } from '../config.js';
 import { sfx } from '../audio/sfx.js';
 import { keys } from '../core/input.js';
@@ -28,7 +29,7 @@ export function tryEnterCar() {
   const c = best;
   if (c.driver === 'npc' || c.driver === 'cop' || c.driver === 'idle') {
     const p = ejectDriver(c);
-    say(p, c.type === 'police' ? 'Ehi! Quella è dello Stato!' : pick(['La mia macchina!', 'Al ladro!', 'Mamma mia!', 'Ma che fai?!']));
+    say(p, c.type === 'police' ? t('say.stolenPolice') : pick(t('say.stolen')));
     if (c.type === 'police') addHeat(2);
     else if (copNear(c.x, c.y, 450)) addHeat(1);
   } else if (c.type === 'police') addHeat(2);
@@ -40,13 +41,17 @@ export function tryEnterCar() {
   if (player.lastCar && player.lastCar !== c) player.lastCar.keep = false;
   player.lastCar = c;
   c.keep = true;
-  toast((c.type === 'police' && c.col === '#16213e' ? 'Carabinieri' : c.d.name) + (c.type === 'police' ? ' — ottima idea…?' : ''), 1.6);
+  toast(
+    (c.type === 'police' && c.col === '#16213e' ? t('car.carabinieri') : t('car.' + c.type)) +
+      (c.type === 'police' ? t('car.policeJoke') : ''),
+    1.6,
+  );
 }
 export function exitCar(forced) {
   const c = player.car;
   if (!c) return;
   if (!forced && (Math.hypot(c.vx, c.vy) > 70 || c.z > 1)) {
-    toast('Rallenta per scendere', 1.4);
+    toast(t('car.slowDown'), 1.4);
     return;
   }
   const fx = Math.cos(c.a),
@@ -72,7 +77,7 @@ export function exitCar(forced) {
 }
 export function honk() {
   const c = player.car;
-  say(c, 'BEEP BEEP!', 1);
+  say(c, t('say.horn'), 1);
   sfx.horn();
   for (const p of peds)
     if (p.down <= 0 && Math.hypot(p.x - c.x, p.y - c.y) < 120) {
@@ -80,8 +85,7 @@ export function honk() {
       p.fleeFrom = [c.x, c.y];
     }
   for (const o of cars)
-    if (o !== c && o.driver === 'npc' && Math.hypot(o.x - c.x, o.y - c.y) < 130 && Math.random() < 0.5)
-      say(o, pick(['Ehi!', 'Calma!', "Ma va' là!", 'Che fretta!']), 1.5);
+    if (o !== c && o.driver === 'npc' && Math.hypot(o.x - c.x, o.y - c.y) < 130 && Math.random() < 0.5) say(o, pick(t('say.honked')), 1.5);
 }
 export function updatePlayer(dt) {
   const up = keys.KeyW || keys.ArrowUp,
@@ -172,7 +176,7 @@ export function playerCarCollide() {
         if (sp > 110 && player.stun <= 0) {
           player.stun = 0.9;
           tryMovePed(player, c.vx * 0.05, c.vy * 0.05);
-          say(player, 'Ahi!', 1.2);
+          say(player, t('say.ouch'), 1.2);
           setShake(Math.max(shake, 5));
         }
       }
@@ -186,7 +190,7 @@ export function boundaryCheck() {
     y = c.y + Math.sin(a) * 40;
   if (tileAtPx(x, y) === OUT && !(edgeWarnT > gtime)) {
     edgeWarnT = gtime + 6;
-    toast('Confine della mappa: per ora Torino finisce qui!', 2.5);
+    toast(t('msg.mapEdge'), 2.5);
   }
 }
 

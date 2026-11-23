@@ -1,4 +1,5 @@
 // Avvio: inizializza i moduli nell'ordine giusto, popola la città e fa girare il ciclo di gioco.
+import { lang } from './i18n/index.js';
 import { drawPerf, recordFrame, stats as perfStats } from './ui/perf.js';
 import { TIME } from './config.js';
 import { scheduleRadio } from './audio/radio.js';
@@ -139,6 +140,9 @@ window.__nr = {
     player.y = y;
   },
   SPAWN,
+  get lang() {
+    return lang;
+  },
   landmarks: LMX,
   L: DATA.L,
   toW,
