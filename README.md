@@ -49,6 +49,7 @@ ROADMAP.md                 le tappe del progetto e cosa fare dopo
 
 ```bash
 python3 tools/fetch_osm.py     # scarica i tasselli OSM in .osm-cache/ (ignorata da git)
+python3 tools/fetch_heights.py # altezze reali degli edifici da Arpa Piemonte
 python3 tools/build_map.py     # scrive data/torino.json
 ```
 
@@ -80,5 +81,5 @@ con controllo di Prettier); le foto si scaricano dall'artefatto `foto-test` dell
 
 ## Dati e licenze
 
-Dati mappa © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), licenza ODbL.
+Dati mappa © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), licenza ODbL. Altezze degli edifici: Arpa Piemonte - Geoportale, CC BY 2.5 Italia. Elenco completo in `docs/CREDITI.md`.
 `data/torino.json` è un'opera derivata da quei dati e resta sotto ODbL.

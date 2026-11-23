@@ -3,6 +3,7 @@
 
 Uso:
     python3 tools/fetch_osm.py            # scarica i tasselli OSM in .osm-cache/
+    python3 tools/fetch_heights.py        # altezze reali degli edifici (ARPA Piemonte)
     python3 tools/build_map.py            # scrive data/torino.json
     python3 tools/build_map.py --compare vecchio.json   # confronta con un file esistente
 
@@ -212,7 +213,33 @@ KEEP_TAGS = ('building', 'building:levels', 'height', 'roof:shape', 'roof:height
              'name', 'building:colour', 'roof:colour', 'building:material', 'roof:material', 'leisure', 'sport', 'surface',
              'highway', 'natural', 'genus', 'attraction', 'amenity', 'playground', 'step_count', 'lit')
 
-def build(geo, clip, landmark_ids=True):
+class Heights:
+    """Altezze reali da ARPA Piemonte (tools/fetch_heights.py): per ogni edificio OSM senza numero di piani,
+    prende l'unità volumetrica più grande che cade dentro la sua impronta e converte i metri in piani."""
+    def __init__(self, path):
+        self.grid = defaultdict(list)
+        if not os.path.exists(path):
+            return
+        for f in json.load(open(path))['edifici']:
+            if not f.get('h') or f['h'] <= 0:
+                continue
+            r = [to_xy(y, x) for x, y in f['rings'][0]]
+            c = centroid(r)
+            self.grid[(int(c[0] // 50), int(c[1] // 50))].append((c, area(r), f['h']))
+    def __bool__(self):
+        return bool(self.grid)
+    def levels_for(self, outer):
+        xs, ys = [p[0] for p in outer], [p[1] for p in outer]
+        best = None
+        for gx in range(int(min(xs) // 50), int(max(xs) // 50) + 1):
+            for gy in range(int(min(ys) // 50), int(max(ys) // 50) + 1):
+                for u in self.grid[(gx, gy)]:
+                    if (best is None or u[1] > best[1]) and point_in(u[0], outer):
+                        best = u
+        # taratura sugli edifici che hanno entrambi i dati: altezza ≈ 3,3 m per piano + 2 m
+        return max(1, round((best[2] - 2) / 3.3)) if best else 0
+
+def build(geo, clip, landmark_ids=True, heights=None):
     N, W, R = geo.N, geo.W, geo.R
     road_box = (clip[0], clip[1], clip[2], clip[3])
     tram_box = (clip[0] - 450, clip[1] - 750, clip[2] + 450, clip[3] + 750)
@@ -326,7 +353,7 @@ def build(geo, clip, landmark_ids=True):
         return any(math.hypot(c[0] - s[0][0], c[1] - s[0][1]) < 3 and abs(a - s[1]) < 0.15 * s[1] + 5 for s in skip_geo)
 
     # --- edifici (senza duplicati: alcuni stadi sono mappati due volte come relazione)
-    B_out, seen = [], set()
+    B_out, seen, stats = [], set(), Counter()
     for t, outer, holes, oid in geo.polygons(lambda t: 'building' in t and t.get('building') != 'no' and t.get('layer', '0')[:1] != '-' and t.get('location') != 'underground'):
         if not any(in_box(p, clip) for p in outer): continue
         if area(outer) < 6 or skipped(outer): continue
@@ -335,7 +362,12 @@ def build(geo, clip, landmark_ids=True):
         seen.add(key)
         o = dedupe(outer, QB)
         if len(o) < 3: continue
-        row = [levels(t), building_kind(t), encode(o, QB)]
+        lv = levels(t)
+        if not lv and heights:
+            lv = heights.levels_for(outer)
+            if lv: stats['altezze_arpa'] += 1
+        elif lv: stats['piani_osm'] += 1
+        row = [lv, building_kind(t), encode(o, QB)]
         for h in holes:
             hh = dedupe(h, QB)
             if len(hh) >= 3: row.append(encode(hh, QB))
@@ -391,6 +423,8 @@ def build(geo, clip, landmark_ids=True):
         elif t.get('highway') == 'bus_stop' and in_box(p, clip, 80):
             BS.append([half(p[0]), half(p[1]), t.get('name', '')])
 
+    print('edifici:', len(B_out), '| piani da OSM:', stats['piani_osm'], '| altezze da ARPA:', stats['altezze_arpa'],
+          '| senza dato:', len(B_out) - stats['piani_osm'] - stats['altezze_arpa'])
     return {'v': 2, 'qb': QB, 'origin': ORIGIN, 'k': K, 'clip': clip, 'names': names,
             'R': R_out, 'B': B_out, 'A': A_out, 'TW': TW, 'TR': TR, 'TS': TS, 'BS': BS, 'L': L}
 
@@ -419,7 +453,9 @@ def main():
     if not files: sys.exit('Nessun file .osm in ' + a.osm + ' — esegui prima tools/fetch_osm.py')
     geo = Geo(*load_osm(files))
     clip = [int(v) for v in a.clip]
-    data = build(geo, clip, not a.no_landmarks)
+    heights = Heights(os.path.join(a.osm, 'arpa_edifici.json'))
+    if not heights: print('attenzione: altezze ARPA assenti, esegui tools/fetch_heights.py')
+    data = build(geo, clip, not a.no_landmarks, heights)
     if a.compare:
         compare(data, json.load(open(a.compare)))
     os.makedirs(os.path.dirname(a.out), exist_ok=True)

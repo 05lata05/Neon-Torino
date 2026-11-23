@@ -9,8 +9,8 @@ di controllo qui sotto.
 | Cosa | Fonte | Note |
 |---|---|---|
 | Strade, edifici, aree, tram, negozi, alberi | **OpenStreetMap** | base di tutto, licenza ODbL |
-| Altezze degli edifici mancanti | open data **Città di Torino / Regione Piemonte**, poi **Overture Maps** | OSM ha i piani solo per circa il 58% degli edifici |
-| Terreno (collina, Superga, rive del Po) | modello del terreno della **Regione Piemonte** (o Copernicus) | Santa Rita è in piano |
+| Altezze degli edifici mancanti | **Arpa Piemonte "Edifici 3D 2017"** (`tools/fetch_heights.py`): per Torino è la quota di gronda reale | collegata: ora il 95% degli edifici ha un'altezza vera. Overture Maps è stata valutata e scartata (in Italia ha poche altezze) |
+| Terreno (collina, Superga, rive del Po) | modello del terreno della **Regione Piemonte** (5 m da rilievo laser, scaricabile dal Geoportale Piemonte) | da collegare in M7; Santa Rita è in piano |
 | Materiali (intonaco, asfalto, porfido, pietra) | texture **CC0** da ambientCG o Poly Haven | nessun obbligo di licenza; elencarle comunque in `docs/CREDITI.md` |
 | Monumenti difficili (Mole, Superga…) | modello fatto a mano sull'impronta OSM; modelli esterni solo con licenza libera verificata | citare l'autore in `docs/CREDITI.md` |
 | Colori, insegne, dettagli di una via | foto di **Mapillary** come riferimento visivo | solo riferimento: le foto non entrano nel gioco |
@@ -21,7 +21,7 @@ Da non usare: Google Earth / Photorealistic 3D Tiles (condizioni d'uso), copie d
 
 **Forma**
 - [ ] Strade, edifici e aree generati da `tools/build_map.py` (niente geometria inventata dove esiste il dato vero).
-- [ ] Altezze reali: piani da OSM; dove mancano, dagli open data o da Overture; inventate solo come ultima risorsa.
+- [ ] Altezze reali: piani da OSM; dove mancano, da Arpa Piemonte (`tools/fetch_heights.py`); inventate solo come ultima risorsa.
 - [ ] Il terreno segue le quote reali se la zona non è in piano.
 
 **Riconoscibilità**

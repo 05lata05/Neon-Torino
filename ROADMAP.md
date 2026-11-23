@@ -43,8 +43,8 @@ Obiettivo: poter far crescere il gioco senza romperlo.
 
 ## M2 · Santa Rita verosimile
 Obiettivo: chi conosce Santa Rita la riconosce. Tutto secondo `docs/REALISMO.md`.
-- [ ] Fonti dati: verificare e collegare open data di Torino/Piemonte e Overture Maps per altezze e terreno (manuale) (~1)
-- [ ] Altezze reali degli edifici nel generatore, con le nuove fonti dove OSM non ha i piani (~1)
+- [x] Fonti dati: altezze reali da Arpa Piemonte "Edifici 3D 2017" (quota di gronda del Comune di Torino); Overture scartata (in Italia ha poche altezze); modello del terreno rimandato a M7 per Superga
+- [x] Altezze reali degli edifici nel generatore: edifici senza dato da 625 a 94
 - [ ] Luce e atmosfera: occlusione ambientale, cielo realistico, foschia, asfalto bagnato che riflette; livelli grafici alto e basso (~2)
 - [ ] Materiali con texture fotografiche CC0 (intonaci, asfalto, marciapiedi, porfido, pietra) e `docs/CREDITI.md` (~1)
 - [ ] Palazzi di Santa Rita: facciate per tipo ed epoca (condomini anni '50–'70, balconi continui in rilievo, tapparelle, colori reali) (~2)
