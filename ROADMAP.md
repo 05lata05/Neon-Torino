@@ -9,7 +9,20 @@ Come si usa: ogni sessione di lavoro prende **la prima casella libera** della ta
 dedicato (`feature/<nome>`), passa `npm test`, apre una pull request e spunta la casella qui.
 Una tappa finita = una versione giocabile con qualcosa di nuovo da provare.
 
-Legenda: `[x]` fatto · `[ ]` da fare · `(~N sessioni)` stima indicativa
+Legenda: `[x]` fatto · `[ ]` da fare · `(~N sessioni)` stima indicativa · `(manuale)` la fa una sessione con il proprietario
+
+## Visione
+
+**Neon Torino è un crime open-world alla GTA nella Torino vera.** Guidi tanto, scappi dalla polizia, scopri i luoghi
+simbolo della città e costruisci un piccolo impero di attività partendo da Santa Rita. Si gioca nel browser, su PC e
+telefono, e si condivide con un link.
+
+Pilastri, in ordine di importanza:
+1. **Torino riconoscibile**: ogni zona rispetta lo standard di realismo (`docs/REALISMO.md`).
+2. **Guida e inseguimenti**: il cuore del divertimento.
+3. **Soldi e impero**: comprare e far crescere attività nel quartiere.
+4. **Crime alla GTA**: polizia, bande, armi, con ironia torinese. La storia è leggera, legata alle attività.
+5. **Gioca ovunque**: anche sul telefono degli amici.
 
 ---
 
@@ -26,38 +39,68 @@ Obiettivo: poter far crescere il gioco senza romperlo.
 - [x] Test automatico su GitHub a ogni push (GitHub Actions + Playwright) (~1)
 - [ ] Ridurre l'oggetto condiviso `G`: ogni modulo espone funzioni (`setState()`, `addMoney()`…) invece di variabili scritte da fuori (~1–2)
 - [ ] Spostare le costanti di bilanciamento (velocità auto, premi, tempi) in `src/config.js` (~1)
+- [ ] Misura delle prestazioni nel test: fps e chiamate di disegno su PC e in emulazione telefono, con soglia minima (~1)
 
-## M2 · A piedi — prossima tappa
-Obiettivo: giocare anche fuori dall'auto, come in GTA.
+## M2 · Santa Rita verosimile
+Obiettivo: chi conosce Santa Rita la riconosce. Tutto secondo `docs/REALISMO.md`.
+- [ ] Fonti dati: verificare e collegare open data di Torino/Piemonte e Overture Maps per altezze e terreno (manuale) (~1)
+- [ ] Altezze reali degli edifici nel generatore, con le nuove fonti dove OSM non ha i piani (~1)
+- [ ] Luce e atmosfera: occlusione ambientale, cielo realistico, foschia, asfalto bagnato che riflette; livelli grafici alto e basso (~2)
+- [ ] Materiali con texture fotografiche CC0 (intonaci, asfalto, marciapiedi, porfido, pietra) e `docs/CREDITI.md` (~1)
+- [ ] Palazzi di Santa Rita: facciate per tipo ed epoca (condomini anni '50–'70, balconi continui in rilievo, tapparelle, colori reali) (~2)
+- [ ] Santuario di Santa Rita da Cascia e la piazza con il mercato (~1)
+- [ ] Insegne vere dei negozi e locali OSM (circa 390) al piano terra, nella loro posizione (~1)
+- [ ] Arredo urbano: i 666 alberi veri, fermate GTT, cassonetti, edicole, targhe delle vie, auto parcheggiate (~2)
+- [ ] Foto prima/dopo di 5 punti del quartiere nel README (~1)
+
+## M3 · Guida e inseguimenti
+Obiettivo: guidare a Santa Rita deve essere divertente da solo.
+- [ ] Fisica delle auto più credibile: peso, trasferimento di carico, derapate controllabili, sospensioni (~2)
+- [ ] Danni visibili: ammaccature, vetri rotti, fumo, ruote che si staccano (~1)
+- [ ] Moto e nuovi veicoli, anche tipici torinesi (furgoni, utilitarie d'epoca, bus GTT da rubare) (~1–2)
+- [ ] Polizia più furba: posti di blocco, accerchiamenti, volanti che speronano a 4–5 stelle (~1–2)
+- [ ] Gare clandestine con percorsi fissi e record da battere (~1)
+- [ ] Acrobazie premiate: salti, derapate lunghe, quasi-incidenti (~1)
+
+## M4 · Gioca ovunque
+Obiettivo: mandare il link agli amici e farli giocare, anche dal telefono.
+- [ ] Comandi touch: levetta virtuale, pulsanti per freno a mano, nitro, sali/scendi (~1–2)
+- [ ] Interfaccia che si adatta allo schermo del telefono (HUD, mappa, menu) (~1)
+- [ ] Grafica che si regola da sola in base alle prestazioni (~1)
+- [ ] Menu iniziale con opzioni (audio, grafica, comandi) e salvataggio affidabile (~1)
+- [ ] Link pubblico aggiornato a ogni versione e istruzioni per gli amici (manuale) (~1)
+
+## M5 · Soldi e impero
+Obiettivo: un motivo per fare soldi e un quartiere da conquistare.
+- [ ] Economia: entrate, spese, prezzi bilanciati in `src/config.js` (~1)
+- [ ] Attività da comprare (inventate): bar, officina, autolavaggio, edicola; rendono ogni giorno di gioco (~2)
+- [ ] Ogni attività porta 2–3 missioni del suo "capo" (la storia leggera del gioco) (~2)
+- [ ] Officina: elaborare le auto (motore, freni, gomme, colori, neon) (~1)
+- [ ] Casa a Santa Rita con salvataggio e garage personale (~1)
+
+## M6 · Crime alla GTA
+Obiettivo: il lato criminale.
 - [ ] Vita e armatura del giocatore, barra nell'HUD (~1)
 - [ ] Pugni e mira automatica sul bersaglio più vicino (~1)
-- [ ] Prima arma: pistola con munizioni, proiettili e colpi su auto e pedoni (~1–2)
-- [ ] Morte → risveglio all'ospedale (Ospedale Mauriziano, vicino) con perdita di soldi; arresto → caserma (~1)
-- [ ] La polizia a piedi scende dalle volanti e insegue (~1)
-- [ ] Negozio di armi (Ammu-Nation all'italiana) (~1)
+- [ ] Armi (pistola, poi altre) con munizioni e armeria (~2)
+- [ ] Morte → ospedale, arresto → caserma, con perdita di soldi o armi (~1)
+- [ ] Polizia a piedi che scende dalle volanti e insegue (~1)
+- [ ] Bande rivali che si contendono le zone e attaccano le tue attività; racket (~2)
 
-## M3 · Quartiere vivo
-- [ ] Due bande rivali con zone sul territorio (es. via Filadelfia vs corso Orbassano) (~2)
-- [ ] Pedoni che reagiscono a spari e incidenti, chiamano la polizia (~1)
-- [ ] Missioni secondarie: ambulanza, vigile del fuoco, vigilante (~2)
-- [ ] Personaggi con animazioni vere al posto dei blocchi (~2)
-
-## M4 · Storia
-- [ ] Formato delle missioni come dati (`data/missioni/*.json`): obiettivi, dialoghi, condizioni (~1–2)
-- [ ] Primo capitolo: 5 missioni collegate con personaggi di Santa Rita (~3)
-- [ ] Dialoghi a schermo e brevi scene con telecamera guidata (~1)
-- [ ] Salvataggio dei progressi della storia (~1)
-
-## M5 · Più Torino
-- [ ] Allargare la mappa: Borgo Filadelfia e Stadio Filadelfia (~1–2)
-- [ ] Lingotto (ex fabbrica con la pista sul tetto) (~2)
-- [ ] Mirafiori (~2)
-- [ ] Passare a Vite quando i file e le risorse diventano tanti (caricamento a pezzi della città) (~1)
+## M7 · Torino iconica
+Obiettivo: la mappa cresce lungo i corsi verso i luoghi simbolo. **Ogni zona passa la lista di controllo di `docs/REALISMO.md`.**
+- [ ] Borgo Filadelfia e Stadio Filadelfia (~1–2)
+- [ ] Lingotto, con la pista sul tetto dell'ex fabbrica (~2)
+- [ ] Porta Nuova e il centro fino a piazza Castello e la Mole (~3)
+- [ ] Po e Murazzi, con i ponti (~2)
+- [ ] Superga e la collina, con il terreno reale (~2)
+- [ ] Segreti e collezionabili in ogni zona (~1)
+- [ ] Caricamento della città a pezzi (ed eventuale passaggio a Vite) quando la mappa diventa grande (~1)
 
 ---
 
 ## Idee in attesa (non ancora in una tappa)
-- Moto e biciclette
 - Radio con conduttori e notiziario di quartiere
 - Partite allo stadio la domenica, con folla e traffico
-- Mercato rionale in piazza Santa Rita
+- Mercato rionale in piazza Santa Rita con bancarelle animate
+- Tram GTT guidabili
