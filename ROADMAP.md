@@ -2,14 +2,15 @@
 
 Lavoro automatico: ATTIVO
 
-> Ogni notte una sessione di Claude fa la prima casella libera e apre una pull request (regole in
-> `docs/LAVORO-AUTOMATICO.md`). Per fermarla scrivi `IN PAUSA` qui sopra. Le caselle marcate `(manuale)` le salta.
+> Ogni notte una sessione di Claude fa la prima casella libera e, se il test su GitHub è verde, la unisce a `main` da
+> sola (regole in `docs/LAVORO-AUTOMATICO.md`). Le caselle `(da rivedere)` restano in una pull request che approvi tu.
+> Le caselle `(manuale)` le salta. Per fermarla scrivi `IN PAUSA` qui sopra.
 
 Come si usa: ogni sessione di lavoro prende **la prima casella libera** della tappa in corso, lavora su un ramo
 dedicato (`feature/<nome>`), passa `npm test`, apre una pull request e spunta la casella qui.
 Una tappa finita = una versione giocabile con qualcosa di nuovo da provare.
 
-Legenda: `[x]` fatto · `[ ]` da fare · `(~N sessioni)` stima indicativa · `(manuale)` la fa una sessione con il proprietario
+Legenda: `[x]` fatto · `[ ]` da fare · `(~N sessioni)` stima indicativa · `(manuale)` la fa una sessione con il proprietario · `(da rivedere)` cambia l'aspetto del gioco: il merge lo fa il proprietario
 
 ## Visione
 
@@ -45,12 +46,12 @@ Obiettivo: poter far crescere il gioco senza romperlo.
 Obiettivo: chi conosce Santa Rita la riconosce. Tutto secondo `docs/REALISMO.md`.
 - [x] Fonti dati: altezze reali da Arpa Piemonte "Edifici 3D 2017" (quota di gronda del Comune di Torino); Overture scartata (in Italia ha poche altezze); modello del terreno rimandato a M7 per Superga
 - [x] Altezze reali degli edifici nel generatore: edifici senza dato da 625 a 94
-- [ ] Luce e atmosfera: occlusione ambientale, cielo realistico, foschia, asfalto bagnato che riflette; livelli grafici alto e basso (~2)
-- [ ] Materiali con texture fotografiche CC0 (intonaci, asfalto, marciapiedi, porfido, pietra) e `docs/CREDITI.md` (~1)
-- [ ] Palazzi di Santa Rita: facciate per tipo ed epoca (condomini anni '50–'70, balconi continui in rilievo, tapparelle, colori reali) (~2)
-- [ ] Santuario di Santa Rita da Cascia e la piazza con il mercato (~1)
-- [ ] Insegne vere dei negozi e locali OSM (circa 390) al piano terra, nella loro posizione (~1)
-- [ ] Arredo urbano: i 666 alberi veri, fermate GTT, cassonetti, edicole, targhe delle vie, auto parcheggiate (~2)
+- [ ] Luce e atmosfera: occlusione ambientale, cielo realistico, foschia, asfalto bagnato che riflette; livelli grafici alto e basso (da rivedere) (~2)
+- [ ] Materiali con texture fotografiche CC0 (intonaci, asfalto, marciapiedi, porfido, pietra) e `docs/CREDITI.md` (da rivedere) (~1)
+- [ ] Palazzi di Santa Rita: facciate per tipo ed epoca (condomini anni '50–'70, balconi continui in rilievo, tapparelle, colori reali) (da rivedere) (~2)
+- [ ] Santuario di Santa Rita da Cascia e la piazza con il mercato (da rivedere) (~1)
+- [ ] Insegne vere dei negozi e locali OSM (circa 390) al piano terra, nella loro posizione (da rivedere) (~1)
+- [ ] Arredo urbano: i 666 alberi veri, fermate GTT, cassonetti, edicole, targhe delle vie, auto parcheggiate (da rivedere) (~2)
 - [ ] Foto prima/dopo di 5 punti del quartiere nel README (~1)
 
 ## M3 · Guida e inseguimenti
@@ -89,11 +90,11 @@ Obiettivo: il lato criminale.
 
 ## M7 · Torino iconica
 Obiettivo: la mappa cresce lungo i corsi verso i luoghi simbolo. **Ogni zona passa la lista di controllo di `docs/REALISMO.md`.**
-- [ ] Borgo Filadelfia e Stadio Filadelfia (~1–2)
-- [ ] Lingotto, con la pista sul tetto dell'ex fabbrica (~2)
-- [ ] Porta Nuova e il centro fino a piazza Castello e la Mole (~3)
-- [ ] Po e Murazzi, con i ponti (~2)
-- [ ] Superga e la collina, con il terreno reale (~2)
+- [ ] Borgo Filadelfia e Stadio Filadelfia (da rivedere) (~1–2)
+- [ ] Lingotto, con la pista sul tetto dell'ex fabbrica (da rivedere) (~2)
+- [ ] Porta Nuova e il centro fino a piazza Castello e la Mole (da rivedere) (~3)
+- [ ] Po e Murazzi, con i ponti (da rivedere) (~2)
+- [ ] Superga e la collina, con il terreno reale (da rivedere) (~2)
 - [ ] Segreti e collezionabili in ogni zona (~1)
 - [ ] Caricamento della città a pezzi (ed eventuale passaggio a Vite) quando la mappa diventa grande (~1)
 
