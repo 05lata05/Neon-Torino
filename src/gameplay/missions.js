@@ -1,4 +1,4 @@
-// Missioni: consegna, corsa clandestina, taxi, colpo.
+// Missions: delivery, street race, taxi, heist.
 import { num, t } from '../i18n/index.js';
 import { MISSIONS } from '../config.js';
 import { sfx } from '../audio/sfx.js';
@@ -196,7 +196,7 @@ export function updateMission(dt) {
 }
 
 export function init() {
-  // ---------------- missioni ----------------
+  // ---------------- missions ----------------
   MT = {
     delivery: { name: 'mission.delivery', col: '#ffd32a', ic: 'C' },
     race: { name: 'mission.race', col: '#3ae374', ic: 'R' },

@@ -1,4 +1,4 @@
-// Meteo: pioggia e nebbia.
+// Weather: rain and fog.
 import { t } from '../i18n/index.js';
 import { WEATHER } from '../config.js';
 import { state } from '../core/state.js';
@@ -7,7 +7,7 @@ import { camera, scene } from '../core/render.js';
 import { rand } from '../core/util.js';
 import { toast } from './effects.js';
 
-// stato di proprietà di questo modulo: gli altri moduli lo leggono e lo cambiano con le funzioni set…()
+// state owned by this module: other modules read it and change it with the set…() functions
 export let fogTarget, fogW, rain, rainA, rainTarget;
 export function setFogTarget(v) {
   fogTarget = v;
@@ -62,7 +62,7 @@ export function updateRain(dt) {
 }
 
 export function init() {
-  // ---------------- meteo: pioggia ----------------
+  // ---------------- weather: rain ----------------
   rain = 0;
   rainTarget = 0;
   weatherT = WEATHER.firstChange;

@@ -1,4 +1,4 @@
-// Urti tra auto.
+// Car-to-car collisions.
 import { t } from '../i18n/index.js';
 import { sfx } from '../audio/sfx.js';
 import { cars, player, setShake, shake } from '../core/state.js';
@@ -7,7 +7,7 @@ import { addHeat, copNear, makeCop } from './police.js';
 import { blockedN, circles, damage } from './vehicles.js';
 import { say, sparks } from '../world/effects.js';
 
-// ---------------- collisioni auto ----------------
+// ---------------- car collisions ----------------
 export function pushCar(c, dx, dy) {
   const cur = blockedN(c, c.x, c.y, c.a);
   if (blockedN(c, c.x + dx, c.y + dy, c.a) <= cur) {

@@ -1,6 +1,6 @@
-// Indicatore delle prestazioni (tasto I): fps reali, chiamate di disegno, triangoli, qualità grafica.
+// Performance overlay (I key): real fps, draw calls, triangles, graphics quality.
 import { t } from '../i18n/index.js';
-// Serve a controllare il gioco su un dispositivo vero, per esempio un telefono.
+// Useful to check the game on a real device, for example a phone.
 import { renderer } from '../core/render.js';
 import { quality } from '../render/quality.js';
 
@@ -11,13 +11,13 @@ export function togglePerf() {
   visible = !visible;
 }
 
-// da chiamare a ogni frame con la durata reale del frame precedente (secondi)
+// call every frame with the real duration of the previous frame (seconds)
 export function recordFrame(raw) {
   if (raw > 0 && raw < 2) times.push(raw);
   if (times.length > 60) times.shift();
 }
 
-// valori del frame appena disegnato (renderer.info si azzera a ogni render)
+// values of the frame just drawn (renderer.info resets on every render)
 export function stats() {
   const avg = times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0,
     r = renderer.info.render,

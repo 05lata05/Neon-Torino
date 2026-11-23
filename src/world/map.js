@@ -1,4 +1,4 @@
-// Dati OSM: griglia di collisione, strade, edifici, grafo stradale, semafori, punto di partenza.
+// OSM data: collision grid, roads, buildings, road graph, traffic lights, spawn point.
 import { TRAFFIC } from '../config.js';
 import { lightT } from '../core/state.js';
 import { angDiff, clamp } from '../core/util.js';
@@ -215,9 +215,9 @@ export function sigGreen(n, inAng) {
 }
 
 export async function init() {
-  // ---------------- mondo: Torino, Santa Rita (dati OpenStreetMap) ----------------
+  // ---------------- world: Turin, Santa Rita (OpenStreetMap data) ----------------
   DATA = await (await fetch(new URL('../../data/torino.json', import.meta.url))).json();
-  // la zona giocabile viene dai dati (clip, in metri): 1 m = 5 unità, 50 m di margine attorno
+  // the playable area comes from the data (clip, in metres): 1 m = 5 units, 50 m margin around it
   CL = DATA.clip || [500, 400, 2300, 2050];
   S5 = 5;
   OXm = CL[0] - 50;
@@ -355,7 +355,7 @@ export async function init() {
       }
     });
   }
-  // grafo stradale per traffico, polizia, pedoni e GPS
+  // road graph for traffic, police, pedestrians and GPS
   nodes = [];
   nodeMap = new Map();
   edges = [];

@@ -1,4 +1,4 @@
-// Server statico minimo per sviluppare in locale: node tools/serve.mjs [porta]
+// Minimal static server for local development: node tools/serve.mjs [port]
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';

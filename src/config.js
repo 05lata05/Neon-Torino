@@ -1,11 +1,11 @@
-// Bilanciamento del gioco: tutti i numeri da regolare stanno qui.
-// Unità: velocità e distanze in unità di gioco (5 unità = 1 m), tempi in secondi reali, soldi in euro.
+// Game balance: every number worth tuning lives here.
+// Units: speeds and distances in game units (5 units = 1 m), times in real seconds, money in euros.
 
-// Tempo del gioco: la partita comincia alle 17:00 e un'ora di gioco dura 15 secondi reali.
+// Game time: a game starts at 17:00 and one game hour lasts 15 real seconds.
 export const TIME = { startHour: 17, secondsPerHour: 15 };
 
-// Veicoli: dimensioni, velocità massima (max), accelerazione (acc), aderenza (grip), sterzo (turn),
-// resistenza ai danni (hp), velocità di crociera nel traffico (cruise), colori possibili, massa relativa.
+// Vehicles: size, top speed (max), acceleration (acc), grip, steering (turn),
+// damage resistance (hp), cruising speed in traffic (cruise), possible colours, relative mass.
 export const VEHICLES = {
   sedan: {
     len: 34,
@@ -100,15 +100,15 @@ export const VEHICLES = {
   },
 };
 
-// Nitro: secondi per svuotare il serbatoio e per riempirlo di nuovo.
+// Nitro: seconds to empty the tank and to refill it.
 export const NITRO = { duration: 3.2, recharge: 9 };
 
-// Traffico: quante auto e pedoni attorno al giocatore, velocità di crociera per tipo di strada
-// (P primaria, S secondaria, T terziaria, R residenziale, V servizio, X pedonale).
+// Traffic: how many cars and pedestrians around the player, cruising speed by road type
+// (P primary, S secondary, T tertiary, R residential, V service, X pedestrian).
 export const TRAFFIC = { auto: 30, pedestrians: 40, speed: { P: 205, S: 185, T: 165, R: 135, V: 90, X: 60 } };
 
-// Polizia: volanti per livello di ricercato (0–5), secondi fuori vista per scendere di un livello
-// (base + perLivello × livello), secondi fermi vicino a una volante per l'arresto, multa all'arresto.
+// Police: patrol cars per wanted level (0–5), seconds out of sight to drop one level
+// (base + perLevel × level), seconds standing still next to a patrol car to get busted, fine when busted.
 export const POLICE = {
   carsPerLevel: [0, 1, 2, 3, 5, 6],
   loseBase: 7,
@@ -118,14 +118,14 @@ export const POLICE = {
   finePerLevel: 150,
 };
 
-// Premi in euro.
+// Rewards in euros.
 export const REWARDS = {
   token: 50,
   allTokens: 5000,
   perSecondInAir: 150,
 };
 
-// Missioni: premio = base + perUnita × distanza (arrotondato a 10 €); tempo = distanza / velocità + margine.
+// Missions: reward = base + perUnit × distance (rounded to €10); time = distance / speed + margin.
 export const MISSIONS = {
   delivery: { rewardBase: 150, rewardPerUnit: 0.12, speed: 180, margin: 18 },
   race: { reward: 700, speed: 230, margin: 8, bonusCheckpoint: 2.5 },
@@ -133,8 +133,8 @@ export const MISSIONS = {
   heist: { reward: 900, heat: 3 },
 };
 
-// Garage: prezzi.
+// Garage: prices.
 export const GARAGE_PRICES = { repair: 100, lightning: 1500, armored: 2500, sports: 0 };
 
-// Meteo: secondi prima del primo cambio e intervallo (minimo, massimo) tra un cambio e l'altro.
+// Weather: seconds before the first change and interval (min, max) between changes.
 export const WEATHER = { firstChange: 75, intervalMin: 80, intervalMax: 180 };

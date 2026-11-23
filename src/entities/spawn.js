@@ -1,4 +1,4 @@
-// Comparsa e rimozione di auto, pedoni e volanti attorno al giocatore.
+// Spawning and despawning of cars, pedestrians and patrol cars around the player.
 import { TRAFFIC } from '../config.js';
 import * as THREE from 'three';
 import { camera } from '../core/render.js';

@@ -1,15 +1,15 @@
-// Kit di costruzione per i landmark: geometrie, texture disegnate su canvas, collisioni, minimappa.
-// Ogni landmark riceve `kit` e lavora in coordinate "mappa" (metri) o "mondo" (1 m = 5 unità).
-// Convenzioni: mondo x = est, mondo z = sud, y = alto. Gli anelli (ring) sono array di [x, z].
+// Building kit for landmarks: geometry, canvas-drawn textures, collisions, minimap.
+// Each landmark receives `kit` and works in "map" coordinates (metres) or "world" coordinates (1 m = 5 units).
+// Conventions: world x = east, world z = south, y = up. Rings are arrays of [x, z].
 
-export const M = 5; // unità di gioco per metro
+export const M = 5; // game units per metre
 
 export function makeKit(ctx) {
   const { THREE, scene } = ctx;
   const kit = { THREE, scene, ctx, M };
 
-  // ------------------------------------------------------------ coordinate
-  kit.W = ring => ring.map(ctx.toW); // anello mappa -> mondo
+  // ------------------------------------------------------------ coordinates
+  kit.W = ring => ring.map(ctx.toW); // map ring -> world ring
   kit.P = p => ctx.toW(p);
   kit.area = r => {
     let a = 0;
@@ -40,7 +40,7 @@ export function makeKit(ctx) {
   };
   kit.len = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
 
-  // rettangolo orientato di area minima: centro, assi, dimensioni (mondo)
+  // minimum-area oriented rectangle: centre, axes, size (world)
   kit.obb = ring => {
     let best = null;
     for (let i = 0; i < ring.length; i++) {
@@ -69,7 +69,7 @@ export function makeKit(ctx) {
     if (v1 - v0 > u1 - u0) {
       [ux, uz] = [-uz, ux];
       [u0, u1, v0, v1] = [v0, v1, -u1, -u0];
-    } // asse lungo = u
+    } // long axis = u
     const cu = (u0 + u1) / 2,
       cv = (v0 + v1) / 2;
     return {
@@ -87,8 +87,8 @@ export function makeKit(ctx) {
   };
   kit.local = (ob, lu, lv) => [ob.cx + ob.ux * lu + ob.vx * lv, ob.cz + ob.uz * lu + ob.vz * lv];
 
-  // ------------------------------------------------------------ geometria
-  // builder di triangoli con normali, uv e colori opzionali; un builder per materiale
+  // ------------------------------------------------------------ geometry
+  // triangle builder with normals, uvs and optional colours; one builder per material
   class GB {
     constructor() {
       this.p = [];
@@ -98,7 +98,7 @@ export function makeKit(ctx) {
       this.col = [1, 1, 1];
     }
     tri(a, b, c, ua, ub, uc) {
-      // a,b,c = [x,y,z]; normale calcolata
+      // a,b,c = [x,y,z]; normal is computed
       const e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]],
         e2 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
       let nx = e1[1] * e2[2] - e1[2] * e2[1],
@@ -146,9 +146,9 @@ export function makeKit(ctx) {
     return m;
   };
 
-  // pareti verticali lungo un anello (mondo), normali verso l'esterno; u in metri/texW, v in metri/texH
+  // vertical walls along a ring (world), normals facing outwards; u in metres/texW, v in metres/texH
   kit.walls = (gb, ring, y0, y1, { texW = 8, texH = 8, u0 = 0, inside = false } = {}) => {
-    // l'ordine A,B,C,D dà normale (-dz, dx): la usiamo se punta fuori dall'anello, altrimenti invertiamo
+    // the A,B,C,D order gives normal (-dz, dx): we use it if it points out of the ring, otherwise we flip
     const sgn = kit.area(ring) > 0 ? 1 : -1;
     let u = u0;
     for (let i = 0; i < ring.length; i++) {
@@ -164,7 +164,7 @@ export function makeKit(ctx) {
         B = [b[0], y0, b[1]],
         C = [b[0], y1, b[1]],
         D = [a[0], y1, a[1]];
-      // per un anello con area (shoelace x,z) positiva l'esterno è a (dz, -dx), quindi serve l'ordine inverso
+      // for a ring with positive (shoelace x,z) area the outside is at (dz, -dx), so the reverse order is needed
       const abcdOut = sgn < 0;
       if (abcdOut !== inside) gb.quad(A, B, C, D, [ua, va], [ub, va], [ub, vb], [ua, vb]);
       else gb.quad(B, A, D, C, [ub, va], [ua, va], [ua, vb], [ub, vb]);
@@ -173,7 +173,7 @@ export function makeKit(ctx) {
     return u;
   };
 
-  // tetto piano (anche con buchi), rivolto verso l'alto; uv in metri/tex
+  // flat roof (holes allowed), facing up; uv in metres/tex
   kit.flat = (gb, ring, holes, y, { tex = 10, down = false } = {}) => {
     const c2 = ring.map(p => new THREE.Vector2(p[0], p[1])),
       h2 = (holes || []).map(r => r.map(p => new THREE.Vector2(p[0], p[1])));
@@ -195,7 +195,7 @@ export function makeKit(ctx) {
     }
   };
 
-  // tetti a falde su rettangolo orientato (mondo): hipped, gabled, round (botte), skillion
+  // pitched roofs on an oriented rectangle (world): hipped, gabled, round (barrel), skillion
   kit.roof = (gb, ob, y, h, shape, over = 0.6 * M) => {
     const L = ob.len / 2 + over,
       Wd = ob.wid / 2 + over,
@@ -249,7 +249,7 @@ export function makeKit(ctx) {
     }
   };
 
-  // tetto a padiglione per impronte qualsiasi: falde fino a un anello rientrato di `inset`, poi piano
+  // hip roof for any footprint: slopes up to a ring shrunk by `inset`, then flat
   kit.insetRoof = (gb, ring, y, h, inset) => {
     const n = ring.length,
       s = kit.area(ring) > 0 ? 1 : -1,
@@ -304,7 +304,7 @@ export function makeKit(ctx) {
     kit.flat(gb, inner, [], y + h);
   };
 
-  // parallelepipedo orientato (mondo): centro, dimensioni lungo u/v, quota
+  // oriented box (world): centre, size along u/v, height range
   kit.box = (gb, cx, cz, ang, du, dv, y0, y1, texM = 4) => {
     const ux = Math.cos(ang),
       uz = Math.sin(ang),
@@ -326,7 +326,7 @@ export function makeKit(ctx) {
     kit.flat(gb, r, [], y1, { tex: texM });
   };
 
-  // nastro piatto lungo una polilinea (mondo)
+  // flat ribbon along a polyline (world)
   kit.ribbon = (gb, pts, w, y, uScale = 1) => {
     let acc = 0;
     for (let i = 0; i + 1 < pts.length; i++) {
@@ -350,7 +350,7 @@ export function makeKit(ctx) {
     }
   };
 
-  // istanze di una geometria: items = [{x,y,z,ry,sx,sy,sz,col}]
+  // instances of a geometry: items = [{x,y,z,ry,sx,sy,sz,col}]
   kit.instances = (geo, mat, items, { cast = true } = {}) => {
     if (!items.length) return null;
     const m = new THREE.InstancedMesh(geo, mat, items.length),
@@ -370,7 +370,7 @@ export function makeKit(ctx) {
     return m;
   };
 
-  // ------------------------------------------------------------ materiali e texture
+  // ------------------------------------------------------------ materials and textures
   kit.cv = (w, h) => {
     const c = document.createElement('canvas');
     c.width = w;
@@ -387,7 +387,7 @@ export function makeKit(ctx) {
     }
   };
   kit.std = o => new THREE.MeshStandardMaterial(Object.assign({ roughness: 0.85 }, o));
-  // i colori OSM a parole ("green", "red"...) diventano tinte da edificio, non colori puri
+  // OSM colour words ("green", "red"...) become building tints, not pure colours
   const NAMED = {
     green: '#4f7a4a',
     red: '#a3472f',
@@ -402,7 +402,7 @@ export function makeKit(ctx) {
     beige: '#e3d4b8',
   };
   kit.color = (c, def) => (!c ? def : c.startsWith('#') ? c : NAMED[c.toLowerCase()] || def);
-  // materiale con finestre che si accendono di notte (emissiveMap); registrato per il ciclo giorno/notte
+  // material with windows that light up at night (emissiveMap); registered for the day/night cycle
   const nightMats = [];
   kit.lit = (map, emap, o = {}) => {
     const m = kit.std(
@@ -418,7 +418,7 @@ export function makeKit(ctx) {
     for (const [m, a, b] of nightMats) m.emissiveIntensity = a + (b - a) * dk;
   };
 
-  // insegna: testo su pannello (texture + mesh piana), posizionata su una parete o libera
+  // sign: text on a panel (texture + flat mesh), placed on a wall or free-standing
   kit.signTex = (
     text,
     {
@@ -462,7 +462,7 @@ export function makeKit(ctx) {
     }
     return { map: kit.tex(c, false), emap: glow ? kit.tex(e, false) : null, aspect: w / h, transparent: !bg };
   };
-  // pannello verticale: centro (mondo), angolo della normale uscente, altezza in metri
+  // vertical panel: centre (world), angle of the outward normal, height in metres
   kit.sign = (text, x, y, z, normalAng, hMeters, opts = {}) => {
     const s = kit.signTex(text, opts),
       hh = hMeters * M,
@@ -476,7 +476,7 @@ export function makeKit(ctx) {
     scene.add(m);
     return m;
   };
-  // insegna su un lato del rettangolo orientato: side = '+u','-u','+v','-v'
+  // sign on one side of the oriented rectangle: side = '+u','-u','+v','-v'
   kit.obbSign = (ob, side, text, yMeters, hMeters, opts) => {
     const s = side[0] === '+' ? 1 : -1,
       ax = side[1];
@@ -485,13 +485,13 @@ export function makeKit(ctx) {
     const n = ax === 'u' ? Math.atan2(ob.uz * s, ob.ux * s) : Math.atan2(ob.vz * s, ob.vx * s);
     return kit.sign(text, x, yMeters * M, z, n, hMeters, opts);
   };
-  // il lato del rettangolo orientato rivolto verso un punto (es. la strada)
+  // the side of the oriented rectangle facing a point (e.g. the street)
   kit.sideToward = (ob, x, z) => {
     const du = (x - ob.cx) * ob.ux + (z - ob.cz) * ob.uz,
       dv = (x - ob.cx) * ob.vx + (z - ob.cz) * ob.vz;
     return Math.abs(du) / ob.len > Math.abs(dv) / ob.wid ? (du > 0 ? '+u' : '-u') : dv > 0 ? '+v' : '-v';
   };
-  // punto più vicino di una strada (eventualmente con un nome preciso) a (x, z)
+  // nearest point of a road (optionally with a given name) to (x, z)
   kit.nearestRoad = (x, z, name) => {
     if (!name) {
       const ne = ctx.nearestEdge(x, z, 900);
@@ -532,8 +532,8 @@ export function makeKit(ctx) {
     return sp;
   };
 
-  // ------------------------------------------------------------ mondo di gioco
-  // collisione: riempie la griglia (BUILD o WATER) con altezza in metri; ring in coordinate mondo
+  // ------------------------------------------------------------ game world
+  // collision: fills the grid (BUILD or WATER) with a height in metres; ring in world coordinates
   kit.solid = (ring, hMeters, tile) => {
     const t = tile ?? ctx.BUILD,
       h = hMeters * M;
@@ -555,9 +555,9 @@ export function makeKit(ctx) {
   kit.tileAt = (x, z) => ctx.tileAtPx(x, z);
   kit.ticks = [];
   kit.onTick = f => kit.ticks.push(f);
-  kit.noRandomTrees = []; // anelli (mondo) dove il gioco non deve piantare alberi casuali
+  kit.noRandomTrees = []; // rings (world) where the game must not plant random trees
 
-  // recinzione a pannelli di rete lungo un anello (mondo), con un varco opzionale
+  // mesh-panel fence along a ring (world), with an optional gap
   let netTex = null;
   kit.fence = (ring, { h = 2.2, gap = null, gapW = 6, color = '#3d4a40', closed = true } = {}) => {
     const posts = [],
@@ -599,7 +599,7 @@ export function makeKit(ctx) {
     kit.instances(new THREE.BoxGeometry(0.22 * M, h * M, 0.22 * M), kit.std({ color }), posts, { cast: false });
   };
 
-  // aloni di luce a terra sotto i lampioni: si accendono col buio
+  // pools of light on the ground under lamps: they switch on when it gets dark
   let poolM = null;
   kit.lightPools = (pts, r = 9) => {
     if (!pts.length) return;
@@ -635,7 +635,7 @@ export function makeKit(ctx) {
     }
   };
 
-  // alberi "veri": tronco + chioma a più sfere; items [{x,z,s}]
+  // "real" trees: trunk + crown made of several spheres; items [{x,z,s}]
   kit.trees = (items, { col = ['#3f7d34', '#4a8a3a', '#567f2f', '#3b6f30'] } = {}) => {
     if (!items.length) return;
     const tr = [],
@@ -666,7 +666,7 @@ export function makeKit(ctx) {
     kit.instances(new THREE.IcosahedronGeometry(1, 1), kit.std({ color: '#ffffff', flatShading: true }), cr);
   };
 
-  // ------------------------------------------------------------ edificio da tag OSM
+  // ------------------------------------------------------------ building from OSM tags
   const num = v => {
     const f = parseFloat(String(v || '').replace(',', '.'));
     return isFinite(f) ? f : 0;
@@ -677,7 +677,7 @@ export function makeKit(ctx) {
     const rh = num(tags['roof:height']) || (tags['roof:shape'] && tags['roof:shape'] !== 'flat' ? Math.min(6, 2 + lv * 0.6) : 0);
     return { wall: Math.max(2.5, h - (num(tags.height) ? rh : 0)), roof: rh };
   };
-  // facciata generica parametrica: finestre a griglia, con mappa notturna. modulo = 4 m x 3.3 m
+  // generic parametric facade: grid of windows with a night map. module = 4 m x 3.3 m
   const facCache = {};
   kit.facade = (style = 'office', base = '#e9e4da') => {
     const key = style + base;
@@ -744,7 +744,7 @@ export function makeKit(ctx) {
           ge.fillStyle = '#bfe6ff';
           ge.fillRect(x0 + 8, y0 + 6, 112, 116);
         } else if (style === 'rationalist') {
-          // anni '30: intonaco bianco, finestre alte e strette, lesene
+          // 1930s: white plaster, tall narrow windows, pilasters
           g.fillStyle = 'rgba(0,0,0,0.06)';
           g.fillRect(x0, y0, 10, 128);
           g.fillRect(x0 + 118, y0, 10, 128);
@@ -752,7 +752,7 @@ export function makeKit(ctx) {
           g.fillStyle = 'rgba(0,0,0,0.08)';
           g.fillRect(x0, y0 + 124, 128, 4);
         } else {
-          // office / università
+          // office / university
           win(x0 + 22, y0 + 26, 84, 66, '#2e3d4f', '#d7d2c8', 0.5);
           g.fillStyle = 'rgba(0,0,0,0.07)';
           g.fillRect(x0, y0 + 118, 128, 6);
@@ -760,7 +760,7 @@ export function makeKit(ctx) {
       }
     return (facCache[key] = [kit.tex(c), kit.tex(e)]);
   };
-  // costruisce un edificio intero dai tag: pareti sull'impronta vera, tetto dal tag roof:shape
+  // builds a whole building from its tags: walls on the real footprint, roof from the roof:shape tag
   kit.tagBuilding = (b, o = {}) => {
     const t = b.tags || {},
       ring = kit.W(b.outer),
@@ -779,10 +779,10 @@ export function makeKit(ctx) {
     const gr = new GB(),
       rh = (roof || Math.min(5, (ob.wid / M) * 0.35)) * M;
     if (shape === 'none') {
-      /* tetto fatto a parte dal chiamante */
+      /* roof built separately by the caller */
     } else if (shape !== 'flat' && ob.fill > 0.75) kit.roof(gr, ob, wallH, rh, shape, o.over ?? 0.4 * M);
     else if (shape !== 'flat')
-      kit.insetRoof(gr, ring, wallH, rh, Math.min(6 * M, ob.wid * 0.4)); // impronte a L, a U...
+      kit.insetRoof(gr, ring, wallH, rh, Math.min(6 * M, ob.wid * 0.4)); // L-shaped, U-shaped footprints...
     else {
       kit.flat(gr, ring, [], wallH);
     }

@@ -1,6 +1,6 @@
-// Parco Rignon e Villa Amoretti (biblioteca civica). Da OSM: perimetro del parco, sentieri,
-// filari di tigli, alberi singoli, panchine e cestini, area giochi, area cani, pista di pattinaggio,
-// la giostra e gli edifici storici (Arancera, Sala dei Centomila, Centro d'incontro) con colori e tetti.
+// Parco Rignon and Villa Amoretti (public library). From OSM: park boundary, paths,
+// rows of lime trees, single trees, benches and bins, playground, dog park, skating rink,
+// the carousel and the historic buildings (Arancera, Sala dei Centomila, Centro d'incontro) with colours and roofs.
 
 export default function build(kit, L) {
   const R = L.rignon;
@@ -10,7 +10,7 @@ export default function build(kit, L) {
   const park = kit.W(R.outer);
   kit.noRandomTrees.push(park);
 
-  // --- sentieri (larghezza e colore dal tipo e dalla superficie)
+  // --- paths (width and colour from type and surface)
   const SURF = { compacted: '#cdbd98', paving_stones: '#b9b4aa', concrete: '#c9c7c1', asphalt: '#7d7f84' };
   const byCol = {},
     lampPts = [],
@@ -64,7 +64,7 @@ export default function build(kit, L) {
     return [d, dir];
   };
 
-  // --- lampioni da parco (lanterna su palo verde scuro)
+  // --- park lamps (lantern on a dark green post)
   const lamps = lampPts.filter(
     (p, i) => lampPts.findIndex(q => Math.hypot(q[0] - p[0], q[1] - p[1]) < 12 * M) === i && kit.tileAt(p[0], p[1]) !== kit.ctx.BUILD,
   );
@@ -83,7 +83,7 @@ export default function build(kit, L) {
   );
   kit.lightPools(lamps, 8);
 
-  // --- aree speciali: giochi, cani, pattinaggio
+  // --- special areas: playground, dogs, skating
   for (const a of R.areas || []) {
     const ring = kit.W(a.outer),
       ob = kit.obb(ring),
@@ -111,7 +111,7 @@ export default function build(kit, L) {
     }
   }
 
-  // --- panchine e cestini (posizioni vere), orientate lungo il sentiero più vicino
+  // --- benches and bins (real positions), aligned with the nearest path
   const bench = new GB();
   kit.box(bench, 0, 0, 0, 1.8 * M, 0.45 * M, 0.42 * M, 0.5 * M);
   kit.box(bench, 0, -0.22 * M, 0, 1.8 * M, 0.08 * M, 0.5 * M, 0.95 * M);
@@ -128,7 +128,7 @@ export default function build(kit, L) {
   kit.instances(bench.geo(), kit.std({ color: '#7b5a3c', roughness: 0.9 }), benches, { cast: false });
   kit.instances(new THREE.CylinderGeometry(0.28 * M, 0.24 * M, 0.9 * M, 8), kit.std({ color: '#2d4a38' }), bins, { cast: false });
 
-  // --- edifici del parco (tranne la villa, già fatta): colori e tetti dai tag
+  // --- park buildings (except the villa, done above): colours and roofs from tags
   for (const b of R.buildings) {
     const t = b.tags;
     if (t.attraction === 'carousel') {
@@ -155,7 +155,7 @@ export default function build(kit, L) {
     if (t.name) kit.label(t.name.replace(/"/g, ''), r.ob.cx, r.ob.cz, r.wallH / M + 9, '#fde68a');
   }
 
-  // --- alberi: filari di tigli, alberi censiti e qualche albero in più sui prati lontano dai sentieri
+  // --- trees: lime tree rows, surveyed trees and a few extra trees on the lawns away from paths
   const trees = [];
   for (const row of R.treeRows || []) {
     const pts = kit.W(row.pts);
@@ -198,14 +198,14 @@ export default function build(kit, L) {
   kit.label('Parco Rignon', cx, cz, 22, '#86efac');
 }
 
-const warm = hex => (hex.toLowerCase() === '#eedddd' ? '#ecd4c8' : hex); // il rosa di OSM, un po' più caldo come l'intonaco vero
+const warm = hex => (hex.toLowerCase() === '#eedddd' ? '#ecd4c8' : hex); // the OSM pink, slightly warmer like the real plaster
 
 function villa(kit, V) {
   const { THREE, M, GB } = kit;
   const ring = kit.W(V.outer),
     ob = kit.obb(ring),
     H = 11.5;
-  // facciata barocca: zoccolo bugnato, cornici marcapiano, finestre con cornice e persiane verdi
+  // baroque facade: rusticated base, string courses, framed windows with green shutters
   const [c, g] = kit.cv(128, 384),
     [e, ge] = kit.cv(128, 384);
   ge.fillStyle = '#000';
@@ -261,7 +261,7 @@ function villa(kit, V) {
   const gw = new GB();
   kit.walls(gw, ring, 0, H * M, { texW: 4.2, texH: H });
   kit.mesh(gw, kit.lit(kit.tex(c), kit.tex(e), { night: 0.85 }));
-  // cornicione e tetto a padiglione in coppi
+  // cornice and hip roof in clay tiles
   const corn = new GB();
   kit.walls(corn, ring, (H - 0.5) * M, H * M + 1, { texW: 4, texH: 1 });
   kit.mesh(corn, kit.std({ color: '#f5ece2' }));
@@ -272,7 +272,7 @@ function villa(kit, V) {
   const roof = new GB();
   kit.insetRoof(roof, ring, H * M, 4 * M, Math.min(6 * M, ob.wid * 0.42));
   kit.mesh(roof, kit.std({ map: kit.tex(rc, true), color: '#c06a5a', side: THREE.DoubleSide }));
-  // portale con scalinata e balcone, sul lato verso il centro del parco
+  // portal with steps and balcony, on the side facing the park centre
   const side = kit.streetSide(ob);
   const s = side[0] === '+' ? 1 : -1,
     ax = side[1],
@@ -320,13 +320,13 @@ function playground(kit, ob) {
     red = new GB(),
     yel = new GB();
   const U = Math.min(ob.len * 0.3, 8 * M);
-  // altalena: due cavalletti, trave e due seggiolini
+  // swing: two A-frames, a beam and two seats
   const [sx, sz] = kit.local(ob, -U, 0);
   for (const d of [-1.6, 1.6])
     for (const k of [-0.7, 0.7]) kit.box(steel, ...kit.local(ob, -U + k * M, d * M), ob.ang, 0.15 * M, 0.15 * M, 0, 2.6 * M);
   kit.box(steel, sx, sz, ob.ang + Math.PI / 2, 3.4 * M, 0.15 * M, 2.5 * M, 2.7 * M);
   for (const d of [-0.7, 0.7]) kit.box(red, ...kit.local(ob, -U, d * M), ob.ang, 0.4 * M, 0.6 * M, 0.6 * M, 0.7 * M);
-  // scivolo: scaletta e piano inclinato
+  // slide: ladder and sloped chute
   const [lx, lz] = kit.local(ob, U, 0);
   kit.box(yel, lx, lz, ob.ang, 1.4 * M, 1.4 * M, 1.6 * M, 1.8 * M);
   for (const d of [-0.6, 0.6]) kit.box(steel, ...kit.local(ob, U - 0.6 * M, d * M), ob.ang, 0.12 * M, 0.12 * M, 0, 1.8 * M);
@@ -336,7 +336,7 @@ function playground(kit, ob) {
   sl.rotation.set(0, -ob.ang, -0.5);
   sl.castShadow = true;
   kit.scene.add(sl);
-  // dondolo
+  // seesaw
   const [cx, cz] = kit.local(ob, 0, Math.min(ob.wid * 0.25, 4 * M));
   kit.box(steel, cx, cz, ob.ang, 0.3 * M, 0.3 * M, 0, 0.5 * M);
   kit.box(yel, cx, cz, ob.ang + 0.08, 3.6 * M, 0.3 * M, 0.5 * M, 0.62 * M);

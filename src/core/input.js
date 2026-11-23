@@ -1,4 +1,4 @@
-// Tastiera e mouse, avvio della partita.
+// Keyboard and mouse, game start.
 import { t, toggleLang } from '../i18n/index.js';
 import { togglePerf } from '../ui/perf.js';
 import { RADIO, radioStation, setNextNoteT, setRadioStation } from '../audio/radio.js';

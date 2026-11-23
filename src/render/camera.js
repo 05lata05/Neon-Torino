@@ -1,4 +1,4 @@
-// Telecamera, ora del giorno, luci e nebbia.
+// Camera, time of day, lights and fog.
 import { TIME } from '../config.js';
 import * as THREE from 'three';
 import { SKY, camera, scene } from '../core/render.js';
@@ -14,7 +14,7 @@ import { SPAWN, WORLD, heightAt } from '../world/map.js';
 import { updateSkyline } from '../world/skyline.js';
 import { asphBase, cFogW, cRain, fogW, rain } from '../world/weather.js';
 
-// stato di proprietà di questo modulo: gli altri moduli lo leggono e lo cambiano con le funzioni set…()
+// state owned by this module: other modules read it and change it with the set…() functions
 export let camOverride;
 export function setCamOverride(v) {
   camOverride = v;
@@ -22,7 +22,7 @@ export function setCamOverride(v) {
 
 export let camPos, camLook, tPos, tLook, hour, cDay, cDusk, cNight, sDay, sDusk, sMoon, hNight, hDay;
 
-// usata dai test e dagli strumenti: {x,y,z,lx,ly,lz,fov}
+// used by tests and tools: {x,y,z,lx,ly,lz,fov}
 export function updateCamera(dt, snap) {
   if (camOverride) {
     const o = camOverride;
@@ -139,7 +139,7 @@ export function updateEnv() {
 }
 
 export function init() {
-  // ---------------- telecamera e ambiente ----------------
+  // ---------------- camera and environment ----------------
   camPos = new THREE.Vector3(WORLD / 2 + 1100, 720, WORLD / 2);
   camLook = new THREE.Vector3(WORLD / 2, 0, WORLD / 2);
   tPos = new THREE.Vector3();

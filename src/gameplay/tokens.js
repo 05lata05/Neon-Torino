@@ -1,4 +1,4 @@
-// Gettoni neon da collezionare.
+// Collectible neon tokens.
 import { num, t as tr } from '../i18n/index.js';
 import { REWARDS } from '../config.js';
 import * as THREE from 'three';
@@ -31,7 +31,7 @@ export function updateTokens() {
 }
 
 export function init() {
-  // ---------------- gettoni neon ----------------
+  // ---------------- neon tokens ----------------
   gseed = 4242;
   grnd = () => {
     gseed = (Math.imul(gseed, 1664525) + 1013904223) >>> 0;

@@ -1,4 +1,4 @@
-// Rampe e salti con premio.
+// Ramps and jumps with rewards.
 import { num, t } from '../i18n/index.js';
 import { REWARDS } from '../config.js';
 import * as THREE from 'three';
@@ -53,7 +53,7 @@ export function landed(c, imp) {
 }
 
 export function init() {
-  // ---------------- rampe e salti ----------------
+  // ---------------- ramps and jumps ----------------
   ramps = [];
   {
     const cand = areasD

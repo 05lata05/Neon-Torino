@@ -1,4 +1,4 @@
-// Modelli 3D di auto, pedoni e indicatori delle missioni.
+// 3D models of cars, pedestrians and mission markers.
 import * as THREE from 'three';
 import { scene } from '../core/render.js';
 import { player } from '../core/state.js';

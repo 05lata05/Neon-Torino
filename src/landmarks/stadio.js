@@ -1,6 +1,6 @@
-// Stadio Olimpico Grande Torino, Torre Maratona, Braciere Olimpico e Inalpi Arena.
-// Forme da OpenStreetMap (anello esterno e interno dello stadio, campo, torre, arena);
-// altezze: torre 40 m e braciere 57 m da OSM, arena 12 m da OSM, tribune e copertura stimate.
+// Stadio Olimpico Grande Torino, Torre Maratona, Braciere Olimpico (Olympic cauldron) and Inalpi Arena.
+// Shapes from OpenStreetMap (outer and inner stadium rings, pitch, tower, arena);
+// heights: tower 40 m and cauldron 57 m from OSM, arena 12 m from OSM, stands and roof estimated.
 
 export default function build(kit, L) {
   if (L.stadium) stadium(kit, L.stadium);
@@ -9,7 +9,7 @@ export default function build(kit, L) {
   if (L.arena) arena(kit, L.arena);
 }
 
-// distanza lungo un raggio fino al bordo di un anello (la più lontana o la più vicina)
+// distance along a ray to the edge of a ring (the farthest or the nearest)
 function rayHit(ring, cx, cz, dx, dz, far) {
   let best = far ? -1 : 1e9;
   for (let i = 0; i < ring.length; i++) {
@@ -47,7 +47,7 @@ function stadium(kit, S) {
   }
   const P = (s, r, y) => [cx + s.dx * r, y * M, cz + s.dz * r];
 
-  // --- texture
+  // --- textures
   const facTex = (() => {
     const [c, g] = kit.cv(512, 512),
       [e, ge] = kit.cv(512, 512);
@@ -73,7 +73,7 @@ function stadium(kit, S) {
     g.fillStyle = 'rgba(0,0,0,0.08)';
     g.fillRect(0, 240, 512, 6);
     for (let x = 0; x < 512; x += 128) {
-      // varchi d'ingresso
+      // entrance gates
       g.fillStyle = '#3a3f46';
       g.fillRect(x + 30, 400, 68, 112);
       g.fillStyle = '#7a1f2b';
@@ -129,7 +129,7 @@ function stadium(kit, S) {
     return [kit.tex(c), kit.tex(e)];
   })();
 
-  // --- facciata esterna, tribune a due anelli, coronamento
+  // --- outer facade, two-tier stands, top concourse
   const fac = new GB(),
     seats = new GB(),
     conc = new GB(),
@@ -140,7 +140,7 @@ function stadium(kit, S) {
     const s = samp[i],
       t = samp[(i + 1) % N];
     const seg = kit.len([cx + s.dx * s.ro, cz + s.dz * s.ro], [cx + t.dx * t.ro, cz + t.dz * t.ro]) / M;
-    // facciata (normale verso l'esterno: ordine scelto per s -> t in senso orario sul piano)
+    // facade (outward normal: vertex order chosen for s -> t clockwise on the plane)
     fac.quad(
       P(t, t.ro, 0),
       P(s, s.ro, 0),
@@ -165,7 +165,7 @@ function stadium(kit, S) {
       seats.col = aisle ? [0.62, 0.62, 0.6] : new THREE.Color(SEAT[i % 3]).toArray();
       seats.quad(P(s, s0, y0), P(t, t0, y0), P(t, t1, y1), P(s, s1, y1), [0, 0], [1, 0], [1, rows / 8], [0, rows / 8]);
     }
-    // camminamento tra i due anelli e coronamento in cima
+    // walkway between the two tiers and concourse at the top
     const [sa, ta] = d(0.47),
       [sb, tb] = d(0.53),
       [sc, tc] = d(0.93);
@@ -175,7 +175,7 @@ function stadium(kit, S) {
     conc.quad(P(s, sc, 18.6), P(t, tc, 18.6), P(t, t.ro, 18.6), P(s, s.ro, 18.6));
     conc.quad(P(s, s.ro - 0.6 * M, 18.6), P(t, t.ro - 0.6 * M, 18.6), P(t, t.ro - 0.6 * M, H), P(s, s.ro - 0.6 * M, H));
     conc.quad(P(s, s.ro - 0.6 * M, H), P(t, t.ro - 0.6 * M, H), P(t, t.ro, H), P(s, s.ro, H));
-    // muretto a bordo campo con i LED pubblicitari
+    // pitch-side wall with LED advertising boards
     led.quad(
       P(s, s.ri, 0),
       P(t, t.ri, 0),
@@ -197,7 +197,7 @@ function stadium(kit, S) {
     ledTex[0].offset.x = ledTex[1].offset.x = (t * 0.035) % 1;
   });
 
-  // --- copertura: membrana bianca su travi d'acciaio radiali, luci sul bordo interno
+  // --- roof: white membrane on radial steel beams, lights on the inner edge
   const roof = new GB(),
     steel = new GB(),
     lights = new GB();
@@ -227,7 +227,7 @@ function stadium(kit, S) {
         mid = (r0 + r1) / 2,
         len = r0 - r1;
       const [bx, , bz] = P(s, mid, 0);
-      // trave principale inclinata come la copertura, con montante sopra la facciata
+      // main beam sloped like the roof, with a post above the facade
       kit.box(steel, bx, bz, s.a, len, 0.9 * M, ((ROOF_I + ROOF_O) / 2) * M - 0.2 * M, ((ROOF_I + ROOF_O) / 2) * M + 1.4 * M);
       const [px, , pz] = P(s, s.ro + 0.6 * M, 0);
       kit.box(steel, px, pz, s.a, 1.1 * M, 1.1 * M, H * M, ROOF_O * M + 2.2 * M);
@@ -237,7 +237,7 @@ function stadium(kit, S) {
   kit.mesh(steel, kit.std({ color: '#9aa2ab', metalness: 0.6, roughness: 0.4 }));
   const lightM = new THREE.MeshBasicMaterial({ color: 0x888888, toneMapped: false, side: THREE.DoubleSide });
   kit.mesh(lights, lightM, { cast: false });
-  // aloni dei riflettori sul bordo della copertura, visibili di notte
+  // floodlight glows on the roof edge, visible at night
   const glowT = kit.tex(
     (() => {
       const [c, g] = kit.cv(64, 64),
@@ -271,7 +271,7 @@ function stadium(kit, S) {
     glowM.opacity = dk * 0.9;
   });
 
-  // --- terreno di gioco: bordo in sintetico, campo a strisce con linee e porte
+  // --- playing field: synthetic surround, striped pitch with lines and goals
   if (hole) {
     const g = new GB();
     kit.flat(g, hole, [], 0.25 * M);
@@ -307,7 +307,7 @@ function stadium(kit, S) {
     g.beginPath();
     g.arc(525, 340, 5, 0, 6.29);
     g.fill();
-    // di notte i riflettori "accendono" il campo: emissiveMap = la stessa texture del prato
+    // at night the floodlights "light up" the pitch: emissiveMap = the same grass texture
     const ptex = kit.tex(c, false),
       pmat = kit.std({ map: ptex, emissiveMap: ptex, emissive: new THREE.Color('#ffffff'), emissiveIntensity: 0, roughness: 0.9 });
     kit.ctx.envHooks.push(dk => {
@@ -338,7 +338,7 @@ function stadium(kit, S) {
     kit.mini(pitch, '#2f8a3f');
   }
 
-  // --- insegne: scritta sulla facciata verso corso Agnelli (ovest) e maxischermo sulla curva sud
+  // --- signs: lettering on the facade towards corso Agnelli (west) and big screen on the south end
   const west = samp[Math.round(N / 2) % N];
   kit.sign('STADIO OLIMPICO GRANDE TORINO', cx + west.dx * west.ro, 14.5 * M, cz + west.dz * west.ro, Math.PI, 2.2, {
     bg: '#f6f3ec',
@@ -389,7 +389,7 @@ function maratonaTower(kit, T) {
   const gw = new GB();
   kit.walls(gw, ring, 0, shaft * M, { texW: Math.max(ob.len, ob.wid) / M, texH: shaft });
   kit.mesh(gw, kit.lit(kit.tex(c), kit.tex(e), { night: 0.7 }));
-  // belvedere: pilastri d'angolo, nucleo scuro, soletta di copertura, asta con bandiera
+  // belvedere: corner pillars, dark core, roof slab, flagpole
   const st = new GB(),
     dark = new GB(),
     hu = ob.len / 2,
@@ -462,7 +462,7 @@ function cauldron(kit, B) {
   };
   for (let k = 0; k < 3; k++) strut(at(k, 0), at(k, top), 0.5 * M);
   for (let y = 0; y + 1 < top; y += 7 * M) {
-    // anelli e controventi del traliccio
+    // lattice rings and bracing
     const y1 = Math.min(top, y + 7 * M);
     if (y > 0) {
       const r = R0 + (R1 - R0) * (y / top),
@@ -523,7 +523,7 @@ function arena(kit, A) {
   const gw = new GB();
   kit.walls(gw, ring, 0, H * M, { texW: 24, texH: H });
   kit.mesh(gw, kit.lit(kit.tex(c), kit.tex(e), { night: 1.0, mat: { metalness: 0.45, roughness: 0.35 } }));
-  // copertura a pannelli con parapetto perimetrale e impianti
+  // panelled roof with a perimeter parapet and plant units
   const [rc, rg] = kit.cv(128, 128);
   kit.noise(rg, 128, 128, '#a2a8af', 400, 0.04);
   rg.fillStyle = 'rgba(0,0,0,0.12)';

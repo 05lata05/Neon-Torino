@@ -1,4 +1,4 @@
-// Veicoli: modelli di guida, fisica, danni ed esplosioni.
+// Vehicles: driving models, physics, damage and explosions.
 import { t } from '../i18n/index.js';
 import { VEHICLES } from '../config.js';
 import { rain } from '../world/weather.js';
@@ -257,7 +257,7 @@ export function ejectDriver(c) {
 }
 
 export function init() {
-  // ---------------- veicoli ----------------
+  // ---------------- vehicles ----------------
   CARS = VEHICLES;
   CP = [
     [1, 1],

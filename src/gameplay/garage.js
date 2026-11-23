@@ -1,4 +1,4 @@
-// Garage: riparazioni e auto da comprare.
+// Garage: repairs and cars to buy.
 import { num, t } from '../i18n/index.js';
 import { GARAGE_PRICES } from '../config.js';
 import * as THREE from 'three';

@@ -1,4 +1,4 @@
-// Suolo, aree verdi e acqua, asfalto e segnaletica, minimappa, segni delle frenate.
+// Ground, green areas and water, asphalt and road markings, minimap, skid marks.
 import * as THREE from 'three';
 import { scene } from '../core/render.js';
 import { TAU, canvasTex, mergeGeo, shapeOf, tmpO } from '../core/util.js';

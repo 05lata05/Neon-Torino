@@ -1,4 +1,4 @@
-// HUD: soldi, ricercato, minimappa, tachimetro, messaggi, schermata iniziale.
+// HUD: money, wanted level, minimap, speedometer, messages, title screen.
 import { num, t, t as tr } from '../i18n/index.js';
 import { audioOn } from '../audio/sfx.js';
 import * as THREE from 'three';
@@ -463,7 +463,7 @@ export function drawOverlay(title, lines, showControls) {
 }
 
 export function init() {
-  // ---------------- HUD 2D ----------------
+  // ---------------- 2D HUD ----------------
   _p = new THREE.Vector3();
   streetT = 0;
   curStreet = '';

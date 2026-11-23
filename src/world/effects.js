@@ -1,4 +1,4 @@
-// Particelle (fumo, scintille) e messaggi a schermo (fumetti, avvisi, titoli).
+// Particles (smoke, sparks) and on-screen messages (speech bubbles, toasts, titles).
 import * as THREE from 'three';
 import { scene } from '../core/render.js';
 import { bubbles, parts, setBig, setBubbles, toasts } from '../core/state.js';
@@ -50,7 +50,7 @@ export function bigMsg(title, sub, col, d) {
 }
 
 export function init() {
-  // ---------------- particelle (sprite) ----------------
+  // ---------------- particles (sprites) ----------------
   puffTex = canvasTex(
     glowCanvas(32, [
       [0, 'rgba(255,255,255,1)'],

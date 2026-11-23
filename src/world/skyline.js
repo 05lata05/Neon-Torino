@@ -1,4 +1,4 @@
-// Orizzonte: Alpi, collina e Mole Antonelliana.
+// Skyline: Alps, hills and the Mole Antonelliana.
 import { fogW, rain } from './weather.js';
 import * as THREE from 'three';
 import { camera, scene } from '../core/render.js';
@@ -15,7 +15,7 @@ export function updateSkyline(dk) {
 }
 
 export function init() {
-  // ---------------- orizzonte: Alpi, collina e Mole ----------------
+  // ---------------- skyline: Alps, hills and the Mole ----------------
   skyline = new THREE.Group();
   scene.add(skyline);
   skyM = new THREE.MeshBasicMaterial({

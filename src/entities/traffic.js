@@ -1,4 +1,4 @@
-// Traffico: auto che seguono le strade, semafori, ostacoli, comparsa delle auto.
+// Traffic: cars following the roads, traffic lights, obstacles, spawning cars.
 import { cars, peds, player, state } from '../core/state.js';
 import { angDiff, clamp, pick, rand } from '../core/util.js';
 import { makePed } from './peds.js';
@@ -9,7 +9,7 @@ import { BUILD, CRUISE, OUT, ROAD, WATER, edgeOut, edges, sigGreen, tileAtPx } f
 
 export let driveEdges, driveW, driveTot, walkEdges, walkW, walkTot;
 
-// ---------------- traffico ----------------
+// ---------------- traffic ----------------
 export function lightState() {
   return 0;
 }

@@ -1,4 +1,4 @@
-// Polizia: inseguimento, livello di ricercato, arresto.
+// Police: chases, wanted level, arrests.
 import { t } from '../i18n/index.js';
 import { POLICE } from '../config.js';
 import { sfx } from '../audio/sfx.js';
@@ -283,6 +283,6 @@ export function respawnAfterBust() {
 }
 
 export function init() {
-  // ---------------- polizia ----------------
+  // ---------------- police ----------------
   COPS_BY = POLICE.carsPerLevel;
 }

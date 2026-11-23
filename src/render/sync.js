@@ -1,4 +1,4 @@
-// Allinea a ogni frame le mesh 3D allo stato della simulazione.
+// Every frame, syncs the 3D meshes with the simulation state.
 import { scene } from '../core/render.js';
 import { cars, frameN, gtime, mission, offers, parts, peds, player, setFrameN, state } from '../core/state.js';
 import { clamp, tmpC } from '../core/util.js';
@@ -154,7 +154,7 @@ export function syncScene(dt) {
 }
 
 export function init() {
-  // ---------------- sincronizzazione scena ----------------
+  // ---------------- scene sync ----------------
   meshCars = [];
   meshPeds = [];
   meshOffers = [];

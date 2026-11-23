@@ -1,4 +1,4 @@
-// Pedoni: camminata sui marciapiedi, fuga, schivate.
+// Pedestrians: walking on sidewalks, fleeing, dodging.
 import { t } from '../i18n/index.js';
 import { SKINS, cars, peds, player, setShake, shake } from '../core/state.js';
 import { TAU, pick, rand } from '../core/util.js';
@@ -183,7 +183,7 @@ export function updatePeds(dt) {
 }
 
 export function init() {
-  // ---------------- pedoni ----------------
+  // ---------------- pedestrians ----------------
   SHIRTS = ['#e74c3c', '#3498db', '#f1c40f', '#9b59b6', '#1abc9c', '#e67e22', '#ecf0f1', '#34495e', '#ff6b81', '#2ecc71', '#fd79a8'];
   HAIRS = ['#2d1b0e', '#5a3825', '#111111', '#c49a6c', '#e0c080', '#7f8c8d', '#a0522d'];
   pedSolid = t => t === BUILD || t === WATER || t === OUT;

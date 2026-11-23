@@ -1,7 +1,7 @@
-// Stato della partita: giocatore, ricercato, salvataggio, liste di auto e pedoni.
+// Game state: player, wanted level, save data, lists of cars and pedestrians.
 import { SPAWN } from '../world/map.js';
 
-// stato di proprietà di questo modulo: gli altri moduli lo leggono e lo cambiano con le funzioni set…()
+// state owned by this module: other modules read it and change it with the set…() functions
 export let big, bubbles, bustT, camMode, camYaw, cars, clockT, frameN, gtime, introT, lightT, mission, money, shake, started, state;
 export function setBig(v) {
   big = v;
@@ -61,7 +61,7 @@ export function saveMoney() {
 }
 
 export function init() {
-  // ---------------- stato ----------------
+  // ---------------- state ----------------
   state = 'title';
   gtime = 0;
   lightT = 0;

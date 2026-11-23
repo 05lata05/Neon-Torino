@@ -1,4 +1,4 @@
-// GPS e mappa grande.
+// GPS and the big map.
 import { t } from '../i18n/index.js';
 import { H, W, ctx } from '../core/render.js';
 import { cars, gtime, mission, offers, peds, player } from '../core/state.js';
@@ -11,7 +11,7 @@ import { HUDF } from './hud.js';
 import { miniCv } from '../world/ground.js';
 import { WORLD, WX, WY } from '../world/map.js';
 
-// ---------------- GPS e mappa grande ----------------
+// ---------------- GPS and big map ----------------
 export function gpsTarget() {
   if (mission && mission.type !== 'heist') {
     const s = mission.steps[mission.idx];

@@ -1,4 +1,4 @@
-// Giocatore: salire e scendere dalle auto, clacson, movimento a piedi, confini della mappa.
+// Player: getting in and out of cars, horn, moving on foot, map edges.
 import { t } from '../i18n/index.js';
 import { NITRO } from '../config.js';
 import { sfx } from '../audio/sfx.js';
@@ -13,7 +13,7 @@ import { OUT, tileAtPx } from '../world/map.js';
 
 export let edgeWarnT;
 
-// ---------------- giocatore ----------------
+// ---------------- player ----------------
 export function tryEnterCar() {
   let best = null,
     bd = 50;

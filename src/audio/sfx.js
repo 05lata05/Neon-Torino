@@ -1,4 +1,4 @@
-// Audio: motore, sirene, elicottero, pioggia ed effetti.
+// Audio: engine, sirens, helicopter, rain and sound effects.
 import { rain, rainA, setRainA } from '../world/weather.js';
 import { radioStation } from './radio.js';
 import { keys } from '../core/input.js';
@@ -6,7 +6,7 @@ import { bustT, camYaw, cars, gtime, player, state } from '../core/state.js';
 import { clamp } from '../core/util.js';
 import { heli } from '../entities/heli.js';
 
-// stato di proprietà di questo modulo: gli altri moduli lo leggono e lo cambiano con le funzioni set…()
+// state owned by this module: other modules read it and change it with the set…() functions
 export let audioOn;
 export function setAudioOn(v) {
   audioOn = v;
