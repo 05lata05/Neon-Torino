@@ -6,6 +6,8 @@ The rules serve three purposes: **make progress every night**, **keep token use 
 
 In short: one box per night; if the GitHub test is green the session merges by itself, except for boxes
 marked `(needs review)` (graphics and new zones), which stay open until the owner approves them.
+The game is made with Unreal Engine, which does not run in the cloud: the session works on what does not need it
+(map data, the exporter in `tools/`, editor scripts, C++ that a `(local)` box will then try) and skips `(local)` boxes.
 On Sundays the session also sends a summary of the week.
 
 To pause: in `ROADMAP.md` write `Automatic work: PAUSED`.
@@ -31,8 +33,9 @@ Write everything in English: branches, commits, pull requests, the final message
    If one of them comes from an `auto/` branch (yours, from a previous night), **do not work**: "A pull request is
    waiting for approval: <link>" (usually a `(needs review)` box or a `[NEEDS FIX]` one). Go straight to step 6
    (Sunday summary) and stop. Pull requests from other branches belong to the owner's friends: they do not stop you.
-3. Find the current milestone (the first one with `[ ]` boxes) and the **first unchecked box** that is free:
-   - not marked `(manual)`;
+3. Go through the milestones in order (skip the "Browser game (frozen)" section) and take the **first unchecked
+   box** that is free:
+   - not marked `(manual)` or `(local)` (they need the owner or Unreal Engine on a PC);
    - not **taken**: a box is taken when an open pull request (draft or not, from any branch) has a title that
      matches the box or clearly refers to it. Leave taken boxes to whoever is working on them.
    If there is none, **stop**: "Nothing free in the roadmap: add new goals or wait for the open pull requests".
@@ -49,9 +52,13 @@ Write everything in English: branches, commits, pull requests, the final message
 2. Create the branch `auto/<short-box-name>` from an up-to-date `main`, push it with a first commit and open the
    pull request right away (title = the box, **not** a draft: a draft cannot be merged through the API), so the
    owner's friends see the box is taken. Do not merge it before step 5.
-3. Follow `CLAUDE.md` and `docs/ARCHITECTURE.md` (player-facing text in both Italian and English, in `src/i18n/strings.js`).
-4. Before finishing: `npm run format`, then `npm test`. Look at at least one picture in `tests/out/` if the box changes the graphics.
-5. If the game has a new feature, add a check to the simulated play in `tests/smoke.mjs`.
+3. Follow `CLAUDE.md` and `unreal/README.md`.
+4. If the box changes the exporter or the map data, regenerate the Unreal files with `npm run unreal` and commit them.
+5. Before finishing: `npm run format`, then `npm test`. If the box changes how the city looks, render the exported
+   file and look at it (e.g. with three.js's GLTFLoader in Playwright, as `tests/` does for the browser game).
+6. Unreal files you cannot open here (`.uasset`, `.umap`, `.uproject`) are never created or changed by the session.
+   Editor scripts and C++ written without trying them in Unreal must say so in the pull request, and a `(local)` box
+   to try them must exist in the roadmap (add one if missing).
 
 ### 4. If the tests fail
 - Fix and retry **at most twice**.
@@ -86,7 +93,8 @@ One or two lines: what got into `main` (with the link), or the pull request wait
 or the reason you did not work. On Sundays, then, the summary.
 
 ### Don'ts
-- Do not change these instructions, the switch in `ROADMAP.md`, the `(needs review)` and `(manual)` markers or the scheduled tasks.
+- Do not change these instructions, the switch in `ROADMAP.md`, the `(needs review)`, `(manual)` and `(local)` markers or the scheduled tasks.
+- Do not work on the frozen browser game (`src/`, `index.html`) unless a box asks for it.
 - Do not merge, close or edit pull requests you did not open in this session (the friends' ones above all).
 - Do not touch secrets, repository settings or cloud environment settings.
 - Do not download data from new services beyond OpenStreetMap, Arpa Piemonte and the package registries.

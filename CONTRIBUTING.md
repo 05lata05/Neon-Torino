@@ -22,9 +22,15 @@ The plan is `ROADMAP.md`: pick **the first free box** of the current milestone (
 that box alone. If you give up, close the draft so the box is free again.
 
 It helps to split the work by area, because areas are different folders and conflicts become rare:
-- driving and police: `src/entities/`, `src/gameplay/`
-- city and realism: `src/world/`, `src/landmarks/`, `tools/`
-- interface and phone: `src/ui/`, `src/core/input.js`
+- driving, traffic and police: the C++ in `unreal/NeonTorino/Source/`
+- city and realism: `tools/` (data and exporter), `unreal/scripts/`, the city materials
+- interface, missions and money: their own C++ classes and the UI assets
+
+Unreal assets (`.uasset`, `.umap`) cannot be merged: before changing a shared one (a level, a material), say so in
+your draft pull request or lock it (`git lfs lock <file>`), and unlock it after merging.
+
+You need: Unreal Engine 5.8 (Epic Games Launcher), Visual Studio 2022 with "Game development with C++", Git with
+Git LFS (`git lfs install` once) or GitHub Desktop, and Node.js for `npm test` and the exporter.
 
 ## Step by step
 
@@ -39,10 +45,10 @@ as you like. When you are done:
 
 ```bash
 npm run format                                # formatting (Prettier)
-npm test                                      # game, landmark pictures, simulated play, performance
+npm test                                      # browser game and exporter checks
 ```
 
-Look at the pictures in `tests/out/`, tick the box in `ROADMAP.md` on your branch, mark the pull request
+For Unreal changes, play the level in the editor (▶) before delivering. Look at the pictures in `tests/out/`, tick the box in `ROADMAP.md` on your branch, mark the pull request
 **Ready for review** and, once the GitHub test is green, **Squash and merge** it. No approval is needed: we trust
 each other, the test is the gatekeeper. Ask a friend to have a look anyway when you change how the game looks.
 

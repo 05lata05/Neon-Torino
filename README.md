@@ -1,12 +1,14 @@
 # Neon Torino
 
-3D open-world game in the **Santa Rita district of Turin**, in the browser. Streets, buildings, parks and tram lines
-come from real **OpenStreetMap** data; the district's landmarks are modelled by hand on their real shapes.
+GTA-style open-world game in the **Santa Rita district of Turin**, made with **Unreal Engine 5** for PC. Streets,
+buildings, parks and tram lines come from real **OpenStreetMap** data and Arpa Piemonte building heights; the city
+is generated from that data, and the district's landmarks are modelled on their real shapes.
 
-Engine: [Three.js](https://threejs.org) 0.160, modern JavaScript (ES modules), no build step.
-The game speaks Italian and English (**L** switches language).
+- **Unreal version (the game):** `unreal/`, start from [`unreal/README.md`](unreal/README.md).
+- **Browser version (first prototype, frozen):** Three.js 0.160, ES modules, no build step; Italian and English
+  (**L** switches language). Described below.
 
-## Quick start
+## Quick start (browser game)
 
 ```bash
 npm run dev          # local server on http://localhost:8080

@@ -1,21 +1,23 @@
 # Neon Torino — notes for whoever works on it
 
-- Language: code, comments, documentation, commit messages and pull requests in English.
-- Player-facing text is bilingual (Italian and English): never write it inline, add a key to `src/i18n/strings.js`
-  with both `it` and `en` and use `t('key')`. Real Italian names stay Italian in both languages: shop signs,
-  landmark lettering, street names, radio station names.
-- No build: ES modules loaded by the browser, Three.js 0.160 from the import map (index.html).
-- `data/torino.json` is generated with `python3 tools/build_map.py`, never edited by hand.
-- Units: 1 m = 5 game units (`M` in the landmark kit); world x = east, z = south.
-- New landmarks: module in `src/landmarks/`, OSM shapes in `LANDMARKS` of `tools/build_map.py` (see README).
-- Before delivering: `npm test` (Playwright) and look at the pictures in `tests/out/`.
+- The game is made with **Unreal Engine 5.8** (PC, Windows) in `unreal/`; read `unreal/README.md`. The Three.js
+  browser game (`src/`, `index.html`) is frozen: it stays playable and tested, but gets no new work unless asked.
+- Language: code, comments, documentation, commit messages and pull requests in English. Player-facing text in
+  Italian and English (Unreal localisation; in the browser game `src/i18n/strings.js`). Real Italian names stay
+  Italian in both languages: shop signs, landmark lettering, street names, radio station names.
+- The city is generated from data, never drawn by hand: OpenStreetMap and Arpa Piemonte → `tools/build_map.py` →
+  `data/torino.json` → `tools/export_gltf.mjs` (`npm run unreal`) → `unreal/import/`. Generated files are never edited by hand.
+- Units: data in metres, x = east, y = south; glTF in metres (x east, y up, z south); Unreal in centimetres, Z up.
+- Game logic in C++ (`unreal/NeonTorino/Source/`): it is text, it merges in Git and Claude can write it. Blueprints
+  only to wire things up. `.uasset`/`.umap` go through Git LFS and cannot be merged: one person per asset.
+- Prefer data and scripts (exporter, editor Python scripts, PCG) to hand-placed assets.
+- Unreal does not run in the cloud: work that needs the editor is a `(local)` roadmap box. Scripts or C++ written
+  without trying them in Unreal must say so in the pull request.
+- Before delivering: `npm test` (browser game and exporter); for Unreal changes, play the level in the editor.
 - Realism: every new or changed zone must follow `docs/REALISM.md` (sources, checklist, rules on real shops).
-- Invented details (not in OSM) must be declared in the comment at the top of the module.
-- What to do: the first unchecked box in `ROADMAP.md`; tick it when done.
+- Invented details (not in the data) must be declared in the comment at the top of the file that adds them.
+- What to do: the first free box in `ROADMAP.md`; tick it when done.
 - Teamwork (see `CONTRIBUTING.md`): one short branch per piece of work (`feature/<name>`, `fix/<name>`; `auto/` is the
   nightly session's), claim the box first with a draft pull request, merge into `main` only through a green pull request.
 - A roadmap box with an open pull request is taken: do not work on it.
-- Modules: read `docs/ARCHITECTURE.md` (rules on `init()`, `export let` and `set…()` functions for state) before adding any.
-- Balance numbers (rewards, prices, speeds, difficulty) only in `src/config.js`.
-- Performance: `npm test` checks the limits; do not raise them without writing the reason in `tests/smoke.mjs`.
 - After changes: `npm run format`.
