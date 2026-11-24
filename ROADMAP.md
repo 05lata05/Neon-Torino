@@ -43,7 +43,7 @@ things up; special models (landmarks, trams, cars) made in **Blender** on the re
 
 ## U1 · Unreal foundations — in progress
 Goal: a C++ project in the repository that everyone can open, and a level rebuilt from data with one command.
-- [ ] C++ project `unreal/NeonTorino` from the Vehicle template (C++), committed with Git LFS; World Partition with "one file per actor" (local) (~1)
+- [x] C++ project `unreal/NeonTorino` from the Vehicle template (C++), committed with Git LFS; World Partition with "one file per actor" (local) (~1)
 - [ ] `npm test` also checks the exporter: `unreal/import/santa_rita.glb` is valid and up to date with `data/torino.json` (~1)
 - [ ] Editor script `unreal/scripts/build_level.py`: imports the city, sets collision, game mode and Player Start in one go (~1)
 - [ ] Try `build_level.py` in the editor and fix it (local) (~1)
