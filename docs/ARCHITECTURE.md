@@ -1,4 +1,7 @@
-# Neon Torino architecture
+# Neon Torino architecture (browser game)
+
+> This describes the frozen Three.js browser game. The game is now made with Unreal Engine: see `unreal/README.md`.
+> The data part (OpenStreetMap → `tools/` → `data/torino.json`) is shared by both.
 
 ## The flow
 
