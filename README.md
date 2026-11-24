@@ -90,7 +90,8 @@ with a Prettier check); the pictures can be downloaded from the run's `test-pict
 
 ## Working together
 
-Branches, how to claim a roadmap box and how to merge: see [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Not everybody needs Unreal: there are roles for Unreal developers, data and tools, OpenStreetMap mappers, Blender
+artists and testers. Roles, branches, how to claim a roadmap box and how to merge: see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Data and licences
 

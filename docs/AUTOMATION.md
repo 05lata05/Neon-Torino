@@ -35,7 +35,8 @@ Write everything in English: branches, commits, pull requests, the final message
    (Sunday summary) and stop. Pull requests from other branches belong to the owner's friends: they do not stop you.
 3. Go through the milestones in order (skip the "Browser game (frozen)" section) and take the **first unchecked
    box** that is free:
-   - not marked `(manual)` or `(local)` (they need the owner or Unreal Engine on a PC);
+   - not marked `(manual)`, `(local)`, `(blender)` or `(osm)` (they need the owner, Unreal Engine, Blender or
+     edits on openstreetmap.org, which the session never makes);
    - not **taken**: a box is taken when an open pull request (draft or not, from any branch) has a title that
      matches the box or clearly refers to it. Leave taken boxes to whoever is working on them.
    If there is none, **stop**: "Nothing free in the roadmap: add new goals or wait for the open pull requests".
@@ -93,7 +94,7 @@ One or two lines: what got into `main` (with the link), or the pull request wait
 or the reason you did not work. On Sundays, then, the summary.
 
 ### Don'ts
-- Do not change these instructions, the switch in `ROADMAP.md`, the `(needs review)`, `(manual)` and `(local)` markers or the scheduled tasks.
+- Do not change these instructions, the switch in `ROADMAP.md`, the `(needs review)`, `(manual)`, `(local)`, `(blender)` and `(osm)` markers or the scheduled tasks.
 - Do not work on the frozen browser game (`src/`, `index.html`) unless a box asks for it.
 - Do not merge, close or edit pull requests you did not open in this session (the friends' ones above all).
 - Do not touch secrets, repository settings or cloud environment settings.

@@ -21,16 +21,39 @@ The plan is `ROADMAP.md`: pick **the first free box** of the current milestone (
 **draft** pull request whose title is the box text. Everybody (and the nightly session) sees it and leaves
 that box alone. If you give up, close the draft so the box is free again.
 
-It helps to split the work by area, because areas are different folders and conflicts become rare:
+## Roles: who can do what
+
+Not everybody needs Unreal Engine. Pick the role that fits your PC and your interests; every roadmap box says
+which role it needs with a marker at the end.
+
+| Role | Roadmap marker | What you do | What you need |
+|---|---|---|---|
+| **Unreal developer** | `(local)` | Game logic in C++ (driving, traffic, police, missions, money), levels, lights, materials, effects; tries the scripts and C++ written in the cloud | Windows PC with a recent graphics card (RTX 3060/4060 or similar), 16–32 GB RAM, ~150 GB free; Unreal Engine 5.8, Visual Studio 2022 with "Game development with C++", Git LFS |
+| **Data and city** | no marker | The tools in `tools/` that turn real data into the city: roofs, facades, trees, shop signs, new Turin zones, the exporter to Unreal | Any PC or Mac with Python 3 and Node.js |
+| **Mapper** | `(osm)` | Completes and corrects OpenStreetMap in the game area on openstreetmap.org (building levels, roof shapes, shops, trees, street furniture): the game takes everything from there | A browser and a free OpenStreetMap account; knowing the district |
+| **3D artist** | `(blender)` | Models in Blender what the data cannot describe: the Santuario, trams, cars, street lamps, landmark details, always on the real OSM footprint | Blender (free), any decent PC or Mac |
+| **Tester** | `(manual)` | Plays the Windows builds from the GitHub Releases, reports bugs and ideas as GitHub issues | A Windows gaming PC |
+| **Nightly Claude session** | no marker | One data or tooling box per night (it cannot run Unreal or Blender, and never edits OpenStreetMap) | — |
+
+`(manual)` boxes are decided or done by the owner. `(needs review)` can be added to any role: it changes how the
+game looks, so the owner does the merge.
+
+In a group of 2–3, a natural split: whoever has the strongest PC is the Unreal developer, the others take data,
+mapping and Blender, and everybody tests the builds. Roles are not fixed: change whenever you like.
+
+Areas are different folders, so working in parallel rarely conflicts:
 - driving, traffic and police: the C++ in `unreal/NeonTorino/Source/`
 - city and realism: `tools/` (data and exporter), `unreal/scripts/`, the city materials
 - interface, missions and money: their own C++ classes and the UI assets
+- models: `unreal/NeonTorino/Content/Models/` (one person per model)
 
 Unreal assets (`.uasset`, `.umap`) cannot be merged: before changing a shared one (a level, a material), say so in
 your draft pull request or lock it (`git lfs lock <file>`), and unlock it after merging.
 
-You need: Unreal Engine 5.8 (Epic Games Launcher), Visual Studio 2022 with "Game development with C++", Git with
-Git LFS (`git lfs install` once) or GitHub Desktop, and Node.js for `npm test` and the exporter.
+Everybody uses Git (GitHub Desktop is the simplest) and follows the same flow below. Contributions on
+openstreetmap.org follow OpenStreetMap's own rules (map only what really exists; no copying from Google Maps):
+then run `python3 tools/fetch_osm.py --force && python3 tools/build_map.py && npm run unreal` (or ask for a data box)
+to bring the changes into the game.
 
 ## Step by step
 
