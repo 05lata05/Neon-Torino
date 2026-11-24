@@ -12,8 +12,10 @@ request is taken), claims it with a draft pull request, works on a dedicated bra
 `npm test` and ticks the box here. Details in `CONTRIBUTING.md`.
 A finished milestone = a Windows build in the GitHub Releases, with something new to try.
 
-Legend: `[x]` done · `[ ]` to do · `(~N sessions)` rough estimate · `(local)` needs Unreal Engine on a PC (a local
-Claude Code session or a person) · `(manual)` done by the owner · `(needs review)` changes how the game looks: the owner does the merge
+Legend: `[x]` done · `[ ]` to do · `(~N sessions)` rough estimate · `(needs review)` changes how the game looks: the owner does the merge.
+Who can do a box (roles in `CONTRIBUTING.md`): no marker = data and tools, any PC or the nightly session ·
+`(local)` = needs Unreal Engine on a PC · `(blender)` = 3D model in Blender · `(osm)` = edits on openstreetmap.org ·
+`(manual)` = the owner
 
 ## Vision
 
@@ -51,13 +53,15 @@ Goal: a C++ project in the repository that everyone can open, and a level rebuil
 
 ## U2 · Believable Santa Rita
 Goal: anyone who knows Santa Rita recognises it. Everything according to `docs/REALISM.md`.
+- [ ] OpenStreetMap check of Santa Rita: missing building levels and roof shapes, shops, trees, bus and tram stops; then a data refresh (osm) (~2)
 - [ ] Exporter: real roof shapes and heights from OSM (`roof:shape`, `roof:height`) where mapped, pitched roofs on small buildings (needs review) (~1)
 - [ ] Exporter: facade types by period and use (1950s–70s blocks, historic, industrial, churches) as separate materials, UVs per floor (needs review) (~1)
 - [ ] CC0 photographic materials in Unreal (plaster, asphalt, sidewalks, porphyry, stone) and `docs/CREDITS.md` (local) (needs review) (~1)
 - [ ] Data export of the 666 real trees, GTT stops, street lamps, bins and benches with their positions (~1)
 - [ ] Place them in Unreal with PCG (procedural content) from that export (local) (needs review) (~1)
 - [ ] Day and night, rain and the Turin haze with Lumen; street lights on at night (local) (needs review) (~1)
-- [ ] Santuario di Santa Rita da Cascia and its square, modelled in Blender on the OSM footprint (local) (needs review) (~2)
+- [ ] Santuario di Santa Rita da Cascia modelled in Blender on the OSM footprint (blender) (needs review) (~2)
+- [ ] Santuario and its square placed in Unreal (local) (needs review) (~1)
 - [ ] Real signs of the OSM shops and venues on the ground floor: data export, then signs in Unreal (local) (needs review) (~2)
 
 ## U3 · Driving and chases
@@ -66,6 +70,7 @@ Goal: driving around Santa Rita must be fun on its own. Numbers from the browser
 - [ ] Traffic on the real road graph, with traffic lights at junctions (local) (~2)
 - [ ] Pedestrians on the sidewalks (local) (~1)
 - [ ] Police and wanted level, chases, helicopter (local) (~2)
+- [ ] GTT tram (Sirio / series 2800) and bus models (blender) (~2)
 - [ ] GTT trams 4 and 10 on the real tracks (local) (~1)
 - [ ] Damage, street races, rewarded stunts (local) (~2)
 
