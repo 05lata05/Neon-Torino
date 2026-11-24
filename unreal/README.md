@@ -6,6 +6,9 @@ The game, made with Unreal Engine 5.8 for PC (Windows). Game logic in C++, the c
 - `import/santa_rita.glb`: Santa Rita as a 3D file (roads, sidewalks, parks, water, pitches, buildings with their
   real footprints, courtyards and heights, the landmarks). Generated from `data/torino.json` by
   `tools/export_gltf.mjs` (`npm run unreal`): never edit it by hand, regenerate it when the map data changes.
+- `scripts/build_level.py`: editor script that rebuilds the city in the SantaRita level in one go (steps 4–6 below):
+  imports the .glb, sets collision, places one actor per mesh, sets the game mode and the Player Start, saves.
+  Written in the cloud and not yet tried in Unreal (roadmap U1).
 - `scripts/setup_collision.py`: editor script that gives the imported meshes their collision.
 
 Units: metres in the file, converted by Unreal to centimetres. The origin (0, 0, 0) is on the street next to
@@ -21,7 +24,9 @@ Alt+P (or the ▶ button) to play: WASD to drive, mouse to look around, Esc to s
 
 ## How the level was built
 
-For reference and to rebuild it by hand (roadmap U1 will turn steps 3–6 into `scripts/build_level.py`).
+For reference and to rebuild it by hand. Steps 4–6 are done by `scripts/build_level.py`: after `npm run unreal`,
+open the project, Tools → **Execute Python Script…** → `unreal/scripts/build_level.py`. It can be run again
+whenever the map data changes: it replaces the city actors, it does not duplicate them.
 
 1. **Project.** Unreal Engine 5.8 → **Games** → **Vehicle** template → **C++**, target **Desktop**, quality
    **Maximum**, no Starter Content, location this `unreal/` folder, name `NeonTorino`.
