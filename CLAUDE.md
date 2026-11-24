@@ -12,7 +12,9 @@
 - Realism: every new or changed zone must follow `docs/REALISM.md` (sources, checklist, rules on real shops).
 - Invented details (not in OSM) must be declared in the comment at the top of the module.
 - What to do: the first unchecked box in `ROADMAP.md`; tick it when done.
-- One branch per feature (`feature/<name>`), then a pull request into `main`.
+- Teamwork (see `CONTRIBUTING.md`): one short branch per piece of work (`feature/<name>`, `fix/<name>`; `auto/` is the
+  nightly session's), claim the box first with a draft pull request, merge into `main` only through a green pull request.
+- A roadmap box with an open pull request is taken: do not work on it.
 - Modules: read `docs/ARCHITECTURE.md` (rules on `init()`, `export let` and `set…()` functions for state) before adding any.
 - Balance numbers (rewards, prices, speeds, difficulty) only in `src/config.js`.
 - Performance: `npm test` checks the limits; do not raise them without writing the reason in `tests/smoke.mjs`.
