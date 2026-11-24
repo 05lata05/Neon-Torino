@@ -19,7 +19,7 @@ src/
   main.js            start-up: calls the init()s in order, populates the city, game loop, debug tools
   i18n/              index.js (t(), num(), current language, L key) · strings.js (Italian and English text)
   core/              render.js · util.js · state.js (game state) · update.js · input.js
-  world/             map.js (data, grid, road graph) · ground.js · lights.js · city.js · skyline.js · weather.js · effects.js
+  world/             map.js (data, grid, road graph) · ground.js · lights.js · city.js · skyline.js · sky.js · weather.js · effects.js
   entities/          vehicles.js · traffic.js · peds.js · police.js · heli.js · trams.js · collisions.js · spawn.js
   gameplay/          player.js · missions.js · garage.js · tokens.js · ramps.js
   render/            models.js · sync.js · camera.js · quality.js
