@@ -6,8 +6,9 @@ Automatic work: ON
 > by itself (rules in `docs/AUTOMATION.md`). Boxes marked `(needs review)` stay in a pull request that you approve.
 > Boxes marked `(manual)` are skipped. To stop it write `PAUSED` instead of `ON` above.
 
-How to use it: each work session takes **the first unchecked box** of the current milestone, works on a dedicated
-branch (`feature/<name>`), passes `npm test`, opens a pull request and ticks the box here.
+How to use it: each work session takes **the first free box** of the current milestone (a box with an open pull
+request is taken), claims it with a draft pull request, works on a dedicated branch (`feature/<name>`), passes
+`npm test` and ticks the box here. Details in `CONTRIBUTING.md`.
 A finished milestone = a playable version with something new to try.
 
 Legend: `[x]` done · `[ ]` to do · `(~N sessions)` rough estimate · `(manual)` done in a session with the owner · `(needs review)` changes how the game looks: the owner does the merge

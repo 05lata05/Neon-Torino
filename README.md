@@ -85,6 +85,10 @@ with a Prettier check); the pictures can be downloaded from the run's `test-pict
    `insetRoof`, `box`, `sign`, `fence`, `trees`, `solid` (collisions), `mini` (minimap), `onTick`, `lit` (windows at night).
 5. Run `npm test` and check the picture in `tests/out/`.
 
+## Working together
+
+Branches, how to claim a roadmap box and how to merge: see [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 ## Data and licences
 
 Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL licence. Building heights: Arpa Piemonte - Geoportale, CC BY 2.5 Italia. Full list in `docs/CREDITS.md`.
