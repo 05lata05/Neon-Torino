@@ -47,6 +47,7 @@ tests/smoke.mjs            test: start-up, landmark pictures, simulated play, pe
 docs/ARCHITECTURE.md       how modules are built and where new things go
 docs/REALISM.md            rules for realistic zones (sources, checklist, real shops)
 docs/AUTOMATION.md         how the nightly automatic work runs
+unreal/                    Unreal Engine prototype: Santa Rita as glTF, import guide and editor scripts
 ROADMAP.md                 project milestones and what to do next
 ```
 

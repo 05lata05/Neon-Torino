@@ -102,6 +102,12 @@ Goal: the map grows along the boulevards towards the city's landmarks. **Every z
 - [ ] Secrets and collectibles in every zone (~1)
 - [ ] Loading the city in pieces (and possibly moving to Vite) when the map gets big (~1)
 
+## U · Unreal Engine prototype (manual)
+Goal: find out whether Unreal Engine's graphics are worth moving the game (PC only). The browser game goes on meanwhile.
+- [x] Santa Rita exported to glTF for Unreal (`tools/export_gltf.mjs` → `unreal/import/santa_rita.glb`) and first-run guide in `unreal/README.md`
+- [ ] Open it in Unreal 5.8 with the Vehicle template and drive around Santa Rita (manual)
+- [ ] Decide: move the game to Unreal, or keep the browser and use what was learned (manual)
+
 ---
 
 ## Ideas on hold (not yet in a milestone)

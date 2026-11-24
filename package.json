@@ -8,7 +8,8 @@
     "map": "python3 tools/build_map.py",
     "osm": "python3 tools/fetch_osm.py",
     "test": "node tests/smoke.mjs",
-    "format": "prettier --write \"src/**/*.js\" \"tests/**/*.mjs\" \"tools/**/*.mjs\""
+    "format": "prettier --write \"src/**/*.js\" \"tests/**/*.mjs\" \"tools/**/*.mjs\"",
+    "unreal": "node tools/export_gltf.mjs"
   },
   "devDependencies": {
     "three": "0.160.0",
