@@ -8,7 +8,7 @@ The game, made with Unreal Engine 5.8 for PC (Windows). Game logic in C++, the c
   `tools/export_gltf.mjs` (`npm run unreal`): never edit it by hand, regenerate it when the map data changes.
 - `scripts/build_level.py`: editor script that rebuilds the city in the SantaRita level in one go (steps 4–6 below):
   imports the .glb, sets collision, places one actor per mesh, sets the game mode and the Player Start, saves.
-  Written in the cloud and not yet tried in Unreal (roadmap U1).
+  Tried in Unreal Engine 5.8. When the .glb has not changed it changes no file, so Git sees nothing to commit.
 - `scripts/setup_collision.py`: editor script that gives the imported meshes their collision.
 
 Units: metres in the file, converted by Unreal to centimetres. The origin (0, 0, 0) is on the street next to
