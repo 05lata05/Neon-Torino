@@ -15,6 +15,23 @@ Units: metres in the file, converted by Unreal to centimetres. The origin (0, 0,
 piazza Santa Rita, where the browser game starts. Meshes are split in 250 m tiles, one material per surface type
 (asphalt, sidewalk, grass, facades…), with UVs in metres ready for real textures.
 
+## Gameplay data for traffic and transit
+
+`npm run unreal` also writes `import/santa_rita_data.json`. All positions are ground-plane
+`[east, south]` metres relative to the **same origin as the GLB**, recorded in `coordinates.originMapMetres`.
+For a point `[e, s]`, the matching glTF point is `[e, 0, s]`. Apply the same axis and unit conversion
+as the city import when placing it in Unreal.
+
+- `roadGraph.nodes` stores positions. Each directed edge `[from, to, street]` indexes the two nodes
+  and one entry in `roadGraph.streets`. Follow edges in the listed direction. Two-way segments have two edges.
+  Shared mapped vertices connect streets. A crossing drawn without a shared vertex creates no junction.
+- Street records retain the map class and name, total mapped lane count (`null` if unknown), and the original
+  one-way flag (`1` forward, `-1` reverse, `0` both). Pedestrian-only ways are excluded from the vehicle graph.
+  Lane-by-lane movements and turn restrictions are outside the source data.
+- `tramTracks` contains track polylines. `tramLines` keeps each route variant with its line number and ordered points.
+  `tramStops` and `busStops` keep the source names and positions, including separate platforms with the same name.
+  Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL.
+
 ## Opening the project (Unreal Engine 5.8)
 
 Needs Visual Studio 2022 with the "Game development with C++" workload, Git LFS (`git lfs install` before cloning,
