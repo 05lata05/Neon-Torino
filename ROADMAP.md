@@ -46,7 +46,7 @@ Goal: a C++ project in the repository that everyone can open, and a level rebuil
 - [x] C++ project `unreal/NeonTorino` from the Vehicle template (C++), committed with Git LFS; World Partition with "one file per actor" (local) (~1)
 - [x] `npm test` also checks the exporter: `unreal/import/santa_rita.glb` is valid and up to date with `data/torino.json` (~1)
 - [x] Editor script `unreal/scripts/build_level.py`: imports the city, sets collision, game mode and Player Start in one go (~1)
-- [ ] Try `build_level.py` in the editor and fix it (local) (~1)
+- [x] Try `build_level.py` in the editor and fix it (local) (~1)
 - [ ] Gameplay data export: road graph with lanes and one-ways, tram tracks and lines, tram and bus stops → `unreal/import/santa_rita_data.json` (~1)
 - [ ] Automated Unreal check run before every Unreal pull request: the level loads, the car drives (Unreal automation test from the command line) (local) (~1)
 - [ ] First Windows build in the GitHub Releases and a "how to play" page for friends (manual) (~1)
