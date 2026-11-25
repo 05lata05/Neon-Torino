@@ -36,6 +36,9 @@ jobs:
       - name: Formatting (Prettier)
         run: npx prettier --check "src/**/*.js" "tests/**/*.mjs" "tools/**/*.mjs"
 
+      - name: Map builder regression tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+
       - name: Simulated play and landmark pictures
         run: npm test
 

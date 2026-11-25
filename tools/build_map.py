@@ -428,16 +428,18 @@ def build(geo, clip, landmark_ids=True, heights=None):
         if t.get('route') != 'tram': continue
         line = t.get('ref') or t.get('name', '?')
         seq = []
-        for m in mem:
-            if m[0] != 'way' or m[2] not in ('', 'forward', 'backward') or m[1] not in W: continue
-            refs = W[m[1]][0]
-            if not all(r in N for r in refs): continue
+        can_reverse_start = True  # the first usable way has no established direction yet
+        for member_type, wid, role in mem:
+            if member_type != 'way' or role not in ('', 'forward', 'backward') or wid not in W: continue
+            refs = W[wid][0]
+            if len(refs) < 2 or not all(r in N for r in refs): continue
             if not seq: seq = list(refs); continue
             if refs[0] == seq[-1]: seq += refs[1:]
             elif refs[-1] == seq[-1]: seq += refs[::-1][1:]
-            elif len(seq) == len(W[mem[0][1]][0]) and (refs[0] == seq[0] or refs[-1] == seq[0]):
+            elif can_reverse_start and seq[0] in (refs[0], refs[-1]):
                 seq = seq[::-1]; seq += refs[1:] if refs[0] == seq[-1] else refs[::-1][1:]
             else: seq += refs  # gap: carry on anyway
+            can_reverse_start = False
         pts = [to_xy(*N[r][:2]) for r in seq]
         pts = [p for p in pts if in_box(p, tram_box, 1200)]
         inside = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(pts, pts[1:]) if in_box(a, clip, 60) and in_box(b, clip, 60))
