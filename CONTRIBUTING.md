@@ -55,6 +55,9 @@ openstreetmap.org follow OpenStreetMap's own rules (map only what really exists;
 then run `python3 tools/fetch_osm.py --force && python3 tools/build_map.py && npm run unreal` (or ask for a data box)
 to bring the changes into the game.
 
+Before writing something big (traffic, pedestrians, police, menus), look at [`docs/REFERENCES.md`](docs/REFERENCES.md):
+existing code that can help, and what each licence lets us do with it.
+
 ## Step by step
 
 ```bash
