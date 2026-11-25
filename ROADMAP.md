@@ -54,7 +54,7 @@ Goal: a C++ project in the repository that everyone can open, and a level rebuil
 ## U2 · Believable Santa Rita
 Goal: anyone who knows Santa Rita recognises it. Everything according to `docs/REALISM.md`.
 - [ ] OpenStreetMap check of Santa Rita: missing building levels and roof shapes, shops, trees, bus and tram stops; then a data refresh (osm) (~2)
-- [ ] Exporter: real roof shapes and heights from OSM (`roof:shape`, `roof:height`) where mapped, pitched roofs on small buildings (needs review) (~1)
+- [x] Exporter: real roof shapes and heights from OSM (`roof:shape`, `roof:height`) where mapped, pitched roofs on small buildings (needs review) (~1)
 - [ ] Exporter: facade types by period and use (1950s–70s blocks, historic, industrial, churches) as separate materials, UVs per floor (needs review) (~1)
 - [ ] CC0 photographic materials in Unreal (plaster, asphalt, sidewalks, porphyry, stone) and `docs/CREDITS.md` (local) (needs review) (~1)
 - [ ] Data export of the 666 real trees, GTT stops, street lamps, bins and benches with their positions (~1)
@@ -68,6 +68,7 @@ Goal: anyone who knows Santa Rita recognises it. Everything according to `docs/R
 Goal: driving around Santa Rita must be fun on its own. Numbers from the browser game's `src/config.js` as a start.
 - [ ] Vehicle types (sedan, compact, sports, van, taxi, police, bus) with their own handling (local) (~2)
 - [ ] Traffic: compare City Sample's MassTraffic with a simpler traffic of our own on `santa_rita_data.json`, write down the choice (see `docs/REFERENCES.md`) (local) (~1)
+- [ ] Speed limits (`maxspeed`) from OpenStreetMap in the gameplay data export (~1)
 - [ ] Traffic on the real road graph, with traffic lights at junctions (local) (~2)
 - [ ] Pedestrians on the sidewalks (MassCrowd from City Sample or our own, see `docs/REFERENCES.md`) (local) (~1)
 - [ ] Police and wanted level, chases, helicopter: port the browser game's rules (`src/entities/police.js`, `POLICE` in `src/config.js`) to C++ (local) (~2)

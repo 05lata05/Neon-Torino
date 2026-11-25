@@ -11,6 +11,9 @@ The game, made with Unreal Engine 5.8 for PC (Windows). Game logic in C++, the c
   Tried in Unreal Engine 5.8. When the .glb has not changed it changes no file, so Git sees nothing to commit.
 - `scripts/setup_collision.py`: editor script that gives the imported meshes their collision.
 
+Roofs: the OpenStreetMap roof shapes (gabled, hipped, pyramidal, skillion) where mapped, gabled roofs on small
+untagged houses, flat elsewhere; the rules and what is invented are at the top of `tools/roofs.mjs`.
+
 Units: metres in the file, converted by Unreal to centimetres. The origin (0, 0, 0) is on the street next to
 piazza Santa Rita, where the browser game starts. Meshes are split in 250 m tiles, one material per surface type
 (asphalt, sidewalk, grass, facades…), with UVs in metres ready for real textures.

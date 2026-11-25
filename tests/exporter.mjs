@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import validator from 'gltf-validator';
 import { buildGameplayData } from '../tools/gameplay_data.mjs';
+import { boundingRect, clipConvex, roofModel } from '../tools/roofs.mjs';
 
 async function readExport(file) {
   const bytes = readFileSync(file);
@@ -58,6 +59,44 @@ assert.deepEqual(sample.roadGraph.edges, [
   [6, 5, 3],
 ]);
 assert.equal(sample.roadGraph.streets[0].lanes, null);
+
+// Roofs: a 20 x 10 m house turned by 30°, gabled and hipped; courtyards and L shapes stay flat.
+const turn = ([x, y]) => [x * Math.cos(0.5236) - y * Math.sin(0.5236) + 100, x * Math.sin(0.5236) + y * Math.cos(0.5236) + 50];
+const house = [
+  [-10, -5],
+  [10, -5],
+  [10, 5],
+  [-10, 5],
+].map(turn);
+const rect = boundingRect(house);
+assert.ok(Math.abs(rect.A - 10) < 1e-6 && Math.abs(rect.B - 5) < 1e-6, 'bounding rectangle of a turned house');
+const near = (a, b) => Math.abs(a - b) < 1e-6;
+const gabled = roofModel(house, [], ['gabled', 0, 0, '']);
+assert.ok(near(gabled.h, 5 * Math.tan(Math.PI / 6)), 'default roof height: 30° slope');
+assert.ok(near(gabled.z(turn([0, 0])), gabled.h) && near(gabled.z(turn([10, 0])), gabled.h), 'gabled: ridge reaches the gable ends');
+assert.ok(near(gabled.z(turn([0, 5])), 0), 'gabled: eaves on the long sides');
+const hipped = roofModel(house, [], ['hipped', 3, 0, '']);
+assert.ok(near(hipped.z(turn([0, 0])), 3) && near(hipped.z(turn([10, 0])), 0), 'hipped: slopes at the ends too, roof:height used');
+assert.equal(roofModel(house, [], ['gabled', 0, 2, 'across']).h, 6, 'roof:levels gives the height');
+assert.equal(roofModel(house, [[turn([-2, -2]), turn([2, -2]), turn([2, 2])]], ['gabled', 0, 0, '']), null, 'courtyard: flat');
+const lShape = [
+  [0, 0],
+  [20, 0],
+  [20, 4],
+  [4, 4],
+  [4, 20],
+  [0, 20],
+];
+assert.equal(roofModel(lShape, [], ['gabled', 0, 0, '']), null, 'far from rectangular: flat');
+assert.equal(roofModel(house, [], 0), null, 'no tags, not small: flat');
+// the roof pieces cover the footprint exactly
+const tri = [house[0], house[1], house[2]];
+const pieceArea = p => Math.abs(p.reduce((s, q, i) => s + q[0] * p[(i + 1) % p.length][1] - p[(i + 1) % p.length][0] * q[1], 0) / 2);
+const covered = hipped.pieces
+  .map(p => clipConvex(tri, p))
+  .filter(Boolean)
+  .reduce((s, p) => s + pieceArea(p), 0);
+assert.ok(Math.abs(covered - 100) < 1e-6, 'roof pieces cover the footprint without gaps or overlaps');
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const temporary = mkdtempSync(path.join(tmpdir(), 'neon-torino-export-'));

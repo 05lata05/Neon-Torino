@@ -13,6 +13,7 @@ The engine multiplies them by 5 (1 m = 5 units) and shifts them by (clip.x0-50, 
 Output format (all lines are encoded as integer polylines, Google style):
   R  roads        [class, oneway, name_index, lanes, polyline(1 m)]
   B  buildings    [levels, kind, outer(qb m), holes...]  kind: 0 generic 1 church 2 stadium 3 garage 4 school
+  BR roofs        one entry per building in B: 0 (no roof tags) or [shape, roof height m, roof levels, orientation]
   A  areas        [kind, outer(qb m), holes...]          kind: g green, p pitch, k parking, w water, r railway
   TW tram tracks  [[x,y],...]   TR tram lines [line, [[x,y],...]]   TS/BS tram/bus stops [x,y,name]
   L  landmarks    {id: {...}}  real shapes of the buildings the game models by hand (src/landmarks/)
@@ -175,6 +176,19 @@ def levels(t):
         return max(0, int(float(t.get('building:levels', '0').split(';')[0])))
     except ValueError:
         return 0
+
+ROOF_SHAPES = ('flat', 'gabled', 'hipped', 'half-hipped', 'pyramidal', 'skillion', 'gambrel', 'mansard', 'round', 'dome', 'onion', 'saltbox')
+
+def roof_info(t):
+    """Roof tags of a building: 0 when none is mapped, else [shape, roof height in m (0 = unknown), roof levels, orientation]."""
+    shape = t.get('roof:shape', '').strip().lower()
+    if shape not in ROOF_SHAPES: shape = ''
+    try: h = round(float(t.get('roof:height', '0').split(';')[0].replace('m', '').strip()), 1)
+    except ValueError: h = 0
+    try: rl = max(0, int(float(t.get('roof:levels', '0').split(';')[0])))
+    except ValueError: rl = 0
+    o = t.get('roof:orientation', '') if t.get('roof:orientation') in ('along', 'across') else ''
+    return [shape, h, rl, o] if shape or h or rl else 0
 
 def area_kind(t):
     if t.get('natural') == 'water' or t.get('water') or t.get('landuse') in ('basin', 'reservoir') \
@@ -353,7 +367,7 @@ def build(geo, clip, landmark_ids=True, heights=None):
         return any(math.hypot(c[0] - s[0][0], c[1] - s[0][1]) < 3 and abs(a - s[1]) < 0.15 * s[1] + 5 for s in skip_geo)
 
     # --- buildings (no duplicates: some stadiums are mapped twice as a relation)
-    B_out, seen, stats = [], set(), Counter()
+    B_out, BR_out, seen, stats = [], [], set(), Counter()
     for t, outer, holes, oid in geo.polygons(lambda t: 'building' in t and t.get('building') != 'no' and t.get('layer', '0')[:1] != '-' and t.get('location') != 'underground'):
         if not any(in_box(p, clip) for p in outer): continue
         if area(outer) < 6 or skipped(outer): continue
@@ -372,6 +386,8 @@ def build(geo, clip, landmark_ids=True, heights=None):
             hh = dedupe(h, QB)
             if len(hh) >= 3: row.append(encode(hh, QB))
         B_out.append(row)
+        BR_out.append(roof_info(t))
+        if BR_out[-1]: stats['roofs'] += 1
 
     # --- areas
     A_out = []
@@ -424,9 +440,9 @@ def build(geo, clip, landmark_ids=True, heights=None):
             BS.append([half(p[0]), half(p[1]), t.get('name', '')])
 
     print('buildings:', len(B_out), '| levels from OSM:', stats['osm_levels'], '| heights from ARPA:', stats['arpa_heights'],
-          '| no data:', len(B_out) - stats['osm_levels'] - stats['arpa_heights'])
+          '| no data:', len(B_out) - stats['osm_levels'] - stats['arpa_heights'], '| roof tags:', stats['roofs'])
     return {'v': 2, 'qb': QB, 'origin': ORIGIN, 'k': K, 'clip': clip, 'names': names,
-            'R': R_out, 'B': B_out, 'A': A_out, 'TW': TW, 'TR': TR, 'TS': TS, 'BS': BS, 'L': L}
+            'R': R_out, 'B': B_out, 'BR': BR_out, 'A': A_out, 'TW': TW, 'TR': TR, 'TS': TS, 'BS': BS, 'L': L}
 
 def compare(new, old):
     print('key           new      old')
