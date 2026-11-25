@@ -18,7 +18,13 @@ export function buildGameplayData(data, roads, origin, toLocal) {
   for (const road of roads) {
     if (road.cls === 'X') continue; // pedestrian ways, as in the browser vehicle graph
     const street = streets.length;
-    streets.push({ class: road.cls, name: road.name, lanes: road.lanes || null, oneway: road.oneway });
+    streets.push({
+      class: road.cls,
+      name: road.name,
+      lanes: road.lanes || null,
+      oneway: road.oneway,
+      maxSpeedKmh: road.maxSpeedKmh ?? null,
+    });
     let from = nodeAt(road.pts[0]);
     for (const point of road.pts.slice(1)) {
       const to = nodeAt(point);
