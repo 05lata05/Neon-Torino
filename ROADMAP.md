@@ -68,7 +68,7 @@ Goal: anyone who knows Santa Rita recognises it. Everything according to `docs/R
 Goal: driving around Santa Rita must be fun on its own. Numbers from the browser game's `src/config.js` as a start.
 - [ ] Vehicle types (sedan, compact, sports, van, taxi, police, bus) with their own handling (local) (~2)
 - [ ] Traffic: compare City Sample's MassTraffic with a simpler traffic of our own on `santa_rita_data.json`, write down the choice (see `docs/REFERENCES.md`) (local) (~1)
-- [ ] Speed limits (`maxspeed`) from OpenStreetMap in the gameplay data export (~1)
+- [x] Speed limits (`maxspeed`) from OpenStreetMap in the gameplay data export (~1)
 - [ ] Traffic on the real road graph, with traffic lights at junctions (local) (~2)
 - [ ] Pedestrians on the sidewalks (MassCrowd from City Sample or our own, see `docs/REFERENCES.md`) (local) (~1)
 - [ ] Police and wanted level, chases, helicopter: port the browser game's rules (`src/entities/police.js`, `POLICE` in `src/config.js`) to C++ (local) (~2)

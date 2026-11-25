@@ -84,9 +84,14 @@ const clean = r => {
 const llToM = (lat, lon) => [(lon - DATA.origin[1]) * DATA.k[0], (DATA.origin[0] - lat) * DATA.k[1]];
 const square = llToM(45.0467, 7.6466),
   want = [square[0] + 18, square[1] + 34];
-const roads = DATA.R.map(r => ({ cls: r[0], name: DATA.names[r[2]] ?? null, lanes: r[3], oneway: r[1], pts: decPoly(r[4], 1) })).filter(
-  r => r.pts.length >= 2,
-);
+const roads = DATA.R.map(r => ({
+  cls: r[0],
+  name: DATA.names[r[2]] ?? null,
+  lanes: r[3],
+  oneway: r[1],
+  pts: decPoly(r[4], 1),
+  maxSpeedKmh: r[5],
+})).filter(r => r.pts.length >= 2);
 let O = null,
   best = 1e9;
 for (const r of roads)

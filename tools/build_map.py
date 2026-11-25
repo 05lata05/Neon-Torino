@@ -11,14 +11,14 @@ Game coordinates ("map metres"): x towards east, y towards south, starting from 
 The engine multiplies them by 5 (1 m = 5 units) and shifts them by (clip.x0-50, clip.y0-50).
 
 Output format (all lines are encoded as integer polylines, Google style):
-  R  roads        [class, oneway, name_index, lanes, polyline(1 m)]
+  R  roads        [class, oneway, name_index, lanes, polyline(1 m), maxspeed_kmh?]
   B  buildings    [levels, kind, outer(qb m), holes...]  kind: 0 generic 1 church 2 stadium 3 garage 4 school
   BR roofs        one entry per building in B: 0 (no roof tags) or [shape, roof height m, roof levels, orientation]
   A  areas        [kind, outer(qb m), holes...]          kind: g green, p pitch, k parking, w water, r railway
   TW tram tracks  [[x,y],...]   TR tram lines [line, [[x,y],...]]   TS/BS tram/bus stops [x,y,name]
   L  landmarks    {id: {...}}  real shapes of the buildings the game models by hand (src/landmarks/)
 """
-import argparse, glob, json, math, os, sys, xml.etree.ElementTree as ET
+import argparse, glob, json, math, os, re, sys, xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -253,6 +253,17 @@ class Heights:
         # calibrated on buildings that have both: height ≈ 3.3 m per level + 2 m
         return max(1, round((best[2] - 2) / 3.3)) if best else 0
 
+def speed_limit_kmh(value):
+    # OSM uses km/h for bare numbers. Keep unknown and non-metric values unset.
+    match = re.fullmatch(r'([0-9]+(?:\.[0-9]+)?)(?: *km/h)?', (value or '').strip())
+    if not match:
+        return None
+    speed = float(match.group(1))
+    if not math.isfinite(speed) or speed <= 0:
+        return None
+    return int(speed) if speed.is_integer() else speed
+
+
 def build(geo, clip, landmark_ids=True, heights=None):
     N, W, R = geo.N, geo.W, geo.R
     road_box = (clip[0], clip[1], clip[2], clip[3])
@@ -290,7 +301,11 @@ def build(geo, clip, landmark_ids=True, heights=None):
         except ValueError: lanes = 0
         pts = dedupe([(round(pts_all[i][0]), round(pts_all[i][1])) for i in idx], 1)
         if len(pts) < 2: continue
-        R_out.append([cls, ow, nidx(t.get('name')), lanes, encode(pts, 1)])
+        road = [cls, ow, nidx(t.get('name')), lanes, encode(pts, 1)]
+        speed = speed_limit_kmh(t.get('maxspeed'))
+        if speed is not None:
+            road.append(speed)
+        R_out.append(road)
 
     # --- landmarks: real shapes; the replaced buildings are removed from the generic list
     L, skip_geo = {}, []          # skip_geo: (centroid, area) of the buildings modelled by hand

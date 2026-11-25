@@ -30,12 +30,12 @@ async function readExport(file) {
 
 // A shared junction, a geometry crossing without a shared vertex, and a reverse-only way.
 // The current district contains no reverse-only ways, so a real-data snapshot alone cannot test that case.
-const road = (pts, oneway = 0, cls = 'R') => ({ pts, oneway, cls, lanes: 0, name: null });
+const road = (pts, oneway = 0, cls = 'R', maxSpeedKmh) => ({ pts, oneway, cls, lanes: 0, name: null, maxSpeedKmh });
 const junction = [10, 0];
 const sample = buildGameplayData(
   { TW: [], TR: [], TS: [], BS: [] },
   [
-    road([[0, 0], junction, [20, 0]]),
+    road([[0, 0], junction, [20, 0]], 0, 'R', 30),
     road([junction, [10, 10]], 1),
     road([[10, -10], junction], -1),
     road([
@@ -59,6 +59,10 @@ assert.deepEqual(sample.roadGraph.edges, [
   [6, 5, 3],
 ]);
 assert.equal(sample.roadGraph.streets[0].lanes, null);
+assert.deepEqual(
+  sample.roadGraph.streets.map(street => street.maxSpeedKmh),
+  [30, null, null, null],
+);
 
 // Roofs: a 20 x 10 m house turned by 30°, gabled and hipped; courtyards and L shapes stay flat.
 const turn = ([x, y]) => [x * Math.cos(0.5236) - y * Math.sin(0.5236) + 100, x * Math.sin(0.5236) + y * Math.cos(0.5236) + 50];
@@ -116,11 +120,12 @@ try {
   const local = ([x, y]) => [x - east, y - south];
   assert.deepEqual(
     data.roadGraph.streets,
-    map.R.filter(([cls]) => cls !== 'X').map(([cls, oneway, name, lanes]) => ({
+    map.R.filter(([cls]) => cls !== 'X').map(([cls, oneway, name, lanes, , maxSpeedKmh]) => ({
       class: cls,
       name: map.names[name] ?? null,
       lanes: lanes || null,
       oneway,
+      maxSpeedKmh: maxSpeedKmh ?? null,
     })),
   );
   assert.deepEqual(
