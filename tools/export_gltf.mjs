@@ -1,5 +1,5 @@
 // Exports Santa Rita from data/torino.json to a glTF file (unreal/import/santa_rita.glb) for the Unreal Engine prototype.
-// Usage: node tools/export_gltf.mjs [out.glb]
+// Usage: node tools/export_gltf.mjs [out.glb [gameplay.json]]. Without arguments, write both Unreal imports.
 //
 // What goes in (real data): roads with their widths, green areas, water, pitches, parking, buildings with their
 // real footprints, courtyards and heights (OSM levels or Arpa Piemonte), the Santa Rita landmarks.
@@ -13,9 +13,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ShapeUtils, Vector2 } from 'three';
+import { buildGameplayData } from './gameplay_data.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = process.argv[2] || path.join(ROOT, 'unreal', 'import', 'santa_rita.glb');
+const DATA_OUT = process.argv[3] || (!process.argv[2] && path.join(ROOT, 'unreal/import/santa_rita_data.json'));
 const DATA = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'torino.json'), 'utf8'));
 const TILE = 250; // metres: meshes are split in tiles, so Unreal can cull and stream them
 
@@ -80,7 +82,9 @@ const clean = r => {
 const llToM = (lat, lon) => [(lon - DATA.origin[1]) * DATA.k[0], (DATA.origin[0] - lat) * DATA.k[1]];
 const square = llToM(45.0467, 7.6466),
   want = [square[0] + 18, square[1] + 34];
-const roads = DATA.R.map(r => ({ cls: r[0], lanes: r[3], oneway: r[1], pts: decPoly(r[4], 1) })).filter(r => r.pts.length >= 2);
+const roads = DATA.R.map(r => ({ cls: r[0], name: DATA.names[r[2]] ?? null, lanes: r[3], oneway: r[1], pts: decPoly(r[4], 1) })).filter(
+  r => r.pts.length >= 2,
+);
 let O = null,
   best = 1e9;
 for (const r of roads)
@@ -473,3 +477,12 @@ console.log(
   `wrote ${path.relative(ROOT, OUT)}: ${(fs.statSync(OUT).size / 1e6).toFixed(1)} MB, ${gltf.meshes.length} meshes, ` +
     `${(tris / 1000).toFixed(0)}k triangles, ${nb} buildings + ${Object.keys(L).length} landmarks; origin at map metres ${O}`,
 );
+
+if (DATA_OUT) {
+  const gameplay = buildGameplayData(DATA, roads, O, W);
+  fs.mkdirSync(path.dirname(DATA_OUT), { recursive: true });
+  fs.writeFileSync(DATA_OUT, JSON.stringify(gameplay) + '\n');
+  console.log(
+    `wrote ${path.relative(ROOT, DATA_OUT)}: ${gameplay.roadGraph.nodes.length} road nodes, ${gameplay.roadGraph.edges.length} directed edges`,
+  );
+}
