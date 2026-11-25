@@ -1,6 +1,6 @@
 import unittest
 
-from tools.build_map import CLIP, Geo, build, to_ll
+from tools.build_map import CLIP, Geo, build, facade_use, to_ll
 
 
 class TramRouteTest(unittest.TestCase):
@@ -28,3 +28,15 @@ class TramRouteTest(unittest.TestCase):
                 relations = {'route': (members, {'route': 'tram', 'ref': '4'})}
                 result = build(Geo(nodes, ways, relations), CLIP, landmark_ids=False)
                 self.assertEqual(result['TR'], [['4', [list(point) for point in points]]])
+
+
+class FacadeUseTest(unittest.TestCase):
+    def test_building_tag_then_other_tags_then_arpa_use(self):
+        self.assertEqual(facade_use({'building': 'apartments'}, 'S'), 'r')
+        self.assertEqual(facade_use({'building': 'garages'}), 'g')
+        self.assertEqual(facade_use({'building': 'yes', 'amenity': 'place_of_worship'}), 'c')
+        self.assertEqual(facade_use({'building': 'yes', 'shop': 'supermarket'}), 'm')
+        self.assertEqual(facade_use({'building': 'yes'}, 'P'), 'i')
+        self.assertEqual(facade_use({'building': 'yes'}, 'S'), 'p')
+        self.assertEqual(facade_use({'building': 'yes'}), 'u')
+        self.assertEqual(facade_use({'building': 'residential', 'building:material': 'brick'}), 'R')

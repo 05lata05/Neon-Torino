@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import validator from 'gltf-validator';
 import { buildGameplayData } from '../tools/gameplay_data.mjs';
+import { bays, facadeMaterial, facadeType, floorsOf, floorV } from '../tools/facades.mjs';
 import { boundingRect, clipConvex, roofModel } from '../tools/roofs.mjs';
 
 async function readExport(file) {
@@ -101,6 +102,22 @@ const covered = hipped.pieces
   .filter(Boolean)
   .reduce((s, p) => s + pieceArea(p), 0);
 assert.ok(Math.abs(covered - 100) < 1e-6, 'roof pieces cover the footprint without gaps or overlaps');
+
+// Facades: type from use, kind and period; UVs that count floors and window bays.
+assert.equal(facadeType('r', 0, 7, false), 'block', 'tall apartment building: 1950s–70s block');
+assert.equal(facadeType('r', 0, 2, true), 'historic', 'low house with a pitched roof: historic');
+assert.equal(facadeType('u', 0, 3, false), 'block', 'flat roof: block');
+assert.equal(facadeType('I', 0, 2, false), 'industrial');
+assert.equal(facadeType('r', 1, 5, false), 'church', 'the building kind wins over the use');
+assert.equal(facadeType('u', 4, 3, false), 'public');
+assert.equal(facadeMaterial('block', true, [10, 20]), 'Facade_Block_Brick', 'brick walls from OSM');
+assert.equal(facadeMaterial('church', false, [10, 20]), 'Facade_Church');
+assert.equal(facadeMaterial('historic', false, [10, 20]), facadeMaterial('historic', false, [10.2, 19.9]), 'colour stable');
+assert.deepEqual(floorsOf(6, 0, 19), { g: 4, f: 3 }, 'ground floor 4 m, then 3 m');
+assert.ok(near(floorV(4, { g: 4, f: 3 }), 1) && near(floorV(19, { g: 4, f: 3 }), 6), 'V counts floors');
+assert.ok(near(floorsOf(1, 1, 19).f, 19) && near(floorV(9.5, floorsOf(1, 1, 19)), 0.5), 'single tall floor');
+assert.equal(bays(10), 3, 'whole window bays per wall');
+assert.ok(near(bays(1), 1 / 3), 'short walls keep their width');
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const temporary = mkdtempSync(path.join(tmpdir(), 'neon-torino-export-'));

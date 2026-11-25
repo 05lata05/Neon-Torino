@@ -5,8 +5,9 @@
 // real footprints, courtyards and heights (OSM levels or Arpa Piemonte), the Santa Rita landmarks.
 // Invented details (not from data): sidewalks are a fixed 3 m strip along every road; the stadium stands are a
 // single 28 m block; buildings without any height data get levels from their size (same rule as the browser game);
-// facade and roof colours are picked from a palette; the Parco Rignon trees are simple shapes; roof heights and the
-// roofs of small untagged buildings (see the comment at the top of tools/roofs.mjs).
+// roof colours; the Parco Rignon trees are simple shapes; roof heights and the
+// roofs of small untagged buildings (see the comment at the top of tools/roofs.mjs); the period and colour of the
+// facades (see the comment at the top of tools/facades.mjs).
 //
 // glTF coordinates: metres, x = east, y = up, z = south (Unreal converts them to centimetres and Z-up on import).
 // The origin is on the street next to piazza Santa Rita, where the browser game starts: put the Player Start there.
@@ -15,6 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ShapeUtils, Vector2 } from 'three';
 import { buildGameplayData } from './gameplay_data.mjs';
+import { bays, FACADE_MATERIALS, facadeMaterial, facadeType, floorsOf, floorV } from './facades.mjs';
 import { clipConvex, roofModel, splitEdge } from './roofs.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -114,20 +116,13 @@ const MATERIALS = {
   Parking: ['#55585d', 0.9],
   Rail: ['#7a6a58', 0.95],
   Path: ['#c2b49a', 0.95],
-  Facade_Ochre: ['#d9a66e', 0.9],
-  Facade_Yellow: ['#e8cf8e', 0.9],
-  Facade_Cream: ['#efe2c8', 0.9],
-  Facade_Grey: ['#c9c4ba', 0.9],
-  Facade_Brick: ['#b9785a', 0.9],
-  Facade_White: ['#ece9e2', 0.9],
-  Church: ['#efe6d2', 0.9],
+  ...FACADE_MATERIALS,
   Concrete: ['#c9ccd2', 0.85],
   Roof: ['#77736d', 0.95],
   Roof_Tiles: ['#a3472f', 0.9],
   Tree_Trunk: ['#5b4330', 0.95],
   Tree_Leaves: ['#3f6f2e', 0.95],
 };
-const FACADES = ['Facade_Ochre', 'Facade_Yellow', 'Facade_Cream', 'Facade_Grey', 'Facade_Brick', 'Facade_White'];
 let seed = 12345;
 const rnd = () => {
   seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
@@ -184,19 +179,24 @@ function flat(group, mat, outer, holes, y) {
     all.map(p => [p[0], p[1]]),
   );
 }
-// extruded footprint: walls for the outer ring and the courtyards, roof (flat, or the model from tools/roofs.mjs)
-function extrude(group, wallMat, roofMat, outer, holes, h, y0 = 0, roof = null) {
+// extruded footprint: walls for the outer ring and the courtyards, roof (flat, or the model from tools/roofs.mjs).
+// Wall UVs: with floors ({g, f} from tools/facades.mjs) U counts window bays and V floors, else both are metres.
+function extrude(group, wallMat, roofMat, outer, holes, h, y0 = 0, roof = null, floors = null) {
   outer = clean(outer);
   if (!outer) return;
   holes = holes.map(clean).filter(Boolean);
   const [cx, cz] = centroid(outer);
   const P = prim(group, cx, cz, wallMat);
+  const V = dy => (floors ? floorV(dy, floors) : y0 + dy);
+  // V is linear on each floor band: with a taller ground floor the wall is split at its top
+  const bands = floors && floors.g !== floors.f && h > floors.g + 1e-6 ? [0, floors.g, h] : [0, h];
   for (const ring of [outer, ...holes]) {
     let u = 0;
     for (let i = 0; i < ring.length; i++) {
       const p = ring[i],
         q = ring[(i + 1) % ring.length],
-        len = Math.hypot(q[0] - p[0], q[1] - p[1]);
+        len = Math.hypot(q[0] - p[0], q[1] - p[1]),
+        ul = floors ? bays(len) : len;
       // outward normal: the side whose nearby point is outside the footprint
       let nx = (q[1] - p[1]) / len,
         nz = -(q[0] - p[0]) / len;
@@ -207,30 +207,35 @@ function extrude(group, wallMat, roofMat, outer, holes, h, y0 = 0, roof = null) 
       }
       const a = W(p),
         b = W(q);
-      addTris(
-        P,
-        [
-          [a[0], y0, a[1]],
-          [b[0], y0, b[1]],
-          [b[0], y0 + h, b[1]],
-          [a[0], y0 + h, a[1]],
-        ],
-        [
-          [0, 1, 2],
-          [0, 2, 3],
-        ],
-        [nx, 0, nz],
-        [
-          [u, y0],
-          [u + len, y0],
-          [u + len, y0 + h],
-          [u, y0 + h],
-        ],
-      );
+      for (let k = 0; k + 1 < bands.length; k++) {
+        const lo = bands[k],
+          hi = bands[k + 1];
+        addTris(
+          P,
+          [
+            [a[0], y0 + lo, a[1]],
+            [b[0], y0 + lo, b[1]],
+            [b[0], y0 + hi, b[1]],
+            [a[0], y0 + hi, a[1]],
+          ],
+          [
+            [0, 1, 2],
+            [0, 2, 3],
+          ],
+          [nx, 0, nz],
+          [
+            [u, V(lo)],
+            [u + ul, V(lo)],
+            [u + ul, V(hi)],
+            [u, V(hi)],
+          ],
+        );
+      }
       // gables: the wall goes up to meet a pitched roof
       if (roof) {
         const pts = splitEdge(p, q, roof.pieces);
         let gu = u;
+        const us = ul / len; // U per metre along this wall
         for (let k = 0; k + 1 < pts.length; k++) {
           const s0 = pts[k],
             s1 = pts[k + 1],
@@ -255,17 +260,17 @@ function extrude(group, wallMat, roofMat, outer, holes, h, y0 = 0, roof = null) 
               ],
               [nx, 0, nz],
               [
-                [gu, top],
-                [gu + sl, top],
-                [gu + sl, top + z1],
-                [gu, top + z0],
+                [gu, V(h)],
+                [gu + sl * us, V(h)],
+                [gu + sl * us, V(h + z1)],
+                [gu, V(h + z0)],
               ],
             );
           }
-          gu += sl;
+          gu += sl * us;
         }
       }
-      u += len;
+      u += ul;
     }
   }
   if (roof) pitchedRoof(group, roofMat, outer, roof, y0 + h);
@@ -421,6 +426,7 @@ const heightOf = (levels, kind) => {
 };
 let nb = 0;
 const roofStats = { tagged: 0, small: 0, flat: 0 };
+const facadeStats = {};
 for (const [i, b] of DATA.B.entries()) {
   const outer = decPoly(b[2], DATA.qb),
     holes = b.slice(3).map(s => decPoly(s, DATA.qb));
@@ -430,12 +436,16 @@ for (const [i, b] of DATA.B.entries()) {
   if (!levels)
     levels = b[1] === 3 ? 1 : am < 60 ? 1 + Math.floor(rnd() * 2) : am < 220 ? 2 + Math.floor(rnd() * 4) : 5 + Math.floor(rnd() * 5);
   const kind = b[1],
-    wall = kind === 1 ? 'Church' : kind === 2 ? 'Concrete' : FACADES[Math.floor(rnd() * FACADES.length)],
     info = DATA.BR ? DATA.BR[i] : 0,
     small = !info && kind === 0 && levels <= 3 && am < 300,
-    model = roofModel(outer, holes, info, small);
+    model = roofModel(outer, holes, info, small),
+    use = DATA.BF ? DATA.BF[i] : 'u',
+    type = facadeType(use, kind, levels, !!model),
+    h = heightOf(levels, kind);
   roofStats[model ? (info ? 'tagged' : 'small') : 'flat']++;
-  extrude('Buildings', wall, model ? 'Roof_Tiles' : 'Roof', outer, holes, heightOf(levels, kind), 0, model);
+  facadeStats[type] = (facadeStats[type] || 0) + 1;
+  const wall = facadeMaterial(type, use !== use.toLowerCase(), centroid(outer));
+  extrude('Buildings', wall, model ? 'Roof_Tiles' : 'Roof', outer, holes, h, 0, model, floorsOf(levels, kind, h));
   nb++;
 }
 
@@ -473,27 +483,33 @@ for (const [id, o] of Object.entries(L)) {
               bt['roof:orientation'] || '',
             ]
           : 0,
-        model = roofModel(b.outer, b.holes || [], info);
+        model = roofModel(b.outer, b.holes || [], info),
+        h = tagH(bt, 7);
       extrude(
         'Landmarks',
-        bt['roof:shape'] === 'gabled' ? 'Facade_Ochre' : 'Facade_Cream',
+        bt['roof:shape'] === 'gabled' ? 'Facade_Historic_Ochre' : 'Facade_Block_Cream',
         model ? 'Roof_Tiles' : 'Roof',
         b.outer,
         b.holes || [],
-        tagH(bt, 7),
+        h,
         0,
         model,
+        floorsOf(Math.max(1, Math.round(h / 3)), 1, h),
       );
     }
   } else if (o.outer) {
-    const h = o.h || (o.levels ? heightOf(o.levels, 0) : tagH(t, 7));
+    const h = o.h || (o.levels ? heightOf(o.levels, 0) : tagH(t, 7)),
+      villa = id === 'villaAmoretti';
     extrude(
       'Landmarks',
-      id === 'villaAmoretti' ? 'Facade_Yellow' : 'Concrete',
-      id === 'villaAmoretti' ? 'Roof_Tiles' : 'Roof',
+      villa ? 'Facade_Historic_Yellow' : 'Concrete',
+      villa ? 'Roof_Tiles' : 'Roof',
       o.outer,
       o.holes || [],
       h,
+      0,
+      null,
+      villa ? floorsOf(o.levels || Math.max(1, Math.round(h / 3)), 1, h) : null,
     );
   }
 }
@@ -586,7 +602,10 @@ fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, Buffer.concat([header, ch(json.length, 0x4e4f534a), json, ch(bin.length, 0x004e4942), bin]));
 console.log(
   `wrote ${path.relative(ROOT, OUT)}: ${(fs.statSync(OUT).size / 1e6).toFixed(1)} MB, ${gltf.meshes.length} meshes, ` +
-    `${(tris / 1000).toFixed(0)}k triangles, ${nb} buildings + ${Object.keys(L).length} landmarks; origin at map metres ${O}; roofs: ${roofStats.tagged} from OSM tags, ${roofStats.small} small houses, ${roofStats.flat} flat`,
+    `${(tris / 1000).toFixed(0)}k triangles, ${nb} buildings + ${Object.keys(L).length} landmarks; origin at map metres ${O}; roofs: ${roofStats.tagged} from OSM tags, ${roofStats.small} small houses, ${roofStats.flat} flat; ` +
+    `facades: ${Object.entries(facadeStats)
+      .map(([k, n]) => `${n} ${k}`)
+      .join(', ')}`,
 );
 
 if (DATA_OUT) {

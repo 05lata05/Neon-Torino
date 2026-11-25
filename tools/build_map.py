@@ -14,6 +14,8 @@ Output format (all lines are encoded as integer polylines, Google style):
   R  roads        [class, oneway, name_index, lanes, polyline(1 m), maxspeed_kmh?]
   B  buildings    [levels, kind, outer(qb m), holes...]  kind: 0 generic 1 church 2 stadium 3 garage 4 school
   BR roofs        one entry per building in B: 0 (no roof tags) or [shape, roof height m, roof levels, orientation]
+  BF facades      string, one character per building in B: its use, for the facade type (see facade_use);
+                  upper case when OSM says the walls are brick (building:material=brick)
   A  areas        [kind, outer(qb m), holes...]          kind: g green, p pitch, k parking, w water, r railway
   TW tram tracks  [[x,y],...]   TR tram lines [line, [[x,y],...]]   TS/BS tram/bus stops [x,y,name]
   L  landmarks    {id: {...}}  real shapes of the buildings the game models by hand (src/landmarks/)
@@ -171,6 +173,31 @@ def building_kind(t):
     if b in ('school', 'kindergarten') or t.get('amenity') in ('school', 'kindergarten'): return 4
     return 0
 
+# use of a building for its facade: r apartment block, h house, c church, p public/services, m commercial,
+# i industrial, g garage/shed, u unknown. From the OSM building tag; for building=yes, from the other OSM tags or the
+# Arpa Piemonte use (USO: R residential, S services, P productive).
+FACADE_USE = {
+    'apartments': 'r', 'residential': 'r', 'dormitory': 'r',
+    'house': 'h', 'detached': 'h', 'semidetached_house': 'h', 'terrace': 'h', 'villa': 'h', 'farm': 'h', 'bungalow': 'h',
+    'church': 'c', 'cathedral': 'c', 'chapel': 'c',
+    'school': 'p', 'kindergarten': 'p', 'government': 'p', 'public': 'p', 'civic': 'p', 'hospital': 'p', 'university': 'p',
+    'college': 'p', 'sports_centre': 'p', 'sports_hall': 'p', 'stadium': 'p', 'arena': 'p', 'gym': 'p', 'fire_station': 'p',
+    'train_station': 'p', 'transportation': 'p', 'air-supported': 'p',
+    'retail': 'm', 'commercial': 'm', 'supermarket': 'm', 'office': 'm', 'shop': 'm', 'mall': 'm',
+    'industrial': 'i', 'warehouse': 'i', 'manufacture': 'i', 'factory': 'i', 'service': 'i', 'hangar': 'i', 'storage_tank': 'i',
+    'garage': 'g', 'garages': 'g', 'roof': 'g', 'shed': 'g', 'carport': 'g', 'hut': 'g', 'kiosk': 'g',
+}
+ARPA_USE = {'R': 'r', 'S': 'p', 'P': 'i'}
+
+def facade_use(t, arpa_use=None):
+    u = FACADE_USE.get(t.get('building', ''))
+    if not u:
+        if t.get('amenity') == 'place_of_worship': u = 'c'
+        elif t.get('amenity') in ('school', 'kindergarten', 'hospital', 'clinic', 'library', 'townhall', 'police'): u = 'p'
+        elif t.get('shop'): u = 'm'
+        else: u = ARPA_USE.get(arpa_use, 'u')
+    return u.upper() if t.get('building:material') == 'brick' else u
+
 def levels(t):
     try:
         return max(0, int(float(t.get('building:levels', '0').split(';')[0])))
@@ -231,27 +258,37 @@ class Heights:
     """Real heights from ARPA Piemonte (tools/fetch_heights.py): for each OSM building without a level count,
     takes the largest volumetric unit inside its footprint and converts metres into levels."""
     def __init__(self, path):
-        self.grid = defaultdict(list)
+        self.grid = defaultdict(list)   # units with a height
+        self.uses = defaultdict(list)   # units with a use (USO)
         if not os.path.exists(path):
             return
         for f in json.load(open(path))['buildings']:
-            if not f.get('h') or f['h'] <= 0:
-                continue
             r = [to_xy(y, x) for x, y in f['rings'][0]]
             c = centroid(r)
-            self.grid[(int(c[0] // 50), int(c[1] // 50))].append((c, area(r), f['h']))
+            cell = (int(c[0] // 50), int(c[1] // 50))
+            if f.get('use'):
+                self.uses[cell].append((c, area(r), f['use']))
+            if f.get('h') and f['h'] > 0:
+                self.grid[cell].append((c, area(r), f['h']))
     def __bool__(self):
         return bool(self.grid)
-    def levels_for(self, outer):
+    @staticmethod
+    def _largest(grid, outer):
         xs, ys = [p[0] for p in outer], [p[1] for p in outer]
         best = None
         for gx in range(int(min(xs) // 50), int(max(xs) // 50) + 1):
             for gy in range(int(min(ys) // 50), int(max(ys) // 50) + 1):
-                for u in self.grid[(gx, gy)]:
+                for u in grid[(gx, gy)]:
                     if (best is None or u[1] > best[1]) and point_in(u[0], outer):
                         best = u
+        return best
+    def levels_for(self, outer):
+        best = self._largest(self.grid, outer)
         # calibrated on buildings that have both: height ≈ 3.3 m per level + 2 m
         return max(1, round((best[2] - 2) / 3.3)) if best else 0
+    def use_for(self, outer):
+        best = self._largest(self.uses, outer)
+        return best[2] if best else None
 
 def speed_limit_kmh(value):
     # OSM uses km/h for bare numbers. Keep unknown and non-metric values unset.
@@ -382,7 +419,7 @@ def build(geo, clip, landmark_ids=True, heights=None):
         return any(math.hypot(c[0] - s[0][0], c[1] - s[0][1]) < 3 and abs(a - s[1]) < 0.15 * s[1] + 5 for s in skip_geo)
 
     # --- buildings (no duplicates: some stadiums are mapped twice as a relation)
-    B_out, BR_out, seen, stats = [], [], set(), Counter()
+    B_out, BR_out, BF_out, seen, stats = [], [], [], set(), Counter()
     for t, outer, holes, oid in geo.polygons(lambda t: 'building' in t and t.get('building') != 'no' and t.get('layer', '0')[:1] != '-' and t.get('location') != 'underground'):
         if not any(in_box(p, clip) for p in outer): continue
         if area(outer) < 6 or skipped(outer): continue
@@ -403,6 +440,7 @@ def build(geo, clip, landmark_ids=True, heights=None):
         B_out.append(row)
         BR_out.append(roof_info(t))
         if BR_out[-1]: stats['roofs'] += 1
+        BF_out.append(facade_use(t, heights.use_for(outer) if heights else None))
 
     # --- areas
     A_out = []
@@ -459,7 +497,7 @@ def build(geo, clip, landmark_ids=True, heights=None):
     print('buildings:', len(B_out), '| levels from OSM:', stats['osm_levels'], '| heights from ARPA:', stats['arpa_heights'],
           '| no data:', len(B_out) - stats['osm_levels'] - stats['arpa_heights'], '| roof tags:', stats['roofs'])
     return {'v': 2, 'qb': QB, 'origin': ORIGIN, 'k': K, 'clip': clip, 'names': names,
-            'R': R_out, 'B': B_out, 'BR': BR_out, 'A': A_out, 'TW': TW, 'TR': TR, 'TS': TS, 'BS': BS, 'L': L}
+            'R': R_out, 'B': B_out, 'BR': BR_out, 'BF': ''.join(BF_out), 'A': A_out, 'TW': TW, 'TR': TR, 'TS': TS, 'BS': BS, 'L': L}
 
 def compare(new, old):
     print('key           new      old')
@@ -469,6 +507,8 @@ def compare(new, old):
     print('road classes old     ', sorted(Counter(r[0] for r in old['R']).items()))
     print('building kinds new   ', sorted(Counter(b[1] for b in new['B']).items()))
     print('building kinds old   ', sorted(Counter(b[1] for b in old['B']).items()))
+    print('facade uses new      ', sorted(Counter(new.get('BF', '')).items()))
+    print('facade uses old      ', sorted(Counter(old.get('BF', '')).items()))
     print('areas new', sorted(Counter(a[0] for a in new['A']).items()))
     print('areas old', sorted(Counter(a[0] for a in old['A']).items()))
     print('tram lines new', [(t[0], len(t[1])) for t in new['TR']])

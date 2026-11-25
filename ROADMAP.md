@@ -55,7 +55,7 @@ Goal: a C++ project in the repository that everyone can open, and a level rebuil
 Goal: anyone who knows Santa Rita recognises it. Everything according to `docs/REALISM.md`.
 - [ ] OpenStreetMap check of Santa Rita: missing building levels and roof shapes, shops, trees, bus and tram stops; then a data refresh (osm) (~2)
 - [x] Exporter: real roof shapes and heights from OSM (`roof:shape`, `roof:height`) where mapped, pitched roofs on small buildings (needs review) (~1)
-- [ ] Exporter: facade types by period and use (1950s–70s blocks, historic, industrial, churches) as separate materials, UVs per floor (needs review) (~1)
+- [x] Exporter: facade types by period and use (1950s–70s blocks, historic, industrial, churches) as separate materials, UVs per floor (needs review) (~1)
 - [ ] CC0 photographic materials in Unreal (plaster, asphalt, sidewalks, porphyry, stone) and `docs/CREDITS.md` (local) (needs review) (~1)
 - [ ] Data export of the 666 real trees, GTT stops, street lamps, bins and benches with their positions (~1)
 - [ ] Place them in Unreal with PCG (procedural content) from that export (local) (needs review) (~1)
