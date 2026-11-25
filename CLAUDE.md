@@ -11,6 +11,8 @@
 - Game logic in C++ (`unreal/NeonTorino/Source/`): it is text, it merges in Git and Claude can write it. Blueprints
   only to wire things up. `.uasset`/`.umap` go through Git LFS and cannot be merged: one person per asset.
 - Prefer data and scripts (exporter, editor Python scripts, PCG) to hand-placed assets.
+- Before writing a system from scratch, check `docs/REFERENCES.md` for existing code (and what its licence allows);
+  never copy code without a licence, record what you reuse in `docs/CREDITS.md`.
 - Unreal does not run in the cloud: work that needs the editor is a `(local)` roadmap box. Scripts or C++ written
   without trying them in Unreal must say so in the pull request.
 - Before delivering: `npm test` (browser game and exporter); for Unreal changes, play the level in the editor.
