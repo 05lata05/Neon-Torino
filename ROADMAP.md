@@ -63,7 +63,8 @@ Goal: anyone who knows Santa Rita recognises it. Everything according to `docs/R
 - [ ] Day and night, rain and the Turin haze with Lumen; street lights on at night (local) (needs review) (~1)
 - [ ] Santuario di Santa Rita da Cascia modelled in Blender on the OSM footprint (blender) (needs review) (~2)
 - [ ] Santuario and its square placed in Unreal (local) (needs review) (~1)
-- [ ] Real signs of the OSM shops and venues on the ground floor: data export, then signs in Unreal (local) (needs review) (~2)
+- [x] Data export for real signs of mapped Santa Rita shops and venues
+- [ ] Place real shop and venue signs in Unreal after checking the ground-floor storefronts (local) (needs review) (~1)
 
 ## U3 · Driving and chases
 Goal: driving around Santa Rita must be fun on its own. Numbers from the browser game's `src/config.js` as a start.

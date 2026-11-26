@@ -52,6 +52,13 @@ as the city import when placing it in Unreal.
   Only individually mapped nodes inside the playable bounds are included. Tree rows and unmapped objects produce no points.
   Use the existing stop arrays for GTT stops. This export provides positions for a future placement pass.
 
+- `shopSigns` contains named shops and venues as visual references for signs. Each entry contains the original
+  `name`, the OSM `category` (for example `shop=bakery`), an `osmId` with an `n`, `w` or `r` prefix,
+  `level` (0 if ground floor is tagged, otherwise `null`), and its local `position`.
+  A point is the mapped location or a marker derived from the mapped outline. Confirm the floor, storefront and
+  orientation in the editor before placing a sign. The data is for scenery, as described in [the realism standard](../docs/REALISM.md).
+  To refresh `data/santa_rita_shop_signs.json` from the map tiles, run `npm run map`, then `npm run unreal`.
+
 Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL.
 
 ## Playing

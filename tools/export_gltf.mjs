@@ -609,7 +609,8 @@ console.log(
 );
 
 if (DATA_OUT) {
-  const gameplay = buildGameplayData(DATA, roads, O, W);
+  const shopSigns = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/santa_rita_shop_signs.json'), 'utf8'));
+  const gameplay = buildGameplayData(DATA, roads, O, W, shopSigns);
   fs.mkdirSync(path.dirname(DATA_OUT), { recursive: true });
   fs.writeFileSync(DATA_OUT, JSON.stringify(gameplay) + '\n');
   console.log(
