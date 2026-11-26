@@ -4,7 +4,7 @@
 // Real data (GTT, Hitachi Rail, tramditorino.it): 28 m long, 2.40 m wide, 3.48 m tall; five modules on three
 // bogies, cab modules and the middle one on bogies, the two suspended modules carry the doors; single-ended
 // (one cab, doors on the right only); four double doors of 1.30 m; yellow and blue livery (the city's colours).
-// Invented details: module lengths (7 + 4.4 + 5.6 + 4.4 + 6.4 m), the exact layout of the livery, the cab shape
+// Invented details: module lengths (7 + 4.4 + 5.6 + 4.4 + 6.2 m, with 10 cm bellows), the exact layout of the livery, the cab shape
 // and all the parts are simple boxes until a Blender model exists; colours can be changed in the Details panel.
 //
 // The driving rules are ported from the browser game (src/entities/trams.js): stop when the next stop is less

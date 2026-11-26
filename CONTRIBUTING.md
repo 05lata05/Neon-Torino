@@ -23,7 +23,7 @@ that box alone. If you give up, close the draft so the box is free again.
 
 ## Roles: who can do what
 
-Not everybody needs Unreal Engine. Pick the role that fits your PC and your interests; every roadmap box says
+Not everybody needs Unreal Engine. The team works on two parallel tracks, code and art: see [`docs/TEAM.md`](docs/TEAM.md). Pick the role that fits your PC and your interests; every roadmap box says
 which role it needs with a marker at the end.
 
 | Role | Roadmap marker | What you do | What you need |
@@ -31,7 +31,7 @@ which role it needs with a marker at the end.
 | **Unreal developer** | `(local)` | Game logic in C++ (driving, traffic, police, missions, money), levels, lights, materials, effects; tries the scripts and C++ written in the cloud | Windows PC with a recent graphics card (RTX 3060/4060 or similar), 16–32 GB RAM, ~150 GB free; Unreal Engine 5.8, Visual Studio 2022 with "Game development with C++", Git LFS |
 | **Data and city** | no marker | The tools in `tools/` that turn real data into the city: roofs, facades, trees, shop signs, new Turin zones, the exporter to Unreal | Any PC or Mac with Python 3 and Node.js |
 | **Mapper** | `(osm)` | Completes and corrects OpenStreetMap in the game area on openstreetmap.org (building levels, roof shapes, shops, trees, street furniture): the game takes everything from there | A browser and a free OpenStreetMap account; knowing the district |
-| **3D artist** | `(blender)` | Models in Blender what the data cannot describe: the Santuario, trams, cars, street lamps, landmark details, always on the real OSM footprint | Blender (free), any decent PC or Mac |
+| **3D artist** | boxes of `ROADMAP-ART.md` | Models and materials in Blender: street furniture, the GTT tram, the facade kit, landmarks, vehicles; follows `docs/ART_PIPELINE.md` and the contract in `art/ASSETS.md` | Blender (free), any decent PC or Mac; Unreal not needed |
 | **Tester** | `(manual)` | Plays the Windows builds from the GitHub Releases, reports bugs and ideas as GitHub issues | A Windows gaming PC |
 | **Nightly Claude session** | no marker | One data or tooling box per night (it cannot run Unreal or Blender, and never edits OpenStreetMap) | — |
 

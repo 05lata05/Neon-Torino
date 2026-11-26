@@ -2,6 +2,15 @@
 unreal/**/*.uasset filter=lfs diff=lfs merge=lfs -text
 unreal/**/*.umap filter=lfs diff=lfs merge=lfs -text
 unreal/**/*.[fF][bB][xX] filter=lfs diff=lfs merge=lfs -text
+# Blender sources, exports and textures of the art track
+art/**/*.blend filter=lfs diff=lfs merge=lfs -text
+art/**/*.[fF][bB][xX] filter=lfs diff=lfs merge=lfs -text
+art/**/*.png filter=lfs diff=lfs merge=lfs -text
+art/**/*.tga filter=lfs diff=lfs merge=lfs -text
+art/**/*.exr filter=lfs diff=lfs merge=lfs -text
+art/**/*.tif filter=lfs diff=lfs merge=lfs -text
+art/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+art/**/*.obj filter=lfs diff=lfs merge=lfs -text
 # the exported city stays a normal file so it can be downloaded straight from GitHub
 *.glb binary
 *.bat text eol=crlf
