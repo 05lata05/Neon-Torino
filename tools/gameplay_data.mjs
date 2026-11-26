@@ -37,6 +37,7 @@ export function buildGameplayData(data, roads, origin, toLocal) {
   }
 
   const stops = rows => rows.map(([x, y, name]) => ({ name, position: toLocal([x, y]) }));
+  const furniture = (rows = []) => rows.map(([osmNodeId, x, y]) => ({ osmNodeId, position: toLocal([x, y]) }));
   return {
     version: 1,
     coordinates: { units: 'metres', axes: ['east', 'south'], originMapMetres: origin },
@@ -46,5 +47,11 @@ export function buildGameplayData(data, roads, origin, toLocal) {
     tramLines: data.TR.map(([line, points]) => ({ line, points: points.map(toLocal) })),
     tramStops: stops(data.TS),
     busStops: stops(data.BS),
+    streetFurniture: {
+      trees: furniture(data.SF?.trees),
+      streetLamps: furniture(data.SF?.streetLamps),
+      benches: furniture(data.SF?.benches),
+      wasteBins: furniture(data.SF?.wasteBins),
+    },
   };
 }

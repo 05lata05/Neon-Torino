@@ -30,7 +30,7 @@ Units: metres in the file, converted by Unreal to centimetres. The origin (0, 0,
 piazza Santa Rita, where the browser game starts. Meshes are split in 250 m tiles, one material per surface type
 (asphalt, sidewalk, grass, facades…); UVs are in metres ready for real textures, except the facades (above).
 
-## Gameplay data for traffic and transit
+## Gameplay data for traffic, transit and street furniture
 
 `npm run unreal` also writes `import/santa_rita_data.json`. All positions are ground-plane
 `[east, south]` metres relative to the **same origin as the GLB**, recorded in `coordinates.originMapMetres`.
@@ -47,7 +47,12 @@ as the city import when placing it in Unreal.
   Lane-by-lane movements and turn restrictions are outside the source data.
 - `tramTracks` contains track polylines. `tramLines` keeps each route variant with its line number and ordered points.
   `tramStops` and `busStops` keep the source names and positions, including separate platforms with the same name.
-  Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL.
+- `streetFurniture` contains `trees`, `streetLamps`, `benches` and `wasteBins`. Each entry has an
+  `osmNodeId` string and a `position` in the same local metres as the stops, rounded to the map's 0.5 m resolution.
+  Only individually mapped nodes inside the playable bounds are included. Tree rows and unmapped objects produce no points.
+  Use the existing stop arrays for GTT stops. This export provides positions for a future placement pass.
+
+Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL.
 
 ## Playing
 

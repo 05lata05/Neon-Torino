@@ -60,6 +60,7 @@ assert.deepEqual(sample.roadGraph.edges, [
   [6, 5, 3],
 ]);
 assert.equal(sample.roadGraph.streets[0].lanes, null);
+assert.deepEqual(sample.streetFurniture, { trees: [], streetLamps: [], benches: [], wasteBins: [] });
 assert.deepEqual(
   sample.roadGraph.streets.map(street => street.maxSpeedKmh),
   [30, null, null, null],
@@ -156,6 +157,11 @@ try {
   const expectedStops = rows => rows.map(([x, y, name]) => ({ name, position: local([x, y]) }));
   assert.deepEqual(data.tramStops, expectedStops(map.TS));
   assert.deepEqual(data.busStops, expectedStops(map.BS));
+  const expectedFurniture = rows => rows.map(([osmNodeId, x, y]) => ({ osmNodeId, position: local([x, y]) }));
+  for (const kind of ['trees', 'streetLamps', 'benches', 'wasteBins']) {
+    assert.ok(map.SF[kind].length > 0, 'Missing mapped ' + kind);
+    assert.deepEqual(data.streetFurniture[kind], expectedFurniture(map.SF[kind]));
+  }
   const stored = readFileSync(path.join(root, 'unreal/import/santa_rita_data.json'), 'utf8');
   assert.ok(stored === readFileSync(freshData, 'utf8'), 'Gameplay export is stale. Run npm run unreal.');
   console.log('Unreal export is valid and matches the current map.');

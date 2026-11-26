@@ -18,6 +18,7 @@ Output format (all lines are encoded as integer polylines, Google style):
                   upper case when OSM says the walls are brick (building:material=brick)
   A  areas        [kind, outer(qb m), holes...]          kind: g green, p pitch, k parking, w water, r railway
   TW tram tracks  [[x,y],...]   TR tram lines [line, [[x,y],...]]   TS/BS tram/bus stops [x,y,name]
+  SF street furniture by type, rows [OSM node ID, x, y]
   L  landmarks    {id: {...}}  real shapes of the buildings the game models by hand (src/landmarks/)
 """
 import argparse, glob, json, math, os, re, sys, xml.etree.ElementTree as ET
@@ -301,6 +302,26 @@ def speed_limit_kmh(value):
     return int(speed) if speed.is_integer() else speed
 
 
+def street_furniture(nodes, clip):
+    tags = {
+        'trees': ('natural', 'tree'),
+        'streetLamps': ('highway', 'street_lamp'),
+        'benches': ('amenity', 'bench'),
+        'wasteBins': ('amenity', 'waste_basket'),
+    }
+    furniture = {kind: [] for kind in tags}
+    for node_id, (lat, lon, node_tags) in nodes.items():
+        for kind, (key, value) in tags.items():
+            if node_tags.get(key) != value:
+                continue
+            x, y = to_xy(lat, lon)
+            if in_box((x, y), clip):
+                furniture[kind].append([node_id, half(x), half(y)])
+    for rows in furniture.values():
+        rows.sort(key=lambda row: int(row[0]))
+    return furniture
+
+
 def build(geo, clip, landmark_ids=True, heights=None):
     N, W, R = geo.N, geo.W, geo.R
     road_box = (clip[0], clip[1], clip[2], clip[3])
@@ -497,7 +518,7 @@ def build(geo, clip, landmark_ids=True, heights=None):
     print('buildings:', len(B_out), '| levels from OSM:', stats['osm_levels'], '| heights from ARPA:', stats['arpa_heights'],
           '| no data:', len(B_out) - stats['osm_levels'] - stats['arpa_heights'], '| roof tags:', stats['roofs'])
     return {'v': 2, 'qb': QB, 'origin': ORIGIN, 'k': K, 'clip': clip, 'names': names,
-            'R': R_out, 'B': B_out, 'BR': BR_out, 'BF': ''.join(BF_out), 'A': A_out, 'TW': TW, 'TR': TR, 'TS': TS, 'BS': BS, 'L': L}
+            'R': R_out, 'B': B_out, 'BR': BR_out, 'BF': ''.join(BF_out), 'A': A_out, 'TW': TW, 'TR': TR, 'TS': TS, 'BS': BS, 'SF': street_furniture(N, clip), 'L': L}
 
 def compare(new, old):
     print('key           new      old')
