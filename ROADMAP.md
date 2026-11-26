@@ -58,12 +58,13 @@ Goal: anyone who knows Santa Rita recognises it. Everything according to `docs/R
 - [x] Exporter: facade types by period and use (1950s–70s blocks, historic, industrial, churches) as separate materials, UVs per floor (needs review) (~1)
 - [x] Procedural facade material in Unreal: windows per floor and bay for every facade type, from an editor Python script (local) (needs review) (~1)
 - [ ] CC0 photographic materials in Unreal (plaster, asphalt, sidewalks, porphyry, stone) and `docs/CREDITS.md` (local) (needs review) (~1)
-- [ ] Data export of the 666 real trees, GTT stops, street lamps, bins and benches with their positions (~1)
+- [x] Data export of the 666 real trees, GTT stops, street lamps, bins and benches with their positions (~1)
 - [ ] Place them in Unreal with PCG (procedural content) from that export (local) (needs review) (~1)
 - [ ] Day and night, rain and the Turin haze with Lumen; street lights on at night (local) (needs review) (~1)
 - [ ] Santuario di Santa Rita da Cascia modelled in Blender on the OSM footprint (blender) (needs review) (~2)
 - [ ] Santuario and its square placed in Unreal (local) (needs review) (~1)
-- [ ] Real signs of the OSM shops and venues on the ground floor: data export, then signs in Unreal (local) (needs review) (~2)
+- [x] Data export for real signs of mapped Santa Rita shops and venues
+- [ ] Place real shop and venue signs in Unreal after checking the ground-floor storefronts (local) (needs review) (~1)
 
 ## U3 · Driving and chases
 Goal: driving around Santa Rita must be fun on its own. Numbers from the browser game's `src/config.js` as a start.

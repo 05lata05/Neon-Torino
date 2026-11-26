@@ -4,7 +4,7 @@
 Usage:
     python3 tools/fetch_osm.py            # downloads the OSM tiles into .osm-cache/
     python3 tools/fetch_heights.py        # real building heights (ARPA Piemonte)
-    python3 tools/build_map.py            # writes data/torino.json
+    python3 tools/build_map.py            # writes data/torino.json and the sign source for Unreal
     python3 tools/build_map.py --compare old.json   # compares with an existing file
 
 Game coordinates ("map metres"): x towards east, y towards south, starting from ORIGIN.
@@ -18,6 +18,7 @@ Output format (all lines are encoded as integer polylines, Google style):
                   upper case when OSM says the walls are brick (building:material=brick)
   A  areas        [kind, outer(qb m), holes...]          kind: g green, p pitch, k parking, w water, r railway
   TW tram tracks  [[x,y],...]   TR tram lines [line, [[x,y],...]]   TS/BS tram/bus stops [x,y,name]
+  SF street furniture by type, rows [OSM node ID, x, y]
   L  landmarks    {id: {...}}  real shapes of the buildings the game models by hand (src/landmarks/)
 """
 import argparse, glob, json, math, os, re, sys, xml.etree.ElementTree as ET
@@ -301,6 +302,87 @@ def speed_limit_kmh(value):
     return int(speed) if speed.is_integer() else speed
 
 
+def street_furniture(nodes, clip):
+    tags = {
+        'trees': ('natural', 'tree'),
+        'streetLamps': ('highway', 'street_lamp'),
+        'benches': ('amenity', 'bench'),
+        'wasteBins': ('amenity', 'waste_basket'),
+    }
+    furniture = {kind: [] for kind in tags}
+    for node_id, (lat, lon, node_tags) in nodes.items():
+        for kind, (key, value) in tags.items():
+            if node_tags.get(key) != value:
+                continue
+            x, y = to_xy(lat, lon)
+            if in_box((x, y), clip):
+                furniture[kind].append([node_id, half(x), half(y)])
+    for rows in furniture.values():
+        rows.sort(key=lambda row: int(row[0]))
+    return furniture
+
+
+VENUE_AMENITIES = {
+    'bar', 'biergarten', 'cafe', 'cinema', 'fast_food', 'food_court', 'ice_cream',
+    'music_venue', 'nightclub', 'pharmacy', 'pub', 'restaurant', 'theatre',
+}
+
+
+def sign_category(tags):
+    shop = tags.get('shop')
+    if shop and shop not in ('no', 'vacant'):
+        return 'shop=' + shop
+    amenity = tags.get('amenity')
+    if amenity in VENUE_AMENITIES:
+        return 'amenity=' + amenity
+    return None
+
+
+def sign_details(tags):
+    name = tags.get('name', '').strip()
+    category = sign_category(tags)
+    if not name or not category:
+        return None
+    if tags.get('location') == 'underground' or any(tags.get(key) == 'yes' for key in ('disused', 'abandoned')):
+        return None
+    levels = tags.get('level', '').strip()
+    if levels and '0' not in {level.strip() for level in levels.split(';')}:
+        return None
+    return name, category, 0 if levels else None
+
+
+def shop_signs(geo, clip):
+    signs = []
+    point_locations = defaultdict(list)
+    for node_id, (lat, lon, tags) in geo.N.items():
+        details = sign_details(tags)
+        if not details:
+            continue
+        position = to_xy(lat, lon)
+        if in_box(position, clip):
+            signs.append(['n' + node_id, *details, [half(v) for v in position]])
+            point_locations[details[0].casefold(), details[1]].append(position)
+
+    area_signs = {}
+    for tags, ring, holes, osm_id in geo.polygons(sign_details):
+        name, category, level = sign_details(tags)
+        if any(point_in(p, ring) and not any(point_in(p, h) for h in holes)
+               for p in point_locations[name.casefold(), category]):
+            continue  # prefer the mapped point when the same venue is tagged on its outline
+        vertices = [p for p in ring if in_box(p, clip)]
+        if not vertices:
+            continue
+        center = centroid(ring)
+        if not (in_box(center, clip) and point_in(center, ring) and not any(point_in(center, h) for h in holes)):
+            center = min(vertices, key=lambda p: math.dist(p, center))
+        size = area(ring)
+        if osm_id not in area_signs or size > area_signs[osm_id][0]:
+            area_signs[osm_id] = size, [osm_id, name, category, level, [half(v) for v in center]]
+
+    signs.extend(sign for _, sign in area_signs.values())
+    return sorted(signs, key=lambda sign: (sign[0][0], int(sign[0][1:])))
+
+
 def build(geo, clip, landmark_ids=True, heights=None):
     N, W, R = geo.N, geo.W, geo.R
     road_box = (clip[0], clip[1], clip[2], clip[3])
@@ -497,7 +579,7 @@ def build(geo, clip, landmark_ids=True, heights=None):
     print('buildings:', len(B_out), '| levels from OSM:', stats['osm_levels'], '| heights from ARPA:', stats['arpa_heights'],
           '| no data:', len(B_out) - stats['osm_levels'] - stats['arpa_heights'], '| roof tags:', stats['roofs'])
     return {'v': 2, 'qb': QB, 'origin': ORIGIN, 'k': K, 'clip': clip, 'names': names,
-            'R': R_out, 'B': B_out, 'BR': BR_out, 'BF': ''.join(BF_out), 'A': A_out, 'TW': TW, 'TR': TR, 'TS': TS, 'BS': BS, 'L': L}
+            'R': R_out, 'B': B_out, 'BR': BR_out, 'BF': ''.join(BF_out), 'A': A_out, 'TW': TW, 'TR': TR, 'TS': TS, 'BS': BS, 'SF': street_furniture(N, clip), 'L': L}
 
 def compare(new, old):
     print('key           new      old')
@@ -517,8 +599,9 @@ def compare(new, old):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--osm', default=os.path.join(ROOT, '.osm-cache'))
-    ap.add_argument('--out', default=os.path.join(ROOT, 'data', 'torino.json'))
+    ap.add_argument('--out', help='write the map to a different path')
     ap.add_argument('--clip', type=float, nargs=4, default=CLIP)
+    ap.add_argument('--shop-signs-out', help='write named shop and venue points separately for Unreal')
     ap.add_argument('--compare')
     ap.add_argument('--no-landmarks', action='store_true')
     a = ap.parse_args()
@@ -531,10 +614,21 @@ def main():
     data = build(geo, clip, not a.no_landmarks, heights)
     if a.compare:
         compare(data, json.load(open(a.compare)))
-    os.makedirs(os.path.dirname(a.out), exist_ok=True)
-    with open(a.out, 'w') as f:
+    map_out = a.out or os.path.join(ROOT, 'data', 'torino.json')
+    signs_out = a.shop_signs_out
+    if not a.out and not signs_out:
+        signs_out = os.path.join(ROOT, 'data', 'santa_rita_shop_signs.json')
+    os.makedirs(os.path.dirname(os.path.abspath(map_out)), exist_ok=True)
+    with open(map_out, 'w') as f:
         json.dump(data, f, separators=(',', ':'), ensure_ascii=False)
-    print('wrote', a.out, os.path.getsize(a.out), 'bytes;', 'landmarks:', ', '.join(data['L']))
+    print('wrote', map_out, os.path.getsize(map_out), 'bytes;', 'landmarks:', ', '.join(data['L']))
+    if signs_out:
+        signs = shop_signs(geo, clip)
+        os.makedirs(os.path.dirname(os.path.abspath(signs_out)), exist_ok=True)
+        with open(signs_out, 'w', encoding='utf-8') as f:
+            json.dump(signs, f, separators=(',', ':'), ensure_ascii=False)
+            f.write('\n')
+        print('wrote', signs_out, ':', len(signs), 'named shops and venues')
 
 if __name__ == '__main__':
     main()
