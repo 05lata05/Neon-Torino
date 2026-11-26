@@ -1,14 +1,17 @@
-// A GTT tram: two articulated sections following its line along the rails, stopping at the stops and braking
-// for whatever is on the track ahead (cars, the player, people, other trams).
+// A GTT tram of the Hitachi series 8000 (design Giugiaro), the trams of lines 4 and 10: five articulated modules
+// following its line along the rails, stopping at the stops and braking for whatever is on the track ahead.
 //
-// The rules are ported from the browser game (src/entities/trams.js): stop when the next stop is less than
-// about a metre away, wait, then go; slow down on a square-root curve before stops and obstacles; brake harder
-// when something is very close; at the end of the line start again from its beginning.
+// Real data (GTT, Hitachi Rail, tramditorino.it): 28 m long, 2.40 m wide, 3.48 m tall; five modules on three
+// bogies, cab modules and the middle one on bogies, the two suspended modules carry the doors; single-ended
+// (one cab, doors on the right only); four double doors of 1.30 m; yellow and blue livery (the city's colours).
+// Invented details: module lengths (7 + 4.4 + 5.6 + 4.4 + 6.4 m), the exact layout of the livery, the cab shape
+// and all the parts are simple boxes until a Blender model exists; colours can be changed in the Details panel.
 //
-// Invented details: the shape (two plain boxes, 10.4 m each, 2.4 m wide, 3.3 m tall, until a Blender model
-// exists) and the classic GTT orange colour. The browser game's numbers were tuned for its smaller scale and
-// arcade feel; here they are real-world values: 50 km/h top speed, 1.2 m/s² acceleration, 1.5 m/s² service and
-// 3 m/s² emergency braking, 10–15 s at each stop.
+// The driving rules are ported from the browser game (src/entities/trams.js): stop when the next stop is less
+// than about a metre away, wait, then go; slow down on a square-root curve before stops and obstacles; brake
+// harder when something is very close; at the end of the line start again from its beginning. The browser
+// game's numbers were tuned for its smaller scale; here they are real-world values: 50 km/h top speed,
+// 1.2 m/s² acceleration, 1.5 m/s² service and 3 m/s² emergency braking, 10–15 s at each stop.
 #pragma once
 
 #include "CoreMinimal.h"
@@ -46,18 +49,24 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Neon Torino|Tram")
 	float LookAhead = 3400.f; // cm: how far ahead the driver looks for obstacles
 
+	// livery (approximate, see the header comment)
+	UPROPERTY(EditAnywhere, Category = "Neon Torino|Tram")
+	FLinearColor Yellow = FLinearColor(0.95f, 0.70f, 0.02f);
+
+	UPROPERTY(EditAnywhere, Category = "Neon Torino|Tram")
+	FLinearColor Blue = FLinearColor(0.02f, 0.10f, 0.40f);
+
 	UPROPERTY(VisibleAnywhere, Category = "Neon Torino|Tram")
 	FString Line;
+
+	static constexpr int32 NumModules = 5;
 
 private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USceneComponent> Root;
 
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UStaticMeshComponent> Front;
-
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UStaticMeshComponent> Rear;
+	TArray<TObjectPtr<UStaticMeshComponent>> Modules;
 
 	UPROPERTY()
 	TObjectPtr<USplineComponent> Path;
@@ -68,13 +77,14 @@ private:
 	float Dwell = 0.f;      // seconds left at the current stop
 	float LastStop = -1e9f; // distance of the last stop served
 
-	static constexpr float SectionLength = 1040.f;
-	static constexpr float SectionGap = 40.f;
+	static constexpr float Gap = 10.f;          // cm between modules (bellows)
 	static constexpr float Width = 240.f;
-	static constexpr float Height = 330.f;
-	static constexpr float FloorHeight = 30.f;
+	static constexpr float Height = 348.f;
+	static constexpr float FloorHeight = 0.f;   // the boxes start at the rail top: low-floor tram
+	static float ModuleLength(int32 Index);     // cm
+	static float TotalLength();
 
 	float ObstacleDistance() const;
 	void Place();
-	void PlaceSection(UStaticMeshComponent* Section, float FrontDistance);
+	void PlaceModule(UStaticMeshComponent* Module, float FrontDistance, float Length);
 };

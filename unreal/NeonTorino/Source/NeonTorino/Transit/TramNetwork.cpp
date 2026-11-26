@@ -1,18 +1,12 @@
 #include "TramNetwork.h"
 
 #include "GttTram.h"
+#include "Dom/JsonObject.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/SplineComponent.h"
-#include "Dom/JsonObject.h"
 #include "Engine/StaticMesh.h"
-#include "Engine/StaticMeshActor.h"
 #include "Engine/World.h"
-#include "EngineUtils.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "Misc/FileHelper.h"
-#include "Misc/Paths.h"
-#include "Serialization/JsonReader.h"
-#include "Serialization/JsonSerializer.h"
 #include "UObject/ConstructorHelpers.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogNeonTrams, Log, All);
@@ -22,40 +16,6 @@ namespace
 	constexpr double GaugeCm = 143.5;       // standard gauge, Turin
 	constexpr double StopSearchCm = 1500.0; // a platform belongs to a route if it is this close to its track
 	constexpr double StopMergeCm = 3000.0;  // platforms of both directions project to nearly the same point
-	constexpr double GroundMarginM = 80.0;  // tools/export_gltf.mjs: the ground covers every road + 80 m
-
-	bool ReadPoint(const TSharedPtr<FJsonValue>& Value, double& OutA, double& OutB)
-	{
-		if (!Value.IsValid() || Value->Type != EJson::Array)
-		{
-			return false;
-		}
-		const TArray<TSharedPtr<FJsonValue>>& P = Value->AsArray();
-		if (P.Num() < 2)
-		{
-			return false;
-		}
-		OutA = P[0]->AsNumber();
-		OutB = P[1]->AsNumber();
-		return true;
-	}
-
-	TArray<FVector2D> ReadPolyline(const TSharedPtr<FJsonValue>& Value)
-	{
-		TArray<FVector2D> Out;
-		if (Value.IsValid() && Value->Type == EJson::Array)
-		{
-			for (const TSharedPtr<FJsonValue>& P : Value->AsArray())
-			{
-				double A, B;
-				if (ReadPoint(P, A, B))
-				{
-					Out.Emplace(A, B);
-				}
-			}
-		}
-		return Out;
-	}
 }
 
 ATramNetwork::ATramNetwork()
@@ -77,125 +37,19 @@ ATramNetwork::ATramNetwork()
 	}
 }
 
-FVector ATramNetwork::ToWorld(double East, double South, double Up) const
-{
-	// the 8 ways to map [east, south] onto Unreal's X/Y: swap or not, and the two signs
-	const int32 Mode = FMath::Clamp(AxisMode, 0, 7);
-	const bool bSwap = (Mode & 4) != 0;
-	const double SignX = (Mode & 1) ? -1.0 : 1.0;
-	const double SignY = (Mode & 2) ? -1.0 : 1.0;
-	const double A = bSwap ? South : East;
-	const double B = bSwap ? East : South;
-	return FVector(SignX * A * 100.0, SignY * B * 100.0, Up * 100.0);
-}
-
 void ATramNetwork::BeginPlay()
 {
 	Super::BeginPlay();
-
-	TSharedPtr<FJsonObject> Data;
-	if (!LoadData(Data))
+	if (!Data.Load(GetWorld(), DataFile, AxisMode))
 	{
 		return;
 	}
-	ChooseAxisMode(Data);
-	BuildRails(Data);
-	BuildRoutes(Data);
+	BuildRails();
+	BuildRoutes();
 	SpawnTrams();
 }
 
-bool ATramNetwork::LoadData(TSharedPtr<FJsonObject>& OutRoot) const
-{
-	const FString Path = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), DataFile));
-	FString Text;
-	if (!FFileHelper::LoadFileToString(Text, *Path))
-	{
-		UE_LOG(LogNeonTrams, Warning, TEXT("Trams: data file not found: %s (run npm run unreal)"), *Path);
-		return false;
-	}
-	const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Text);
-	if (!FJsonSerializer::Deserialize(Reader, OutRoot) || !OutRoot.IsValid())
-	{
-		UE_LOG(LogNeonTrams, Warning, TEXT("Trams: cannot read %s"), *Path);
-		return false;
-	}
-	return true;
-}
-
-void ATramNetwork::ChooseAxisMode(const TSharedPtr<FJsonObject>& Data)
-{
-	if (AxisMode >= 0)
-	{
-		UE_LOG(LogNeonTrams, Log, TEXT("Trams: axis mode %d forced"), AxisMode);
-		return;
-	}
-	AxisMode = 0;
-
-	// extent of the data: the road graph nodes (the exported ground covers them + 80 m)
-	double E0 = TNumericLimits<double>::Max(), E1 = TNumericLimits<double>::Lowest();
-	double S0 = E0, S1 = E1;
-	const TSharedPtr<FJsonObject>* Graph = nullptr;
-	const TArray<TSharedPtr<FJsonValue>>* Nodes = nullptr;
-	if (Data->TryGetObjectField(TEXT("roadGraph"), Graph) && (*Graph)->TryGetArrayField(TEXT("nodes"), Nodes))
-	{
-		for (const TSharedPtr<FJsonValue>& N : *Nodes)
-		{
-			double E, S;
-			if (ReadPoint(N, E, S))
-			{
-				E0 = FMath::Min(E0, E);
-				E1 = FMath::Max(E1, E);
-				S0 = FMath::Min(S0, S);
-				S1 = FMath::Max(S1, S);
-			}
-		}
-	}
-
-	// extent of the imported ground mesh
-	FBox Ground(ForceInit);
-	for (TActorIterator<AStaticMeshActor> It(GetWorld()); It; ++It)
-	{
-		const UStaticMeshComponent* C = It->GetStaticMeshComponent();
-		if (C && C->GetStaticMesh() && C->GetStaticMesh()->GetName().Contains(TEXT("Ground")))
-		{
-			Ground += It->GetComponentsBoundingBox(true);
-		}
-	}
-	if (!Ground.IsValid || E0 > E1)
-	{
-		UE_LOG(LogNeonTrams, Warning, TEXT("Trams: no imported Ground mesh found, using axis mode 0 (set AxisMode if the trams are off the streets)"));
-		return;
-	}
-	E0 -= GroundMarginM;
-	E1 += GroundMarginM;
-	S0 -= GroundMarginM;
-	S1 += GroundMarginM;
-
-	double BestError = TNumericLimits<double>::Max();
-	int32 BestMode = 0;
-	for (int32 Mode = 0; Mode < 8; ++Mode)
-	{
-		AxisMode = Mode;
-		FBox Box(ForceInit);
-		Box += ToWorld(E0, S0);
-		Box += ToWorld(E1, S1);
-		const double Error = FMath::Abs(Box.Min.X - Ground.Min.X) + FMath::Abs(Box.Max.X - Ground.Max.X) +
-			FMath::Abs(Box.Min.Y - Ground.Min.Y) + FMath::Abs(Box.Max.Y - Ground.Max.Y);
-		if (Error < BestError)
-		{
-			BestError = Error;
-			BestMode = Mode;
-		}
-	}
-	AxisMode = BestMode;
-	UE_LOG(LogNeonTrams, Log, TEXT("Trams: axis mode %d, ground match within %.1f m"), AxisMode, BestError / 400.0);
-	if (BestError / 400.0 > 50.0)
-	{
-		UE_LOG(LogNeonTrams, Warning, TEXT("Trams: poor match with the Ground mesh: check that the trams run on the streets"));
-	}
-}
-
-void ATramNetwork::BuildRails(const TSharedPtr<FJsonObject>& Data)
+void ATramNetwork::BuildRails()
 {
 	UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
 	if (Base)
@@ -205,15 +59,10 @@ void ATramNetwork::BuildRails(const TSharedPtr<FJsonObject>& Data)
 		Rails->SetMaterial(0, Steel);
 	}
 
-	const TArray<TSharedPtr<FJsonValue>>* Tracks = nullptr;
-	if (!Data->TryGetArrayField(TEXT("tramTracks"), Tracks))
-	{
-		return;
-	}
 	int32 Count = 0;
-	for (const TSharedPtr<FJsonValue>& T : *Tracks)
+	for (const TSharedPtr<FJsonValue>& T : Data.Array(TEXT("tramTracks")))
 	{
-		const TArray<FVector2D> P = ReadPolyline(T);
+		const TArray<FVector2D> P = FSantaRitaData::ReadPolyline(T);
 		for (int32 i = 0; i + 1 < P.Num(); ++i)
 		{
 			const FVector A = ToWorld(P[i].X, P[i].Y);
@@ -239,30 +88,19 @@ void ATramNetwork::BuildRails(const TSharedPtr<FJsonObject>& Data)
 	UE_LOG(LogNeonTrams, Log, TEXT("Trams: %d rail pieces"), Count);
 }
 
-void ATramNetwork::BuildRoutes(const TSharedPtr<FJsonObject>& Data)
+void ATramNetwork::BuildRoutes()
 {
-	const TArray<TSharedPtr<FJsonValue>>* Lines = nullptr;
-	if (!Data->TryGetArrayField(TEXT("tramLines"), Lines))
-	{
-		UE_LOG(LogNeonTrams, Warning, TEXT("Trams: no tramLines in the data"));
-		return;
-	}
 	TArray<FVector> StopPoints;
-	const TArray<TSharedPtr<FJsonValue>>* StopsJson = nullptr;
-	if (Data->TryGetArrayField(TEXT("tramStops"), StopsJson))
+	for (const TSharedPtr<FJsonValue>& S : Data.Array(TEXT("tramStops")))
 	{
-		for (const TSharedPtr<FJsonValue>& S : *StopsJson)
+		double E, N;
+		if (FSantaRitaData::ReadPosition(S->AsObject(), E, N))
 		{
-			const TSharedPtr<FJsonObject>* Obj = nullptr;
-			const TArray<TSharedPtr<FJsonValue>>* Pos = nullptr;
-			if (S->TryGetObject(Obj) && (*Obj)->TryGetArrayField(TEXT("position"), Pos) && Pos->Num() >= 2)
-			{
-				StopPoints.Add(ToWorld((*Pos)[0]->AsNumber(), (*Pos)[1]->AsNumber(), RailHeight / 100.0));
-			}
+			StopPoints.Add(ToWorld(E, N, RailHeight / 100.0));
 		}
 	}
 
-	for (const TSharedPtr<FJsonValue>& L : *Lines)
+	for (const TSharedPtr<FJsonValue>& L : Data.Array(TEXT("tramLines")))
 	{
 		const TSharedPtr<FJsonObject>* Obj = nullptr;
 		if (!L->TryGetObject(Obj))
@@ -276,7 +114,7 @@ void ATramNetwork::BuildRoutes(const TSharedPtr<FJsonObject>& Data)
 			Route.Line = (*Obj)->TryGetNumberField(TEXT("line"), Num) ? FString::FromInt(int32(Num)) : TEXT("?");
 		}
 		const TSharedPtr<FJsonValue> PointsValue = (*Obj)->TryGetField(TEXT("points"));
-		const TArray<FVector2D> P = ReadPolyline(PointsValue);
+		const TArray<FVector2D> P = FSantaRitaData::ReadPolyline(PointsValue);
 		if (P.Num() < 2)
 		{
 			continue;

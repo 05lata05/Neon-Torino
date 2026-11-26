@@ -1,5 +1,6 @@
-// Puts the GTT tram network into the SantaRita level when play starts, so nobody has to place it by hand.
-// If an ATramNetwork is already in the level (placed to tweak its settings), that one is used.
+// Puts the GTT tram network and the street props (trees, lamps, benches, bins, stops, shop signs) into the
+// SantaRita level when play starts, so nobody has to place them by hand. If one is already in the level
+// (placed to tweak its settings), that one is used.
 #pragma once
 
 #include "CoreMinimal.h"

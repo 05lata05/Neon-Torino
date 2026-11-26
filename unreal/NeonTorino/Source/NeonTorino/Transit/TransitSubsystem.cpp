@@ -1,6 +1,7 @@
 #include "TransitSubsystem.h"
 
 #include "TramNetwork.h"
+#include "CityProps.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 
@@ -18,11 +19,13 @@ void UTransitSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 	{
 		return;
 	}
-	for (TActorIterator<ATramNetwork> It(&InWorld); It; ++It)
+	// spawn each one unless it was already placed in the level (to tweak its settings)
+	if (!TActorIterator<ATramNetwork>(&InWorld))
 	{
-		return; // already placed in the level
+		InWorld.SpawnActor<ATramNetwork>(ATramNetwork::StaticClass(), FTransform::Identity);
 	}
-	FActorSpawnParameters Params;
-	Params.Name = TEXT("GttTramNetwork");
-	InWorld.SpawnActor<ATramNetwork>(ATramNetwork::StaticClass(), FTransform::Identity, Params);
+	if (!TActorIterator<ACityProps>(&InWorld))
+	{
+		InWorld.SpawnActor<ACityProps>(ACityProps::StaticClass(), FTransform::Identity);
+	}
 }

@@ -7,13 +7,12 @@
 // Invented details: the rails are plain steel bars (standard gauge 1435 mm, as in Turin), two trams per line
 // direction, the tram shape and colour (see GttTram.h).
 //
-// Coordinates: the data is in metres [east, south] from the same origin as the imported city. The axis
-// mapping to Unreal is found at start by matching the data's extent with the imported "Ground" mesh
-// (AxisMode = -1); set AxisMode to 0..7 to force one if the log says the match is poor.
+// Coordinates: see City/SantaRitaData.h (the axis mapping is found automatically; AxisMode 0..7 forces one).
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "SantaRitaData.h"
 #include "TramNetwork.generated.h"
 
 class UInstancedStaticMeshComponent;
@@ -61,7 +60,7 @@ public:
 	const TArray<FTramLineRoute>& GetRoutes() const { return Routes; }
 
 	// data metres [east, south] → Unreal world (cm)
-	FVector ToWorld(double East, double South, double Up = 0.0) const;
+	FVector ToWorld(double East, double South, double Up = 0.0) const { return Data.ToWorld(East, South, Up); }
 
 protected:
 	virtual void BeginPlay() override;
@@ -79,9 +78,9 @@ private:
 	UPROPERTY()
 	TArray<TObjectPtr<AGttTram>> Trams;
 
-	bool LoadData(TSharedPtr<class FJsonObject>& OutRoot) const;
-	void ChooseAxisMode(const TSharedPtr<class FJsonObject>& Root);
-	void BuildRails(const TSharedPtr<class FJsonObject>& Root);
-	void BuildRoutes(const TSharedPtr<class FJsonObject>& Root);
+	FSantaRitaData Data;
+
+	void BuildRails();
+	void BuildRoutes();
 	void SpawnTrams();
 };

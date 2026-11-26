@@ -28,7 +28,8 @@ public class NeonTorino : ModuleRules
 			"NeonTorino/Variant_OffRoad",
 			"NeonTorino/Variant_TimeTrial",
 			"NeonTorino/Variant_TimeTrial/UI",
-			"NeonTorino/Transit"
+			"NeonTorino/Transit",
+			"NeonTorino/City"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

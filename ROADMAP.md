@@ -59,12 +59,14 @@ Goal: anyone who knows Santa Rita recognises it. Everything according to `docs/R
 - [x] Procedural facade material in Unreal: windows per floor and bay for every facade type, from an editor Python script (local) (needs review) (~1)
 - [ ] CC0 photographic materials in Unreal (plaster, asphalt, sidewalks, porphyry, stone) and `docs/CREDITS.md` (local) (needs review) (~1)
 - [x] Data export of the 666 real trees, GTT stops, street lamps, bins and benches with their positions (~1)
-- [ ] Place them in Unreal with PCG (procedural content) from that export (local) (needs review) (~1)
+- [x] Place them in Unreal from that export, in C++ (`City/CityProps`): trees, lamps, benches, bins, bus stops and tram shelters as placeholder shapes (~1)
+- [ ] Try the street props in Unreal and fix them; later swap the placeholders for real models (PCG or Fab/Blender meshes) (local) (needs review) (~1)
 - [ ] Day and night, rain and the Turin haze with Lumen; street lights on at night (local) (needs review) (~1)
 - [ ] Santuario di Santa Rita da Cascia modelled in Blender on the OSM footprint (blender) (needs review) (~2)
 - [ ] Santuario and its square placed in Unreal (local) (needs review) (~1)
 - [x] Data export for real signs of mapped Santa Rita shops and venues
-- [ ] Place real shop and venue signs in Unreal after checking the ground-floor storefronts (local) (needs review) (~1)
+- [x] Real shop and venue signs in C++: a board with the real name on the facade facing the nearest street, colour by category (~1)
+- [ ] Check the signs in Unreal (right wall, readable from the street) and fix them (local) (needs review) (~1)
 
 ## U3 · Driving and chases
 Goal: driving around Santa Rita must be fun on its own. Numbers from the browser game's `src/config.js` as a start.
@@ -74,8 +76,8 @@ Goal: driving around Santa Rita must be fun on its own. Numbers from the browser
 - [ ] Traffic on the real road graph, with traffic lights at junctions (local) (~2)
 - [ ] Pedestrians on the sidewalks (MassCrowd from City Sample or our own, see `docs/REFERENCES.md`) (local) (~1)
 - [ ] Police and wanted level, chases, helicopter: port the browser game's rules (`src/entities/police.js`, `POLICE` in `src/config.js`) to C++ (local) (~2)
-- [ ] GTT tram (Sirio / series 2800) and bus models (blender) (~2)
-- [x] GTT trams 4 and 10 on the real tracks in C++: rails drawn from `santa_rita_data.json`, articulated tram following each line, stops, braking for obstacles (rules from the browser game's `src/entities/trams.js`) (~1)
+- [ ] GTT tram (Hitachi series 8000, lines 4 and 10) and bus models (blender) (~2)
+- [x] GTT trams 4 and 10 on the real tracks in C++: rails drawn from `santa_rita_data.json`, Hitachi series 8000 shape (5 modules, 28 m, doors on the right, yellow and blue), stops, braking for obstacles (rules from the browser game's `src/entities/trams.js`) (~1)
 - [ ] Try the trams in Unreal and fix them (local) (~1)
 - [ ] Damage, street races, rewarded stunts (local) (~2)
 
