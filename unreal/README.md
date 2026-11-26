@@ -49,6 +49,11 @@ as the city import when placing it in Unreal.
   `tramStops` and `busStops` keep the source names and positions, including separate platforms with the same name.
   Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL.
 
+## Playing
+
+Double-click `play.bat` at the repository root: it pulls the latest changes (Git and Git LFS), builds the C++ module
+if it changed and starts the game in a window (`UnrealEditor.exe … -game`), without opening the editor.
+
 ## Opening the project (Unreal Engine 5.8)
 
 Needs Visual Studio 2022 with the "Game development with C++" workload, Git LFS (`git lfs install` before cloning,
