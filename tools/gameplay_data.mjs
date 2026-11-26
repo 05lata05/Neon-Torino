@@ -1,6 +1,6 @@
 // Gameplay geometry from the same decoded roads and ground-plane projection as the GLB.
 // No invented lane counts, turn restrictions or stops.
-export function buildGameplayData(data, roads, origin, toLocal) {
+export function buildGameplayData(data, roads, origin, toLocal, shopSigns = []) {
   const nodes = [];
   const nodeIds = new Map();
   const streets = [];
@@ -47,6 +47,13 @@ export function buildGameplayData(data, roads, origin, toLocal) {
     tramLines: data.TR.map(([line, points]) => ({ line, points: points.map(toLocal) })),
     tramStops: stops(data.TS),
     busStops: stops(data.BS),
+    shopSigns: shopSigns.map(([osmId, name, category, level, point]) => ({
+      osmId,
+      name,
+      category,
+      level,
+      position: toLocal(point),
+    })),
     streetFurniture: {
       trees: furniture(data.SF?.trees),
       streetLamps: furniture(data.SF?.streetLamps),

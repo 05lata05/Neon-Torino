@@ -1,6 +1,6 @@
 import unittest
 
-from tools.build_map import CLIP, Geo, build, facade_use, to_ll
+from tools.build_map import CLIP, Geo, build, facade_use, shop_signs, to_ll
 
 
 class TramRouteTest(unittest.TestCase):
@@ -51,6 +51,42 @@ class StreetFurnitureTest(unittest.TestCase):
             'wasteBins': [['5', 697, 700]],
         })
         self.assertEqual(result['BS'], [[699, 702, 'Example']])
+
+
+class ShopSignsTest(unittest.TestCase):
+    def test_keeps_ground_floor_candidates_and_prefers_mapped_points(self):
+        named = {'name': 'Caffè Sant’Anna', 'amenity': 'cafe'}
+        nodes = {
+            '1': (*to_ll(710, 710), {**named, 'level': '0;1'}),
+            '2': (*to_ll(740, 710), named),
+            '3': (*to_ll(730, 740), {**named, 'level': '1'}),
+            '4': (*to_ll(730, 750), {'name': 'Closed', 'shop': 'vacant'}),
+            '5': (*to_ll(499, 750), {'name': 'Outside', 'shop': 'bakery'}),
+            '6': (*to_ll(730, 760), {**named, 'location': 'underground'}),
+            '7': (*to_ll(730, 770), {'shop': 'books'}),
+        }
+
+        def ring(first_id, points):
+            ids = [str(first_id + i) for i in range(len(points))]
+            for node_id, point in zip(ids, points):
+                nodes[node_id] = (*to_ll(*point), {})
+            return [*ids, ids[0]]
+
+        ways = {
+            '11': (ring(10, [(700, 700), (720, 700), (720, 720), (700, 720)]), named),
+            '12': (ring(20, [(760, 700), (780, 700), (780, 720), (760, 720)]),
+                   {'name': 'Panetteria', 'shop': 'bakery'}),
+            '13': (ring(30, [(800, 700), (820, 700), (820, 720), (800, 720)]), {}),
+        }
+        relations = {
+            '20': ([('way', '13', 'outer')], {'type': 'multipolygon', 'name': 'Cinema', 'amenity': 'cinema'}),
+        }
+        self.assertEqual(shop_signs(Geo(nodes, ways, relations), CLIP), [
+            ['n1', 'Caffè Sant’Anna', 'amenity=cafe', 0, [710, 710]],
+            ['n2', 'Caffè Sant’Anna', 'amenity=cafe', None, [740, 710]],
+            ['r20', 'Cinema', 'amenity=cinema', None, [810, 710]],
+            ['w12', 'Panetteria', 'shop=bakery', None, [770, 710]],
+        ])
 
 
 class FacadeUseTest(unittest.TestCase):
