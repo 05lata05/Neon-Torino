@@ -10,6 +10,11 @@ The game, made with Unreal Engine 5.8 for PC (Windows). Game logic in C++, the c
   imports the .glb, sets collision, places one actor per mesh, sets the game mode and the Player Start, saves.
   Tried in Unreal Engine 5.8. When the .glb has not changed it changes no file, so Git sees nothing to commit.
 - `scripts/setup_collision.py`: editor script that gives the imported meshes their collision.
+- `scripts/facade_materials.py`: procedural facade materials (`/Game/NeonTorino/Facades`): the master `M_Facade`
+  draws a window per bay and per floor from the facade UVs (frame, sill, roller shutter, floor line; shop windows or
+  a garage door on the ground floor), one instance `MI_Facade_*` per facade type. `build_level.py` runs it and puts
+  the instances on the facade slots of the city meshes. Change the look by editing the `TYPES` table and running
+  `build_level.py` again. Tried in Unreal Engine 5.8.
 
 Roofs: the OpenStreetMap roof shapes (gabled, hipped, pyramidal, skillion) where mapped, gabled roofs on small
 untagged houses, flat elsewhere; the rules and what is invented are at the top of `tools/roofs.mjs`.

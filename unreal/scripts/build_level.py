@@ -3,7 +3,8 @@
 1. opens the level /Game/Maps/SantaRita;
 2. imports (or re-imports) unreal/import/santa_rita.glb into /Game/SantaRita, unless the meshes already come from
    this exact file (SHA-1 in their metadata);
-3. gives every city mesh collision that follows its real shape ("use complex as simple");
+3. gives every city mesh collision that follows its real shape ("use complex as simple") and puts the procedural
+   facade materials of facade_materials.py (windows per floor and bay) on its Facade_* slots;
 4. keeps one Static Mesh Actor per mesh at the origin in the outliner folder "SantaRita" (the glTF vertices are
    already in world space): existing actors are reused by label, missing ones added, stale ones removed;
 5. sets the GameMode Override to the vehicle game mode and puts one Player Start at 0, 0, 100;
@@ -18,13 +19,20 @@ The level itself (lights, sky, fog) must already exist: the script does not crea
 Tried in Unreal Engine 5.8 (headless and Tools > Execute Python Script).
 """
 import hashlib
+import importlib
 import json
 import os
 import struct
+import sys
 
 import unreal
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if SCRIPT_DIR not in sys.path:
+    sys.path.append(SCRIPT_DIR)
+import facade_materials  # noqa: E402 (needs SCRIPT_DIR on the path)
+
+importlib.reload(facade_materials)  # the editor keeps modules between runs: pick up changes to the file
 GLB = os.path.normpath(os.path.join(SCRIPT_DIR, '..', 'import', 'santa_rita.glb'))
 LEVEL = '/Game/Maps/SantaRita'
 DEST = '/Game/SantaRita'  # imported meshes and materials
@@ -94,13 +102,19 @@ def is_up_to_date(meshes, missing, sha1):
     return bool(meshes) and not missing and all(lib.get_metadata_tag(m, GLB_TAG) == sha1 for m in meshes)
 
 
-def set_collision(meshes, sha1):
-    """Collision "use complex as simple" and the .glb tag; a mesh is saved only when one of them changes."""
+def set_collision(meshes, sha1, facades):
+    """Collision "use complex as simple", the .glb tag and the facade materials ({slot name: material}); a mesh is
+    saved only when one of them changes."""
     lib = unreal.EditorAssetLibrary
     complex_as_simple = unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE
     done, skipped = 0, []
     for mesh in meshes:
         dirty = False
+        for index, slot in enumerate(mesh.static_materials):
+            wanted = facades.get(str(slot.material_slot_name))
+            if wanted is not None and slot.material_interface != wanted:
+                mesh.set_material(index, wanted)
+                dirty = True
         if lib.get_metadata_tag(mesh, GLB_TAG) != sha1:
             lib.set_metadata_tag(mesh, GLB_TAG, sha1)
             dirty = True
@@ -208,7 +222,7 @@ def main():
             len(missing), DEST, ', '.join(missing[:20])))
     if not meshes:
         raise RuntimeError('No Santa Rita meshes imported under ' + DEST + ': check the Output Log')
-    collided = set_collision(meshes, sha1)
+    collided = set_collision(meshes, sha1, facade_materials.ensure())
     load_city_actors(names)
     reused, created, removed = place_city(actors, meshes)
     set_game_mode(world_of.get_editor_world())
