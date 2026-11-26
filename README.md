@@ -5,6 +5,8 @@ buildings, parks and tram lines come from real **OpenStreetMap** data and Arpa P
 is generated from that data, and the district's landmarks are modelled on their real shapes.
 
 - **Unreal version (the game):** `unreal/`, start from [`unreal/README.md`](unreal/README.md).
+  To play the latest version on Windows: double-click **`play.bat`** in the repository folder (it updates from
+  GitHub, builds the C++ if needed and starts the game; needs Unreal Engine 5.8 and Visual Studio 2022).
 - **Browser version (first prototype, frozen):** Three.js 0.160, ES modules, no build step; Italian and English
   (**L** switches language). Described below.
 
