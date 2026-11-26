@@ -14,9 +14,16 @@ The game, made with Unreal Engine 5.8 for PC (Windows). Game logic in C++, the c
 Roofs: the OpenStreetMap roof shapes (gabled, hipped, pyramidal, skillion) where mapped, gabled roofs on small
 untagged houses, flat elsewhere; the rules and what is invented are at the top of `tools/roofs.mjs`.
 
+Facades: one material per facade type, so each can get its own texture: `Facade_Block_*` (1950s–70s apartment
+blocks: ochre, yellow, cream, grey plaster and brick), `Facade_Historic_*` (older low houses), `Facade_Industrial`,
+`Facade_Commercial`, `Facade_Public`, `Facade_Church`, `Facade_Garage`. The type comes from the OSM building tag or
+the Arpa Piemonte use; the rules and what is guessed are at the top of `tools/facades.mjs`. Facade UVs count
+**window bays and floors**: one texture tile = one bay (about 3 m, a whole number per wall) × one floor; V goes from
+0 to 1 on the ground floor (4 m on apartment blocks), then +1 per floor, so a facade texture lines up with the floors.
+
 Units: metres in the file, converted by Unreal to centimetres. The origin (0, 0, 0) is on the street next to
 piazza Santa Rita, where the browser game starts. Meshes are split in 250 m tiles, one material per surface type
-(asphalt, sidewalk, grass, facades…), with UVs in metres ready for real textures.
+(asphalt, sidewalk, grass, facades…); UVs are in metres ready for real textures, except the facades (above).
 
 ## Gameplay data for traffic and transit
 
@@ -69,7 +76,7 @@ whenever the map data changes: it replaces the city actors, it does not duplicat
 
 Real (OpenStreetMap, Arpa Piemonte): positions and shapes of roads, buildings, courtyards, parks, water, pitches,
 building heights, landmark shapes. Invented: 3 m sidewalks along every road, the stadium stands as one 28 m block,
-levels of the 94 buildings without data, facade colours, the shapes of the Parco Rignon trees. Flat roofs everywhere.
+levels of the 94 buildings without data, the period and colour of the facades, the shapes of the Parco Rignon trees. Flat roofs everywhere.
 
 ## Working with Git
 
