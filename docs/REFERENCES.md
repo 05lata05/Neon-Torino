@@ -31,6 +31,14 @@ Write in the pull request which reference you used and how (copied, adapted, onl
 - Our own data: `unreal/import/santa_rita_data.json` (road graph with lanes and one-ways, tram lines and stops,
   from OpenStreetMap) — whatever traffic system we pick must run on it.
 
+### Trams (U3)
+- **The browser game** (`src/entities/trams.js`) — trams on the real tracks with stops, dwell times, braking
+  curves and obstacle checks. **Use:** ported to C++ in `unreal/NeonTorino/Source/NeonTorino/Transit/` (rules
+  kept, numbers changed to real-world values: see the header of `GttTram.h`).
+- **Unreal's Spline Component** — the standard way to move trains and trams along a path; each line's track
+  from `santa_rita_data.json` becomes one spline.
+- No useful outside code: City Sample's MassTraffic only drives cars; tram packs on Fab are paid Blueprints.
+
 ### Police, wanted level, chases (U3, U5)
 - **The browser game** (`src/entities/police.js`, `src/entities/heli.js`, `src/config.js` → `POLICE`) — already
   working rules and numbers: cars per wanted level, losing the police, fines, helicopter. **Use:** port the rules to C++.
