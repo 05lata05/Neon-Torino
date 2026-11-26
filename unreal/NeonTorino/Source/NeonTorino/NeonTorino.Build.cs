@@ -17,7 +17,8 @@ public class NeonTorino : ModuleRules
 			"ChaosVehicles",
 			"PhysicsCore",
 			"UMG",
-			"Slate"
+			"Slate",
+			"Json"
 		});
 
 		PublicIncludePaths.AddRange(new string[] {
@@ -26,7 +27,8 @@ public class NeonTorino : ModuleRules
 			"NeonTorino/OffroadCar",
 			"NeonTorino/Variant_OffRoad",
 			"NeonTorino/Variant_TimeTrial",
-			"NeonTorino/Variant_TimeTrial/UI"
+			"NeonTorino/Variant_TimeTrial/UI",
+			"NeonTorino/Transit"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
