@@ -15,6 +15,13 @@ The game, made with Unreal Engine 5.8 for PC (Windows). Game logic in C++, the c
   a garage door on the ground floor), one instance `MI_Facade_*` per facade type. `build_level.py` runs it and puts
   the instances on the facade slots of the city meshes. Change the look by editing the `TYPES` table and running
   `build_level.py` again. Tried in Unreal Engine 5.8.
+- `scripts/import_art.py`: editor script that imports the art track's Blender exports (`art/exports/<Category>/SM_*.fbx`
+  and `art/textures/<Set>/T_<Set>_<Map>.png`) into `/Game/Art/` with fixed settings: scale 1, axes converted,
+  collision from the `UCX_` meshes, normal maps with the green channel flipped, ORM as linear masks, one material
+  instance `MI_<Set>` per texture set from the master `/Game/Art/Materials/M_ArtPBR`, put on the matching mesh
+  slots. The Output Log lists the names that break `art/ASSETS.md` and the size in metres of every mesh. Run it after
+  `git lfs pull`; it re-imports only the files that changed. The name rules are in `scripts/art_contract.py`
+  (tested by `tests/test_art_contract.py`). Written without Unreal: not tried in the editor yet (box ⇄ A0).
 
 Roofs: the OpenStreetMap roof shapes (gabled, hipped, pyramidal, skillion) where mapped, gabled roofs on small
 untagged houses, flat elsewhere; the rules and what is invented are at the top of `tools/roofs.mjs`.

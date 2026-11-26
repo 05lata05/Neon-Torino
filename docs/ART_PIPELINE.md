@@ -67,7 +67,10 @@ art/
    - Path: `art/exports/<Category>/SM_<Asset>.fbx`
    Save these as an operator preset called **Neon Torino** and always use it.
 9. **Check** with the list below, commit the `.blend`, textures and export in a pull request with a screenshot.
-   The code side runs the import script and replies with an in-game screenshot.
+   The code side runs the import script (`unreal/scripts/import_art.py`) and replies with an in-game screenshot.
+   The script takes the material of each mesh slot from the textures: name the Blender material `M_<Set>` with
+   textures in `art/textures/<Set>/`; a mesh with a single material may instead use its own set
+   (`SM_Bench_Turin` → `art/textures/Bench_Turin/`).
 
 ## 4. Kits (facades and street furniture)
 
