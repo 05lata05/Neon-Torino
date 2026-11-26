@@ -95,7 +95,7 @@ def scan_exports(root, contract):
         meshes.append({'name': stem, 'category': category, 'path': path})
     names = [m['name'] for m in meshes]
     for name in sorted({n for n in names if names.count(n) > 1}):
-        problems.append((name, 'the same mesh name is in more than one category; only the first is imported', True))
+        problems.append((name, 'the same mesh name is in more than one category; only the first (alphabetical) is imported', True))
         first = names.index(name)
         meshes = [m for i, m in enumerate(meshes) if m['name'] != name or i == first]
         names = [m['name'] for m in meshes]

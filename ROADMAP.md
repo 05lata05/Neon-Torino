@@ -59,7 +59,7 @@ Goal: a C++ project in the repository that everyone can open, and a level rebuil
 - [x] Editor script `unreal/scripts/build_level.py`: imports the city, sets collision, game mode and Player Start in one go (~1)
 - [x] Try `build_level.py` in the editor and fix it (local) (~1)
 - [x] Gameplay data export: road graph with lanes and one-ways, tram tracks and lines, tram and bus stops → `unreal/import/santa_rita_data.json` (~1)
-- [ ] Art import script `unreal/scripts/import_art.py`: imports `art/exports/**` into `/Game/Art/` with fixed settings (scale, axes, collision from `UCX_`, normal maps, material instances from a master PBR material); reports names that break `art/ASSETS.md` (~1)
+- [x] Art import script `unreal/scripts/import_art.py`: imports `art/exports/**` into `/Game/Art/` with fixed settings (scale, axes, collision from `UCX_`, normal maps, material instances from a master PBR material); reports names that break `art/ASSETS.md` (~1)
 - [ ] ⇄ A0: try it with `SM_Calibration_Arrow`, confirm the axes, fix the pipeline doc if needed (local) (~0.5)
 - [ ] Automated Unreal check run before every Unreal pull request: the level loads, the car drives (Unreal automation test from the command line) (local) (~1)
 - [ ] First Windows build in the GitHub Releases and a "how to play" page for friends (manual) (~1)
