@@ -92,6 +92,8 @@ with a Prettier check); the pictures can be downloaded from the run's `test-pict
 
 ## Working together
 
+Two parallel tracks: **code** ([`ROADMAP.md`](ROADMAP.md)) and **art in Blender** ([`ROADMAP-ART.md`](ROADMAP-ART.md),
+[`art/`](art/README.md)); how they fit together in [`docs/TEAM.md`](docs/TEAM.md).
 Not everybody needs Unreal: there are roles for Unreal developers, data and tools, OpenStreetMap mappers, Blender
 artists and testers. Roles, branches, how to claim a roadmap box and how to merge: see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 

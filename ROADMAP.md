@@ -1,4 +1,15 @@
-# Neon Torino roadmap
+# Neon Torino roadmap — code track
+
+Two tracks run in parallel (`docs/TEAM.md`): **this file is the code track** (Unreal, C++, data, scripts); the art
+track (Blender models and materials) is **[`ROADMAP-ART.md`](ROADMAP-ART.md)**. They meet at the sync points `⇄`,
+through the asset contract `art/ASSETS.md`: the code works with placeholder boxes until the art arrives.
+
+| Code milestone | Waits for art? | Sync point with the art track |
+|---|---|---|
+| U1 foundations | no | ⇄ A0: the art import script tested with the calibration asset |
+| U2 believable Santa Rita | no (placeholders) | ⇄ A1 materials, ⇄ A2 street furniture, ⇄ A4 facade kit, ⇄ A5 Santuario |
+| U3 driving and chases | no (placeholders) | ⇄ A3 GTT tram 8000, ⇄ A6 cars |
+| U4–U6 | no | ⇄ A5 landmarks, ⇄ A6 people |
 
 Automatic work: ON
 
@@ -14,8 +25,8 @@ A finished milestone = a Windows build in the GitHub Releases, with something ne
 
 Legend: `[x]` done · `[ ]` to do · `(~N sessions)` rough estimate · `(needs review)` changes how the game looks: the owner does the merge.
 Who can do a box (roles in `CONTRIBUTING.md`): no marker = data and tools, any PC or the nightly session ·
-`(local)` = needs Unreal Engine on a PC · `(blender)` = 3D model in Blender · `(osm)` = edits on openstreetmap.org ·
-`(manual)` = the owner
+`(local)` = needs Unreal Engine on a PC · `(osm)` = edits on openstreetmap.org · `(manual)` = the owner ·
+`⇄ A…` = integrates a delivery of the art roadmap (`ROADMAP-ART.md`). Blender work is only in the art roadmap.
 
 ## Vision
 
@@ -48,6 +59,8 @@ Goal: a C++ project in the repository that everyone can open, and a level rebuil
 - [x] Editor script `unreal/scripts/build_level.py`: imports the city, sets collision, game mode and Player Start in one go (~1)
 - [x] Try `build_level.py` in the editor and fix it (local) (~1)
 - [x] Gameplay data export: road graph with lanes and one-ways, tram tracks and lines, tram and bus stops → `unreal/import/santa_rita_data.json` (~1)
+- [ ] Art import script `unreal/scripts/import_art.py`: imports `art/exports/**` into `/Game/Art/` with fixed settings (scale, axes, collision from `UCX_`, normal maps, material instances from a master PBR material); reports names that break `art/ASSETS.md` (~1)
+- [ ] ⇄ A0: try it with `SM_Calibration_Arrow`, confirm the axes, fix the pipeline doc if needed (local) (~0.5)
 - [ ] Automated Unreal check run before every Unreal pull request: the level loads, the car drives (Unreal automation test from the command line) (local) (~1)
 - [ ] First Windows build in the GitHub Releases and a "how to play" page for friends (manual) (~1)
 
@@ -57,13 +70,17 @@ Goal: anyone who knows Santa Rita recognises it. Everything according to `docs/R
 - [x] Exporter: real roof shapes and heights from OSM (`roof:shape`, `roof:height`) where mapped, pitched roofs on small buildings (needs review) (~1)
 - [x] Exporter: facade types by period and use (1950s–70s blocks, historic, industrial, churches) as separate materials, UVs per floor (needs review) (~1)
 - [x] Procedural facade material in Unreal: windows per floor and bay for every facade type, from an editor Python script (local) (needs review) (~1)
-- [ ] CC0 photographic materials in Unreal (plaster, asphalt, sidewalks, porphyry, stone) and `docs/CREDITS.md` (local) (needs review) (~1)
+- [ ] ⇄ A1: the art materials (`M_Plaster_*`, `M_Asphalt_*`, `M_RoofTiles_Coppi`…) applied to the exporter's material slots, world-scale UVs (local) (needs review) (~1)
 - [x] Data export of the 666 real trees, GTT stops, street lamps, bins and benches with their positions (~1)
 - [x] Place them in Unreal from that export, in C++ (`City/CityProps`): trees, lamps, benches, bins, bus stops and tram shelters as placeholder shapes (~1)
-- [ ] Try the street props in Unreal and fix them; later swap the placeholders for real models (PCG or Fab/Blender meshes) (local) (needs review) (~1)
+- [ ] Try the street props in Unreal and fix them (local) (~1)
+- [ ] Mesh slots in `CityProps` for every prop of `art/ASSETS.md` (lamp, bench, bin, stop pole, shelter, tree species by OSM `genus`), placeholders when empty (~1)
+- [ ] ⇄ A2: the art street furniture in the slots (local) (needs review) (~0.5)
 - [ ] Day and night, rain and the Turin haze with Lumen; street lights on at night (local) (needs review) (~1)
-- [ ] Santuario di Santa Rita da Cascia modelled in Blender on the OSM footprint (blender) (needs review) (~2)
-- [ ] Santuario and its square placed in Unreal (local) (needs review) (~1)
+- [ ] Landmark footprints for the art track: the Santuario's and the stadium's OSM outlines exported as `.obj` to `art/refs/<Landmark>/` (~0.5)
+- [ ] Facade kit assembly: the pieces of `art/ASSETS.md` placed along the real footprints, floor by floor, shop fronts where there are shops, signs on the sign band (~2)
+- [ ] ⇄ A4: the art facade kit in the assembly (local) (needs review) (~0.5)
+- [ ] ⇄ A5: the Santuario and its square placed in Unreal (local) (needs review) (~1)
 - [x] Data export for real signs of mapped Santa Rita shops and venues
 - [x] Real shop and venue signs in C++: a board with the real name on the facade facing the nearest street, colour by category (~1)
 - [ ] Check the signs in Unreal (right wall, readable from the street) and fix them (local) (needs review) (~1)
@@ -76,7 +93,8 @@ Goal: driving around Santa Rita must be fun on its own. Numbers from the browser
 - [ ] Traffic on the real road graph, with traffic lights at junctions (local) (~2)
 - [ ] Pedestrians on the sidewalks (MassCrowd from City Sample or our own, see `docs/REFERENCES.md`) (local) (~1)
 - [ ] Police and wanted level, chases, helicopter: port the browser game's rules (`src/entities/police.js`, `POLICE` in `src/config.js`) to C++ (local) (~2)
-- [ ] GTT tram (Hitachi series 8000, lines 4 and 10) and bus models (blender) (~2)
+- [ ] Mesh slots in `GttTram` (one per module, door leaves that open at stops), boxes when empty (~1)
+- [ ] ⇄ A3: the art tram 8000 in the slots (local) (needs review) (~0.5)
 - [x] GTT trams 4 and 10 on the real tracks in C++: rails drawn from `santa_rita_data.json`, Hitachi series 8000 shape (5 modules, 28 m, doors on the right, yellow and blue), stops, braking for obstacles (rules from the browser game's `src/entities/trams.js`) (~1)
 - [ ] Try the trams in Unreal and fix them (local) (~1)
 - [ ] Damage, street races, rewarded stunts (local) (~2)

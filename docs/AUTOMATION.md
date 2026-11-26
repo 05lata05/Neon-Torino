@@ -35,6 +35,7 @@ Write everything in English: branches, commits, pull requests, the final message
    (Sunday summary) and stop. Pull requests from other branches belong to the owner's friends: they do not stop you.
 3. Go through the milestones in order (skip the "Browser game (frozen)" section) and take the **first unchecked
    box** that is free:
+   - only boxes of `ROADMAP.md` (never `ROADMAP-ART.md`, which is the artist's), and never files in `art/`;
    - not marked `(manual)`, `(local)`, `(blender)` or `(osm)` (they need the owner, Unreal Engine, Blender or
      edits on openstreetmap.org, which the session never makes);
    - not **taken**: a box is taken when an open pull request (draft or not, from any branch) has a title that

@@ -19,6 +19,9 @@
 - Realism: every new or changed zone must follow `docs/REALISM.md` (sources, checklist, rules on real shops).
 - Invented details (not in the data) must be declared in the comment at the top of the file that adds them.
 - What to do: the first free box in `ROADMAP.md`; tick it when done.
+- Two tracks (`docs/TEAM.md`): code (`ROADMAP.md`) and art in Blender (`ROADMAP-ART.md`, `art/`). Code that shows a
+  model builds against the contract in `art/ASSETS.md` with placeholders and mesh slots; never edit files in `art/`
+  unless the box asks for it (they belong to the artist).
 - Teamwork (see `CONTRIBUTING.md`): one short branch per piece of work (`feature/<name>`, `fix/<name>`; `auto/` is the
   nightly session's), claim the box first with a draft pull request, merge into `main` only through a green pull request.
 - A roadmap box with an open pull request is taken: do not work on it.
