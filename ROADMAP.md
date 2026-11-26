@@ -74,7 +74,8 @@ Goal: driving around Santa Rita must be fun on its own. Numbers from the browser
 - [ ] Pedestrians on the sidewalks (MassCrowd from City Sample or our own, see `docs/REFERENCES.md`) (local) (~1)
 - [ ] Police and wanted level, chases, helicopter: port the browser game's rules (`src/entities/police.js`, `POLICE` in `src/config.js`) to C++ (local) (~2)
 - [ ] GTT tram (Sirio / series 2800) and bus models (blender) (~2)
-- [ ] GTT trams 4 and 10 on the real tracks (local) (~1)
+- [ ] GTT trams 4 and 10 on the real tracks in C++: rails drawn from `santa_rita_data.json`, articulated tram following each line, stops, braking for obstacles (rules from the browser game's `src/entities/trams.js`) (~1)
+- [ ] Try the trams in Unreal and fix them (local) (~1)
 - [ ] Damage, street races, rewarded stunts (local) (~2)
 
 ## U4 · Game, money and empire
