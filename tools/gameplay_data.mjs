@@ -37,7 +37,9 @@ export function buildGameplayData(data, roads, origin, toLocal, shopSigns = []) 
   }
 
   const stops = rows => rows.map(([x, y, name]) => ({ name, position: toLocal([x, y]) }));
-  const furniture = (rows = []) => rows.map(([osmNodeId, x, y]) => ({ osmNodeId, position: toLocal([x, y]) }));
+  // trees carry the OSM genus (e.g. Tilia, Platanus) when it is mapped, so Unreal can pick the species model
+  const furniture = (rows = []) =>
+    rows.map(([osmNodeId, x, y, genus]) => ({ osmNodeId, position: toLocal([x, y]), ...(genus ? { genus } : {}) }));
   return {
     version: 1,
     coordinates: { units: 'metres', axes: ['east', 'south'], originMapMetres: origin },

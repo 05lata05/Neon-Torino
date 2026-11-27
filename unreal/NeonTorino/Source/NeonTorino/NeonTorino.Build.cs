@@ -18,7 +18,8 @@ public class NeonTorino : ModuleRules
 			"PhysicsCore",
 			"UMG",
 			"Slate",
-			"Json"
+			"Json",
+			"AssetRegistry"
 		});
 
 		PublicIncludePaths.AddRange(new string[] {

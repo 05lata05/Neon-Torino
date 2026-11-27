@@ -62,6 +62,28 @@ assert.deepEqual(sample.roadGraph.edges, [
 assert.equal(sample.roadGraph.streets[0].lanes, null);
 assert.deepEqual(sample.shopSigns, []);
 assert.deepEqual(sample.streetFurniture, { trees: [], streetLamps: [], benches: [], wasteBins: [] });
+// Trees keep the OSM genus when it is mapped (Unreal picks the species model from it); untagged trees have none.
+const trees = buildGameplayData(
+  {
+    TW: [],
+    TR: [],
+    TS: [],
+    BS: [],
+    SF: {
+      trees: [
+        ['1', 2, 3, 'Platanus'],
+        ['2', 4, 5],
+      ],
+    },
+  },
+  [],
+  [0, 0],
+  point => point,
+).streetFurniture.trees;
+assert.deepEqual(trees, [
+  { osmNodeId: '1', position: [2, 3], genus: 'Platanus' },
+  { osmNodeId: '2', position: [4, 5] },
+]);
 assert.deepEqual(
   sample.roadGraph.streets.map(street => street.maxSpeedKmh),
   [30, null, null, null],
@@ -158,7 +180,8 @@ try {
   const expectedStops = rows => rows.map(([x, y, name]) => ({ name, position: local([x, y]) }));
   assert.deepEqual(data.tramStops, expectedStops(map.TS));
   assert.deepEqual(data.busStops, expectedStops(map.BS));
-  const expectedFurniture = rows => rows.map(([osmNodeId, x, y]) => ({ osmNodeId, position: local([x, y]) }));
+  const expectedFurniture = rows =>
+    rows.map(([osmNodeId, x, y, genus]) => ({ osmNodeId, position: local([x, y]), ...(genus ? { genus } : {}) }));
   for (const kind of ['trees', 'streetLamps', 'benches', 'wasteBins']) {
     assert.ok(map.SF[kind].length > 0, 'Missing mapped ' + kind);
     assert.deepEqual(data.streetFurniture[kind], expectedFurniture(map.SF[kind]));

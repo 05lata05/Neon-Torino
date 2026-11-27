@@ -74,7 +74,7 @@ Goal: anyone who knows Santa Rita recognises it. Everything according to `docs/R
 - [x] Data export of the 666 real trees, GTT stops, street lamps, bins and benches with their positions (~1)
 - [x] Place them in Unreal from that export, in C++ (`City/CityProps`): trees, lamps, benches, bins, bus stops and tram shelters as placeholder shapes (~1)
 - [ ] Try the street props in Unreal and fix them (local) (~1)
-- [ ] Mesh slots in `CityProps` for every prop of `art/ASSETS.md` (lamp, bench, bin, stop pole, shelter, tree species by OSM `genus`), placeholders when empty (~1)
+- [x] Mesh slots in `CityProps` for every prop of `art/ASSETS.md` (lamp, bench, bin, stop pole, shelter, tree species by OSM `genus`), placeholders when empty (~1)
 - [ ] ⇄ A2: the art street furniture in the slots (local) (needs review) (~0.5)
 - [ ] Day and night, rain and the Turin haze with Lumen; street lights on at night (local) (needs review) (~1)
 - [ ] Landmark footprints for the art track: the Santuario's and the stadium's OSM outlines exported as `.obj` to `art/refs/<Landmark>/` (~0.5)
@@ -134,3 +134,4 @@ for the rules and numbers to port to Unreal (`src/config.js`, `src/gameplay/`). 
 - Neighbourhood market in piazza Santa Rita with animated stalls
 - Drivable GTT trams
 - Online play with friends (Unreal multiplayer)
+- Packaged builds: add `/Game/Art` to "Additional Asset Directories to Cook", since `CityProps` finds the art models by name at run time
