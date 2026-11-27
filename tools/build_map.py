@@ -18,7 +18,7 @@ Output format (all lines are encoded as integer polylines, Google style):
                   upper case when OSM says the walls are brick (building:material=brick)
   A  areas        [kind, outer(qb m), holes...]          kind: g green, p pitch, k parking, w water, r railway
   TW tram tracks  [[x,y],...]   TR tram lines [line, [[x,y],...]]   TS/BS tram/bus stops [x,y,name]
-  SF street furniture by type, rows [OSM node ID, x, y]
+  SF street furniture by type, rows [OSM node ID, x, y]; trees add a 4th item, the OSM genus, when it is tagged
   L  landmarks    {id: {...}}  real shapes of the buildings the game models by hand (src/landmarks/)
 """
 import argparse, glob, json, math, os, re, sys, xml.etree.ElementTree as ET
@@ -316,7 +316,10 @@ def street_furniture(nodes, clip):
                 continue
             x, y = to_xy(lat, lon)
             if in_box((x, y), clip):
-                furniture[kind].append([node_id, half(x), half(y)])
+                row = [node_id, half(x), half(y)]
+                if kind == 'trees' and node_tags.get('genus'):
+                    row.append(node_tags['genus'])
+                furniture[kind].append(row)
     for rows in furniture.values():
         rows.sort(key=lambda row: int(row[0]))
     return furniture

@@ -56,6 +56,7 @@ as the city import when placing it in Unreal.
   `tramStops` and `busStops` keep the source names and positions, including separate platforms with the same name.
 - `streetFurniture` contains `trees`, `streetLamps`, `benches` and `wasteBins`. Each entry has an
   `osmNodeId` string and a `position` in the same local metres as the stops, rounded to the map's 0.5 m resolution.
+  Trees also have the OSM `genus` (e.g. `Tilia`, `Platanus`) when it is mapped; `CityProps` picks the species model from it.
   Only individually mapped nodes inside the playable bounds are included. Tree rows and unmapped objects produce no points.
   Use the existing stop arrays for GTT stops. This export provides positions for a future placement pass.
 

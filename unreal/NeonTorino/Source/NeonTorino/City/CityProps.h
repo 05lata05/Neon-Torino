@@ -11,7 +11,15 @@
 // exist (tree heights 7–12 m with a seeded random variation, lamps 7 m, benches, bins, stop poles and tram
 // shelters); benches and stops face the nearest street; a shop sign is put on the first wall met going from
 // the nearest street towards the shop's mapped point, 3.2 m up, with a colour chosen by category.
-// The meshes can be swapped for real models in the Details panel (TreeTrunkMesh, TreeCrownMesh…).
+//
+// Mesh slots (art/ASSETS.md, street furniture A2): every prop has a slot for its art model. A slot left empty is
+// filled at BeginPlay with the asset of the same name imported by unreal/scripts/import_art.py anywhere under
+// /Game/Art (e.g. SM_Lamp_Turin_A), so the spawned actor picks the art up without touching the level; if that is
+// missing too, the placeholder shapes above are drawn. Art models are placed by their contract pivot and front
+// (+X): lamps with the arm, benches with the seat, stop poles with the sign and bins with the opening towards the
+// nearest street, shelters with the open side towards the track. Trees pick their species from the OSM `genus`
+// when mapped (TreeSpecies, Tilia first: it is the default for untagged trees and for genera without a model),
+// a variant per tree with the seeded random, and a scale of 0.7–1.2. Invented: the bins' facing.
 #pragma once
 
 #include "CoreMinimal.h"
@@ -21,6 +29,25 @@
 
 class UInstancedStaticMeshComponent;
 class UStaticMesh;
+
+// one tree species: the OSM genus it stands for and its model variants (art/ASSETS.md: SM_Tree_<Genus>_A, _B…)
+USTRUCT(BlueprintType)
+struct FCityTreeSpecies
+{
+	GENERATED_BODY()
+
+	// OSM `genus` value, compared without case (Tilia, Platanus…)
+	UPROPERTY(EditAnywhere, Category = "Neon Torino|Props")
+	FString Genus;
+
+	// asset names looked up under /Game/Art when Meshes is empty
+	UPROPERTY(EditAnywhere, Category = "Neon Torino|Props")
+	TArray<FName> ArtNames;
+
+	// model variants; empty: ArtNames from /Game/Art, else the placeholder trunk and crown
+	UPROPERTY(EditAnywhere, Category = "Neon Torino|Props")
+	TArray<TObjectPtr<UStaticMesh>> Meshes;
+};
 
 UCLASS()
 class ACityProps : public AActor
@@ -40,11 +67,29 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Neon Torino|Props")
 	bool bShopSigns = true;
 
-	UPROPERTY(EditAnywhere, Category = "Neon Torino|Props")
-	TObjectPtr<UStaticMesh> TreeTrunkMesh;
+	// the first entry is the default species (lime, the most common in Santa Rita)
+	UPROPERTY(EditAnywhere, Category = "Neon Torino|Props|Meshes")
+	TArray<FCityTreeSpecies> TreeSpecies;
 
-	UPROPERTY(EditAnywhere, Category = "Neon Torino|Props")
-	TObjectPtr<UStaticMesh> TreeCrownMesh;
+	// SM_Lamp_Turin_A: pole 7.0 m, arm 1.3 m towards front; pivot at the base of the pole
+	UPROPERTY(EditAnywhere, Category = "Neon Torino|Props|Meshes")
+	TObjectPtr<UStaticMesh> LampMesh;
+
+	// SM_Bench_Turin: 1.8 × 0.5 m, seat 0.45 m; pivot at the centre of the base, seat side front
+	UPROPERTY(EditAnywhere, Category = "Neon Torino|Props|Meshes")
+	TObjectPtr<UStaticMesh> BenchMesh;
+
+	// SM_Bin_Street: Ø 0.5 m, 0.9 m tall; pivot at the base centre, opening front
+	UPROPERTY(EditAnywhere, Category = "Neon Torino|Props|Meshes")
+	TObjectPtr<UStaticMesh> BinMesh;
+
+	// SM_GTT_StopPole: 2.8 m, sign 0.5 × 0.35 m; pivot at the base, sign face front
+	UPROPERTY(EditAnywhere, Category = "Neon Torino|Props|Meshes")
+	TObjectPtr<UStaticMesh> StopPoleMesh;
+
+	// SM_GTT_TramShelter: 4.0 × 1.6 × 2.6 m; pivot at the centre of the base, open side front
+	UPROPERTY(EditAnywhere, Category = "Neon Torino|Props|Meshes")
+	TObjectPtr<UStaticMesh> TramShelterMesh;
 
 protected:
 	virtual void BeginPlay() override;
@@ -74,7 +119,13 @@ private:
 	// a point closer than Clearance to a tram track is pushed away from it, so trams pass freely
 	FVector ClearOfTracks(const FVector& Point, float Clearance) const;
 
+	// placeholder instances: a basic shape with a flat colour
 	UInstancedStaticMeshComponent* MakeInstances(UStaticMesh* Mesh, const FLinearColor& Colour, bool bCollision = false);
+	// art instances: the model with its own materials and collision
+	UInstancedStaticMeshComponent* MakeMeshInstances(UStaticMesh* Mesh, bool bCollision);
+	// fills the empty slots with the art imported under /Game/Art, by contract name
+	void FindArtMeshes();
+	static UStaticMesh* FindArtMesh(const TMap<FName, FSoftObjectPath>& Art, FName Name);
 	float GroundZ(const FVector& Point) const;
 	FVector NearestStreetPoint(const FVector& Point) const;
 	float YawTowardsStreet(const FVector& Point) const;

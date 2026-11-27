@@ -1,5 +1,7 @@
 #include "CityProps.h"
 
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetRegistry/IAssetRegistry.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "Dom/JsonObject.h"
@@ -23,6 +25,15 @@ ACityProps::ACityProps()
 	Cube = CubeFinder.Object;
 	Cylinder = CylinderFinder.Object;
 	Sphere = SphereFinder.Object;
+
+	// tree species of art/ASSETS.md; more can be added in the Details panel when the art track models them
+	FCityTreeSpecies Lime;
+	Lime.Genus = TEXT("Tilia");
+	Lime.ArtNames = {TEXT("SM_Tree_Tilia_A"), TEXT("SM_Tree_Tilia_B")};
+	FCityTreeSpecies Plane;
+	Plane.Genus = TEXT("Platanus");
+	Plane.ArtNames = {TEXT("SM_Tree_Platanus_A")};
+	TreeSpecies = {Lime, Plane};
 }
 
 void ACityProps::BeginPlay()
@@ -32,6 +43,7 @@ void ACityProps::BeginPlay()
 	{
 		return;
 	}
+	FindArtMeshes();
 	LoadStreets();
 	PlaceTrees();
 	PlaceFurniture();
@@ -42,7 +54,68 @@ void ACityProps::BeginPlay()
 	}
 }
 
-UInstancedStaticMeshComponent* ACityProps::MakeInstances(UStaticMesh* Mesh, const FLinearColor& Colour, bool bCollision)
+UStaticMesh* ACityProps::FindArtMesh(const TMap<FName, FSoftObjectPath>& Art, FName Name)
+{
+	const FSoftObjectPath* Path = Art.Find(Name);
+	return Path ? Cast<UStaticMesh>(Path->TryLoad()) : nullptr;
+}
+
+void ACityProps::FindArtMeshes()
+{
+	// every static mesh imported by import_art.py, by asset name (the names are unique by art/ASSETS.md)
+	TMap<FName, FSoftObjectPath> Art;
+	IAssetRegistry& Registry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
+	FARFilter Filter;
+	Filter.PackagePaths.Add(TEXT("/Game/Art"));
+	Filter.bRecursivePaths = true;
+	Filter.ClassPaths.Add(UStaticMesh::StaticClass()->GetClassPathName());
+	TArray<FAssetData> Assets;
+	Registry.GetAssets(Filter, Assets);
+	for (const FAssetData& Asset : Assets)
+	{
+		Art.Add(Asset.AssetName, Asset.GetSoftObjectPath());
+	}
+
+	TArray<FString> Found;
+	auto Fill = [&](TObjectPtr<UStaticMesh>& Slot, const TCHAR* Name)
+	{
+		if (!Slot)
+		{
+			Slot = FindArtMesh(Art, Name);
+		}
+		if (Slot)
+		{
+			Found.Add(Slot->GetName());
+		}
+	};
+	Fill(LampMesh, TEXT("SM_Lamp_Turin_A"));
+	Fill(BenchMesh, TEXT("SM_Bench_Turin"));
+	Fill(BinMesh, TEXT("SM_Bin_Street"));
+	Fill(StopPoleMesh, TEXT("SM_GTT_StopPole"));
+	Fill(TramShelterMesh, TEXT("SM_GTT_TramShelter"));
+	for (FCityTreeSpecies& Species : TreeSpecies)
+	{
+		Species.Meshes.Remove(nullptr);
+		if (Species.Meshes.IsEmpty())
+		{
+			for (const FName& Name : Species.ArtNames)
+			{
+				if (UStaticMesh* Mesh = FindArtMesh(Art, Name))
+				{
+					Species.Meshes.Add(Mesh);
+				}
+			}
+		}
+		for (const TObjectPtr<UStaticMesh>& Mesh : Species.Meshes)
+		{
+			Found.Add(Mesh->GetName());
+		}
+	}
+	UE_LOG(LogCityProps, Log, TEXT("City props: %d art models under /Game/Art, in use: %s"), Art.Num(),
+		Found.IsEmpty() ? TEXT("none (placeholders)") : *FString::Join(Found, TEXT(", ")));
+}
+
+UInstancedStaticMeshComponent* ACityProps::MakeMeshInstances(UStaticMesh* Mesh, bool bCollision)
 {
 	UInstancedStaticMeshComponent* C = NewObject<UInstancedStaticMeshComponent>(this);
 	C->SetupAttachment(Root);
@@ -51,6 +124,12 @@ UInstancedStaticMeshComponent* ACityProps::MakeInstances(UStaticMesh* Mesh, cons
 	C->SetCollisionProfileName(bCollision ? TEXT("BlockAll") : TEXT("NoCollision"));
 	C->SetCollisionObjectType(ECC_WorldStatic);
 	C->RegisterComponent();
+	return C;
+}
+
+UInstancedStaticMeshComponent* ACityProps::MakeInstances(UStaticMesh* Mesh, const FLinearColor& Colour, bool bCollision)
+{
+	UInstancedStaticMeshComponent* C = MakeMeshInstances(Mesh, bCollision);
 	if (UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial")))
 	{
 		UMaterialInstanceDynamic* M = UMaterialInstanceDynamic::Create(Base, this);
@@ -225,34 +304,67 @@ float ACityProps::YawTowardsStreet(const FVector& Point) const
 
 void ACityProps::PlaceTrees()
 {
-	UInstancedStaticMeshComponent* Trunks = MakeInstances(TreeTrunkMesh ? TreeTrunkMesh.Get() : Cylinder.Get(), FLinearColor(0.20f, 0.13f, 0.08f), true);
-	UInstancedStaticMeshComponent* CrownsA = MakeInstances(TreeCrownMesh ? TreeCrownMesh.Get() : Sphere.Get(), FLinearColor(0.10f, 0.28f, 0.06f));
-	UInstancedStaticMeshComponent* CrownsB = MakeInstances(TreeCrownMesh ? TreeCrownMesh.Get() : Sphere.Get(), FLinearColor(0.16f, 0.33f, 0.08f));
+	UInstancedStaticMeshComponent* Trunks = MakeInstances(Cylinder, FLinearColor(0.20f, 0.13f, 0.08f), true);
+	UInstancedStaticMeshComponent* CrownsA = MakeInstances(Sphere, FLinearColor(0.10f, 0.28f, 0.06f));
+	UInstancedStaticMeshComponent* CrownsB = MakeInstances(Sphere, FLinearColor(0.16f, 0.33f, 0.08f));
+	TMap<UStaticMesh*, UInstancedStaticMeshComponent*> ArtTrees; // one component per model, made when first used
 	FRandomStream Random(1774);
-	int32 Count = 0;
+	int32 Count = 0, Art = 0;
 	for (const TSharedPtr<FJsonValue>& T : Data.Array(TEXT("streetFurniture"), TEXT("trees")))
 	{
+		const TSharedPtr<FJsonObject> Tree = T->AsObject();
 		double E, S;
-		if (!FSantaRitaData::ReadPosition(T->AsObject(), E, S))
+		if (!FSantaRitaData::ReadPosition(Tree, E, S))
 		{
 			continue;
 		}
+		FString Genus, Id;
+		Tree->TryGetStringField(TEXT("genus"), Genus);
+		Tree->TryGetStringField(TEXT("osmNodeId"), Id);
 		FVector P = ClearOfTracks(Data.ToWorld(E, S), 200.f);
 		P.Z = GroundZ(P);
 		const float H = Random.FRandRange(700.f, 1200.f); // cm
 		const float Yaw = Random.FRandRange(0.f, 360.f);
-		// basic shapes are 100 cm and centred: trunk 35 cm wide up to 45% of the height, crown 55% of the height wide
-		Trunks->AddInstance(FTransform(FRotator(0, Yaw, 0), P + FVector(0, 0, H * 0.225f), FVector(0.35f, 0.35f, H * 0.45f / 100.f)), true);
-		const float C = H * 0.55f / 100.f;
-		(Count % 2 ? CrownsA : CrownsB)->AddInstance(FTransform(FRotator(0, Yaw, 0), P + FVector(0, 0, H * 0.68f), FVector(C, C, C * 0.9f)), true);
+
+		// species from the OSM genus; untagged trees and genera without a model use the first species (lime)
+		const FCityTreeSpecies* Species = TreeSpecies.IsEmpty() ? nullptr : &TreeSpecies[0];
+		for (const FCityTreeSpecies& Candidate : TreeSpecies)
+		{
+			if (!Genus.IsEmpty() && Candidate.Genus.Equals(Genus, ESearchCase::IgnoreCase) && !Candidate.Meshes.IsEmpty())
+			{
+				Species = &Candidate;
+				break;
+			}
+		}
+		if (Species && !Species->Meshes.IsEmpty())
+		{
+			// the variant follows the OSM node, so a tree keeps its model when the data around it changes
+			UStaticMesh* Mesh = Species->Meshes[GetTypeHash(Id) % uint32(Species->Meshes.Num())];
+			UInstancedStaticMeshComponent*& Instances = ArtTrees.FindOrAdd(Mesh);
+			if (!Instances)
+			{
+				Instances = MakeMeshInstances(Mesh, true);
+			}
+			// pivot at the base of the trunk; 0.7–1.2 of the model's real size
+			Instances->AddInstance(FTransform(FRotator(0, Yaw, 0), P, FVector(H / 1000.f)), true);
+			++Art;
+		}
+		else
+		{
+			// basic shapes are 100 cm and centred: trunk 35 cm wide up to 45% of the height, crown 55% of the height wide
+			Trunks->AddInstance(FTransform(FRotator(0, Yaw, 0), P + FVector(0, 0, H * 0.225f), FVector(0.35f, 0.35f, H * 0.45f / 100.f)), true);
+			const float C = H * 0.55f / 100.f;
+			(Count % 2 ? CrownsA : CrownsB)->AddInstance(FTransform(FRotator(0, Yaw, 0), P + FVector(0, 0, H * 0.68f), FVector(C, C, C * 0.9f)), true);
+		}
 		++Count;
 	}
-	UE_LOG(LogCityProps, Log, TEXT("City props: %d trees"), Count);
+	UE_LOG(LogCityProps, Log, TEXT("City props: %d trees, %d of them with art models"), Count, Art);
 }
 
 void ACityProps::PlaceFurniture()
 {
 	// street lamps: 7 m grey pole with an arm and a lamp towards the street
+	UInstancedStaticMeshComponent* Lamps = LampMesh ? MakeMeshInstances(LampMesh, true) : nullptr;
 	UInstancedStaticMeshComponent* Poles = MakeInstances(Cylinder, FLinearColor(0.25f, 0.26f, 0.27f), true);
 	UInstancedStaticMeshComponent* Heads = MakeInstances(Cube, FLinearColor(0.85f, 0.85f, 0.75f));
 	for (const TSharedPtr<FJsonValue>& L : Data.Array(TEXT("streetFurniture"), TEXT("streetLamps")))
@@ -265,12 +377,18 @@ void ACityProps::PlaceFurniture()
 		FVector P = ClearOfTracks(Data.ToWorld(E, S), 250.f);
 		P.Z = GroundZ(P);
 		const FRotator Face(0, YawTowardsStreet(P), 0);
+		if (Lamps)
+		{
+			Lamps->AddInstance(FTransform(Face, P), true); // pivot at the base of the pole, arm towards the street
+			continue;
+		}
 		Poles->AddInstance(FTransform(FRotator::ZeroRotator, P + FVector(0, 0, 350.f), FVector(0.16f, 0.16f, 7.f)), true);
 		Poles->AddInstance(FTransform(Face, P + Face.Vector() * 60.f + FVector(0, 0, 690.f), FVector(1.3f, 0.08f, 0.08f)), true);
 		Heads->AddInstance(FTransform(Face, P + Face.Vector() * 120.f + FVector(0, 0, 675.f), FVector(0.55f, 0.25f, 0.15f)), true);
 	}
 
 	// benches: seat and back, facing the street
+	UInstancedStaticMeshComponent* Benches = BenchMesh ? MakeMeshInstances(BenchMesh, true) : nullptr;
 	UInstancedStaticMeshComponent* Wood = MakeInstances(Cube, FLinearColor(0.30f, 0.17f, 0.08f), true);
 	for (const TSharedPtr<FJsonValue>& B : Data.Array(TEXT("streetFurniture"), TEXT("benches")))
 	{
@@ -282,6 +400,11 @@ void ACityProps::PlaceFurniture()
 		FVector P = ClearOfTracks(Data.ToWorld(E, S), 250.f);
 		P.Z = GroundZ(P);
 		const FRotator Face(0, YawTowardsStreet(P), 0);
+		if (Benches)
+		{
+			Benches->AddInstance(FTransform(Face, P), true); // pivot at the centre of the base, seat towards the street
+			continue;
+		}
 		const FVector Back = -Face.Vector();
 		Wood->AddInstance(FTransform(Face, P + FVector(0, 0, 45.f), FVector(0.5f, 1.8f, 0.08f)), true);
 		Wood->AddInstance(FTransform(Face, P + Back * 25.f + FVector(0, 0, 70.f), FVector(0.06f, 1.8f, 0.4f)), true);
@@ -289,6 +412,7 @@ void ACityProps::PlaceFurniture()
 	}
 
 	// waste bins
+	UInstancedStaticMeshComponent* ArtBins = BinMesh ? MakeMeshInstances(BinMesh, true) : nullptr;
 	UInstancedStaticMeshComponent* Bins = MakeInstances(Cylinder, FLinearColor(0.05f, 0.20f, 0.10f), true);
 	for (const TSharedPtr<FJsonValue>& W : Data.Array(TEXT("streetFurniture"), TEXT("wasteBins")))
 	{
@@ -297,6 +421,12 @@ void ACityProps::PlaceFurniture()
 		{
 			FVector P = ClearOfTracks(Data.ToWorld(E, S), 200.f);
 			P.Z = GroundZ(P);
+			if (ArtBins)
+			{
+				// pivot at the base centre, opening towards the street (invented: OSM does not say)
+				ArtBins->AddInstance(FTransform(FRotator(0, YawTowardsStreet(P), 0), P), true);
+				continue;
+			}
 			Bins->AddInstance(FTransform(FRotator::ZeroRotator, P + FVector(0, 0, 45.f), FVector(0.5f, 0.5f, 0.9f)), true);
 		}
 	}
@@ -308,6 +438,8 @@ void ACityProps::PlaceStops()
 	UInstancedStaticMeshComponent* Poles = MakeInstances(Cylinder, FLinearColor(0.55f, 0.56f, 0.58f), true);
 	UInstancedStaticMeshComponent* Signs = MakeInstances(Cube, FLinearColor(0.95f, 0.70f, 0.02f));
 	UInstancedStaticMeshComponent* Shelters = MakeInstances(Cube, FLinearColor(0.30f, 0.33f, 0.36f), true);
+	UInstancedStaticMeshComponent* ArtPoles = StopPoleMesh ? MakeMeshInstances(StopPoleMesh, true) : nullptr;
+	UInstancedStaticMeshComponent* ArtShelters = TramShelterMesh ? MakeMeshInstances(TramShelterMesh, true) : nullptr;
 	int32 Bus = 0, Tram = 0;
 	for (const TSharedPtr<FJsonValue>& B : Data.Array(TEXT("busStops")))
 	{
@@ -320,9 +452,14 @@ void ACityProps::PlaceStops()
 		FVector P = ClearOfTracks(OntoSidewalk(Data.ToWorld(E, S)), 250.f);
 		P.Z = GroundZ(P);
 		const FRotator Face(0, YawTowardsStreet(P), 0);
+		++Bus;
+		if (ArtPoles)
+		{
+			ArtPoles->AddInstance(FTransform(Face, P), true); // pivot at the base, sign face towards the street
+			continue;
+		}
 		Poles->AddInstance(FTransform(FRotator::ZeroRotator, P + FVector(0, 0, 140.f), FVector(0.08f, 0.08f, 2.8f)), true);
 		Signs->AddInstance(FTransform(Face, P + FVector(0, 0, 260.f), FVector(0.04f, 0.5f, 0.35f)), true);
-		++Bus;
 	}
 	for (const TSharedPtr<FJsonValue>& T : Data.Array(TEXT("tramStops")))
 	{
@@ -337,11 +474,16 @@ void ACityProps::PlaceStops()
 		const int32 Track = Nearest(TrackA, TrackB, FVector2D(P.X, P.Y), OnTrack);
 		P.Z = GroundZ(P);
 		const FRotator Face(0, Track != INDEX_NONE ? (FVector(OnTrack.X, OnTrack.Y, P.Z) - P).Rotation().Yaw : YawTowardsStreet(P), 0);
+		++Tram;
+		if (ArtShelters)
+		{
+			ArtShelters->AddInstance(FTransform(Face, P), true); // pivot at the centre of the base, open side to the track
+			continue;
+		}
 		const FVector Back = -Face.Vector();
 		Shelters->AddInstance(FTransform(Face, P + FVector(0, 0, 260.f), FVector(1.6f, 4.f, 0.1f)), true);              // roof
 		Shelters->AddInstance(FTransform(Face, P + Back * 75.f + FVector(0, 0, 130.f), FVector(0.05f, 4.f, 2.4f)), true); // back panel
 		Signs->AddInstance(FTransform(Face, P + Face.Vector() * 60.f + FVector(0, 0, 290.f), FVector(0.04f, 1.f, 0.4f)), true);
-		++Tram;
 	}
 	UE_LOG(LogCityProps, Log, TEXT("City props: %d bus stops, %d tram stops"), Bus, Tram);
 }
